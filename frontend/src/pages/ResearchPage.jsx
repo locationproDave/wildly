@@ -134,7 +134,14 @@ const ResearchPage = () => {
         fetchSessions();
       }
     } catch (error) {
-      toast.error(error.response?.data?.detail || "Failed to get response");
+      const errorMsg = error.response?.data?.detail || "Failed to get response";
+      if (errorMsg.includes("usage limit") || errorMsg.includes("budget") || errorMsg.includes("Balance")) {
+        toast.error("AI usage limit reached. Please add balance to your Universal Key.", {
+          duration: 8000
+        });
+      } else {
+        toast.error(errorMsg);
+      }
       setMessages(prev => prev.slice(0, -1));
     } finally {
       setIsLoading(false);

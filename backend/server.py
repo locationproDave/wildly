@@ -256,9 +256,14 @@ async def get_ai_response(query: str, session_id: str, chat_history: List[Dict[s
             last_error = str(e)
             continue
     
-    # If all models fail, raise error
+    # If all models fail, raise error with helpful message
     logging.error(f"All AI models failed. Last error: {last_error}")
-    raise HTTPException(status_code=503, detail=f"AI service temporarily unavailable. Please try again.")
+    
+    error_msg = "AI service temporarily unavailable. Please try again in a moment."
+    if "budget" in str(last_error).lower() or "cost" in str(last_error).lower():
+        error_msg = "AI usage limit reached. Please go to Profile → Universal Key → Add Balance to continue."
+    
+    raise HTTPException(status_code=503, detail=error_msg)
 
 # ==================== AUTH ROUTES ====================
 
