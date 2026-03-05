@@ -1,34 +1,164 @@
-.App-logo {
-    height: 40vmin;
-    pointer-events: none;
-}
+/* PetPulse Custom Styles */
 
-@media (prefers-reduced-motion: no-preference) {
-    .App-logo {
-        animation: App-logo-spin infinite 20s linear;
-    }
-}
-
-.App-header {
-    background-color: #0f0f10;
+.App {
     min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    font-size: calc(10px + 2vmin);
-    color: white;
 }
 
-.App-link {
-    color: #61dafb;
+/* Hero section gradient overlay */
+.hero-overlay {
+    background: linear-gradient(
+        to bottom,
+        rgba(253, 252, 248, 0.1) 0%,
+        rgba(253, 252, 248, 0.95) 100%
+    );
 }
 
-@keyframes App-logo-spin {
-    from {
-        transform: rotate(0deg);
-    }
-    to {
-        transform: rotate(360deg);
-    }
+/* Button hover effects */
+.btn-primary {
+    @apply bg-[#2F3E32] text-[#F2F0E9] hover:bg-[#253229] rounded-full px-8 py-4 font-medium transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5;
+}
+
+.btn-secondary {
+    @apply bg-white border border-stone-200 text-stone-800 hover:bg-stone-50 rounded-full px-8 py-4 font-medium transition-all;
+}
+
+.btn-ghost {
+    @apply text-[#2F3E32] hover:bg-[#2F3E32]/5 rounded-full px-4 py-2 transition-all;
+}
+
+/* Card styles */
+.card-base {
+    @apply bg-white rounded-2xl border border-stone-100 shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden;
+}
+
+.card-interactive {
+    @apply cursor-pointer hover:border-[#D4A373]/50 hover:ring-2 hover:ring-[#D4A373]/20;
+}
+
+/* Input styles */
+.input-base {
+    @apply rounded-xl border-stone-200 bg-white/50 focus:ring-2 focus:ring-[#2F3E32]/20 focus:border-[#2F3E32] px-4 py-3;
+}
+
+/* Feature card icons */
+.feature-icon {
+    @apply w-12 h-12 rounded-xl bg-[#2F3E32]/5 flex items-center justify-center text-[#2F3E32];
+}
+
+/* Stat card */
+.stat-card {
+    @apply bg-[#F2F0E9] rounded-2xl p-6 text-center;
+}
+
+.stat-number {
+    @apply text-4xl font-bold text-[#2F3E32] font-['Fraunces'];
+}
+
+.stat-label {
+    @apply text-sm text-[#57534E] uppercase tracking-widest mt-2;
+}
+
+/* Chat interface */
+.chat-container {
+    @apply flex flex-col h-[calc(100vh-200px)] bg-white rounded-2xl border border-stone-100 shadow-sm;
+}
+
+.chat-messages {
+    @apply flex-1 overflow-y-auto p-6 space-y-4;
+}
+
+.chat-input-container {
+    @apply border-t border-stone-100 p-4;
+}
+
+/* Product evaluation card */
+.product-card {
+    @apply bg-white rounded-2xl border border-stone-100 p-6 hover:shadow-lg transition-all duration-300;
+}
+
+.product-card-header {
+    @apply flex items-start justify-between mb-4;
+}
+
+.product-card-title {
+    @apply text-lg font-semibold text-[#2F3E32] font-['Fraunces'];
+}
+
+.product-card-supplier {
+    @apply text-sm text-[#57534E];
+}
+
+.product-card-metric {
+    @apply flex justify-between py-2 border-b border-stone-100 last:border-0;
+}
+
+.product-card-metric-label {
+    @apply text-sm text-[#57534E];
+}
+
+.product-card-metric-value {
+    @apply text-sm font-medium text-[#2F3E32];
+}
+
+/* Verdict badges */
+.verdict-badge {
+    @apply px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wide;
+}
+
+/* Navigation */
+.nav-link {
+    @apply text-[#57534E] hover:text-[#2F3E32] transition-colors font-medium;
+}
+
+.nav-link-active {
+    @apply text-[#2F3E32] font-semibold;
+}
+
+/* Section headers */
+.section-header {
+    @apply text-sm text-[#57534E] uppercase tracking-widest font-semibold mb-4;
+}
+
+/* Empty states */
+.empty-state {
+    @apply flex flex-col items-center justify-center py-16 text-center;
+}
+
+.empty-state-icon {
+    @apply w-16 h-16 rounded-full bg-[#F2F0E9] flex items-center justify-center text-[#D4A373] mb-4;
+}
+
+.empty-state-title {
+    @apply text-xl font-semibold text-[#2F3E32] mb-2 font-['Fraunces'];
+}
+
+.empty-state-description {
+    @apply text-[#57534E] max-w-sm;
+}
+
+/* Loading skeleton */
+.skeleton {
+    @apply bg-[#E8E6DE] rounded animate-pulse;
+}
+
+/* Discount badge */
+.discount-badge {
+    @apply inline-flex items-center gap-2 bg-[#768A75] text-white px-4 py-2 rounded-full text-sm font-medium;
+}
+
+/* Typing indicator */
+.typing-indicator {
+    @apply flex gap-1 items-center;
+}
+
+.typing-dot {
+    @apply w-2 h-2 rounded-full bg-[#D4A373] animate-bounce;
+}
+
+.typing-dot:nth-child(2) {
+    animation-delay: 0.1s;
+}
+
+.typing-dot:nth-child(3) {
+    animation-delay: 0.2s;
 }

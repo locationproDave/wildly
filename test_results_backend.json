@@ -1,0 +1,95 @@
+{
+  "summary": {
+    "total_tests": 14,
+    "passed": 8,
+    "failed": 6,
+    "success_rate": "57.1%"
+  },
+  "detailed_results": [
+    {
+      "test_name": "API Root",
+      "status": "PASSED",
+      "details": "Status: 200",
+      "timestamp": "2026-03-05T21:24:47.409367"
+    },
+    {
+      "test_name": "Health Check",
+      "status": "PASSED",
+      "details": "Status: 200",
+      "timestamp": "2026-03-05T21:24:47.553092"
+    },
+    {
+      "test_name": "User Registration",
+      "status": "PASSED",
+      "details": "Status: 200",
+      "timestamp": "2026-03-05T21:24:48.008273"
+    },
+    {
+      "test_name": "User Login",
+      "status": "PASSED",
+      "details": "Status: 200",
+      "timestamp": "2026-03-05T21:24:48.445451"
+    },
+    {
+      "test_name": "Get Current User",
+      "status": "PASSED",
+      "details": "Status: 200",
+      "timestamp": "2026-03-05T21:24:48.606561"
+    },
+    {
+      "test_name": "Send Chat Message",
+      "status": "FAILED",
+      "details": "Exception: HTTPSConnectionPool(host='pet-care-curator.preview.emergentagent.com', port=443): Read timed out. (read timeout=30)",
+      "timestamp": "2026-03-05T21:25:18.693672"
+    },
+    {
+      "test_name": "Get Chat Sessions",
+      "status": "FAILED",
+      "details": "Exception: HTTPSConnectionPool(host='pet-care-curator.preview.emergentagent.com', port=443): Read timed out. (read timeout=30)",
+      "timestamp": "2026-03-05T21:25:48.839456"
+    },
+    {
+      "test_name": "Save Product",
+      "status": "FAILED",
+      "details": "Exception: HTTPSConnectionPool(host='pet-care-curator.preview.emergentagent.com', port=443): Read timed out. (read timeout=30)",
+      "timestamp": "2026-03-05T21:26:18.976175"
+    },
+    {
+      "test_name": "Get Saved Products",
+      "status": "FAILED",
+      "details": "Exception: HTTPSConnectionPool(host='pet-care-curator.preview.emergentagent.com', port=443): Read timed out. (read timeout=30)",
+      "timestamp": "2026-03-05T21:26:49.131891"
+    },
+    {
+      "test_name": "Get Search History",
+      "status": "FAILED",
+      "details": "Exception: HTTPSConnectionPool(host='pet-care-curator.preview.emergentagent.com', port=443): Read timed out. (read timeout=30)",
+      "timestamp": "2026-03-05T21:27:19.261645"
+    },
+    {
+      "test_name": "Get User Stats",
+      "status": "FAILED",
+      "details": "Exception: HTTPSConnectionPool(host='pet-care-curator.preview.emergentagent.com', port=443): Read timed out. (read timeout=30)",
+      "timestamp": "2026-03-05T21:27:49.387251"
+    },
+    {
+      "test_name": "Invalid Login",
+      "status": "PASSED",
+      "details": "Status: 401",
+      "timestamp": "2026-03-05T21:27:50.508262"
+    },
+    {
+      "test_name": "Unauthorized Access",
+      "status": "PASSED",
+      "details": "Status: 401",
+      "timestamp": "2026-03-05T21:27:50.625351"
+    },
+    {
+      "test_name": "Invalid Endpoint",
+      "status": "PASSED",
+      "details": "Status: 404",
+      "timestamp": "2026-03-05T21:27:50.753586"
+    }
+  ],
+  "timestamp": "2026-03-05T21:27:50.754244"
+}
