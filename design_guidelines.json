@@ -1,0 +1,139 @@
+{
+  "brand_identity": {
+    "name": "PetPulse Sourcing",
+    "archetype": "The Scientific Naturalist",
+    "emotional_vibe": "Trustworthy, Warm, Premium, Intelligent",
+    "description": "A premium product sourcing agent for pet wellness dropshippers. Think 'Aesop' or 'Kinfolk' meets high-tech data analytics."
+  },
+  "typography": {
+    "font_family": {
+      "headings": "\"Fraunces\", \"Playfair Display\", serif",
+      "body": "\"Manrope\", \"DM Sans\", sans-serif",
+      "mono": "\"JetBrains Mono\", monospace"
+    },
+    "scale": {
+      "h1": "text-5xl md:text-7xl font-bold tracking-tight leading-none",
+      "h2": "text-4xl md:text-5xl font-semibold tracking-tight",
+      "h3": "text-2xl md:text-3xl font-medium",
+      "body_lg": "text-lg md:text-xl leading-relaxed text-stone-600",
+      "body_base": "text-base leading-relaxed text-stone-600",
+      "caption": "text-sm text-stone-500 uppercase tracking-widest font-semibold"
+    },
+    "import_instructions": "Import 'Fraunces' (weights 300-700) and 'Manrope' (weights 400-700) from Google Fonts in index.css"
+  },
+  "colors": {
+    "palette": {
+      "primary": {
+        "DEFAULT": "#2F3E32",
+        "foreground": "#F2F0E9",
+        "hover": "#253229"
+      },
+      "secondary": {
+        "DEFAULT": "#D4A373",
+        "foreground": "#2F3E32",
+        "hover": "#C89565"
+      },
+      "background": {
+        "DEFAULT": "#FDFCF8",
+        "paper": "#F2F0E9",
+        "subtle": "#E8E6DE"
+      },
+      "text": {
+        "primary": "#1C1C1C",
+        "secondary": "#57534E",
+        "muted": "#A8A29E"
+      },
+      "status": {
+        "success": "#768A75",
+        "warning": "#E8B05C",
+        "error": "#D66D5A",
+        "info": "#7CA5B8"
+      }
+    },
+    "usage_rules": {
+      "gradients": "NO gradients for backgrounds. Use solid colors or subtle grain textures.",
+      "glassmorphism": "Use 'bg-white/80 backdrop-blur-md border-white/20' for sticky headers."
+    }
+  },
+  "layout": {
+    "spacing_scale": "Generous. Use 'p-8' or 'gap-8' as default for sections.",
+    "container": "max-w-7xl mx-auto px-4 sm:px-6 lg:px-8",
+    "grid_system": {
+      "dashboard": "grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6",
+      "marketing": "grid grid-cols-1 md:grid-cols-12 gap-8"
+    },
+    "radius": {
+      "default": "rounded-xl",
+      "card": "rounded-2xl",
+      "button": "rounded-full"
+    }
+  },
+  "components": {
+    "buttons": {
+      "primary": "bg-primary text-primary-foreground hover:bg-primary/90 rounded-full px-8 py-4 font-medium transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5",
+      "secondary": "bg-white border border-stone-200 text-stone-800 hover:bg-stone-50 rounded-full px-8 py-4 font-medium transition-all",
+      "ghost": "text-primary hover:bg-primary/5 rounded-full px-4 py-2"
+    },
+    "cards": {
+      "base": "bg-white rounded-2xl border border-stone-100 shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden",
+      "interactive": "cursor-pointer hover:border-secondary/50 hover:ring-2 hover:ring-secondary/20"
+    },
+    "inputs": {
+      "base": "rounded-lg border-stone-200 bg-white/50 focus:ring-2 focus:ring-primary/20 focus:border-primary px-4 py-3"
+    },
+    "visual_enhancers": {
+      "shadows": "shadow-[0_2px_10px_rgba(47,62,50,0.05)]",
+      "grain_texture": "url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0IiBoZWlnaHQ9IjQiPgo8cmVjdCB3aWR0aD0iNCIgaGVpZ2h0PSI0IiBmaWxsPSIjZmZmIi8+CjxyZWN0IHdpZHRoPSIxIiBoZWlnaHQ9IjEiIGZpbGw9IiNjY2MiIG9wYWNpdHk9IjAuMiIvPgo8L3N2Zz4=')"
+    }
+  },
+  "assets": {
+    "images": {
+      "hero_dog": {
+        "url": "https://images.unsplash.com/photo-1768676758480-44e11e5c164a",
+        "alt": "Golden retriever in golden hour sunlight",
+        "use_case": "Hero Section Main Visual"
+      },
+      "cat_window": {
+        "url": "https://images.unsplash.com/photo-1716203896899-8d27161fb522",
+        "alt": "Cat looking out window",
+        "use_case": "Secondary emotional imagery"
+      },
+      "packaging_nature": {
+        "url": "https://images.unsplash.com/photo-1673573032549-8394cf9282f3",
+        "alt": "Eco packaging boxes in grass",
+        "use_case": "Sourcing/Product context"
+      },
+      "vet_trust": {
+        "url": "https://images.unsplash.com/photo-1700665537650-1bf37979aae0",
+        "alt": "Veterinarian holding small dog",
+        "use_case": "Trust/Verification section"
+      }
+    },
+    "icons": {
+      "library": "lucide-react",
+      "style": "Stroke width 1.5px (Light/Elegant)",
+      "color": "text-primary"
+    }
+  },
+  "motion": {
+    "preset": "framer-motion",
+    "transitions": {
+      "default": "transition-all duration-300 ease-out",
+      "slow": "transition-all duration-700 ease-out",
+      "hover": "transition-transform duration-200 ease-out"
+    },
+    "rules": {
+      "lists": "Stagger children animations by 0.05s",
+      "modals": "Scale in from 0.95 opacity 0",
+      "buttons": "Active scale 0.98"
+    }
+  },
+  "universal_guidelines": [
+    "NEVER use generic purple/blue gradients.",
+    "Use 'Deep Forest Green' (#2F3E32) instead of Black for text where possible for softer contrast.",
+    "Always check accessibility contrast. Light beige backgrounds need dark text.",
+    "Interactive elements MUST have a 'data-testid' attribute.",
+    "Use 'Sonner' for toast notifications, styled to match the earthy theme.",
+    "Avoid 'Inter' font. Import and use 'Fraunces' for headings to give character."
+  ]
+}
