@@ -83,6 +83,11 @@ Build a specialist product sourcing agent for a premium pet wellness dropshippin
   - Flow C: Post-Purchase (3 emails)
   - Flow D: Win-Back (3 emails for 90+ day inactive)
   - 80-130 word emails, no spam triggers, claims compliant
+- [ ] **Customer Service Agent** - Support response system:
+  - Templates: shipping delay, return request, product questions, complaints
+  - Escalation triggers: injury reports, legal threats, $150+ disputes, repeat contacts
+  - Policy-aware: 30-day returns, 5-7 day refunds, exchange handling
+  - Never invent order info, always verify before responding
 - [ ] Web scraping integration for real-time supplier verification
 - [ ] Product image previews in pipeline
 - [ ] Export products to CSV
