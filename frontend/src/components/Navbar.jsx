@@ -1,16 +1,14 @@
 import React, { useState } from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
-import { useAuth } from "../App";
+import { Link, useLocation } from "react-router-dom";
+import { useAuth, useCart } from "../App";
 import { 
-  Dog, 
-  Search, 
-  Package, 
-  History, 
+  ShoppingBag, 
   Menu, 
   X,
-  LogOut,
   User,
-  Gift,
+  LogOut,
+  Package,
+  Settings,
   Bot
 } from "lucide-react";
 import { Button } from "./ui/button";
@@ -25,62 +23,65 @@ import { Avatar, AvatarFallback } from "./ui/avatar";
 
 const Navbar = ({ onAuthClick }) => {
   const { user, logout } = useAuth();
+  const { cart, setCartOpen } = useCart();
   const location = useLocation();
-  const navigate = useNavigate();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const navLinks = [
-    { path: "/research", label: "Research", icon: <Search className="w-4 h-4" /> },
-    { path: "/agents", label: "Agents", icon: <Bot className="w-4 h-4" /> },
-    { path: "/pipeline", label: "Pipeline", icon: <Package className="w-4 h-4" />, protected: true },
-    { path: "/history", label: "History", icon: <History className="w-4 h-4" />, protected: true },
+    { path: "/products", label: "Shop" },
+    { path: "/products?pet_type=dog", label: "Dogs" },
+    { path: "/products?pet_type=cat", label: "Cats" },
   ];
-
-  const handleLogout = () => {
-    logout();
-    navigate("/");
-  };
 
   const getInitials = (name) => {
     return name?.split(" ").map(n => n[0]).join("").toUpperCase() || "U";
   };
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 glass border-b border-white/20">
+    <nav className="fixed top-0 left-0 right-0 z-50 glass border-b border-[#E8DFD5]/50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2" data-testid="nav-logo">
-            <div className="w-8 h-8 bg-[#2F3E32] rounded-lg flex items-center justify-center">
-              <Dog className="w-5 h-5 text-white" />
-            </div>
-            <span className="font-bold text-[#2F3E32] text-lg font-['Fraunces']">PetPulse</span>
+            <span className="text-2xl">🐾</span>
+            <span className="font-bold text-[#2D4A3E] text-xl font-['Fraunces']">CalmTails</span>
           </Link>
 
           {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center gap-6">
-            {navLinks.map((link) => {
-              if (link.protected && !user) return null;
-              return (
-                <Link
-                  key={link.path}
-                  to={link.path}
-                  className={`flex items-center gap-2 text-sm font-medium transition-colors ${
-                    location.pathname === link.path 
-                      ? 'text-[#2F3E32]' 
-                      : 'text-[#57534E] hover:text-[#2F3E32]'
-                  }`}
-                  data-testid={`nav-link-${link.label.toLowerCase()}`}
-                >
-                  {link.icon}
-                  {link.label}
-                </Link>
-              );
-            })}
+          <div className="hidden md:flex items-center gap-8">
+            {navLinks.map((link) => (
+              <Link
+                key={link.path}
+                to={link.path}
+                className={`text-sm font-medium transition-colors ${
+                  location.pathname === link.path.split("?")[0]
+                    ? 'text-[#2D4A3E]' 
+                    : 'text-[#5C6D5E] hover:text-[#2D4A3E]'
+                }`}
+                data-testid={`nav-link-${link.label.toLowerCase()}`}
+              >
+                {link.label}
+              </Link>
+            ))}
           </div>
 
           {/* Right Section */}
           <div className="flex items-center gap-4">
+            {/* Cart */}
+            <button
+              onClick={() => setCartOpen(true)}
+              className="relative p-2 hover:bg-[#E8DFD5] rounded-full transition-colors"
+              data-testid="cart-btn"
+            >
+              <ShoppingBag className="w-5 h-5 text-[#2D4A3E]" />
+              {cart.item_count > 0 && (
+                <span className="absolute -top-1 -right-1 w-5 h-5 bg-[#D4A574] text-white text-xs rounded-full flex items-center justify-center">
+                  {cart.item_count}
+                </span>
+              )}
+            </button>
+
+            {/* User Menu */}
             {user ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -89,8 +90,8 @@ const Navbar = ({ onAuthClick }) => {
                     className="relative h-10 w-10 rounded-full"
                     data-testid="user-menu-trigger"
                   >
-                    <Avatar className="h-10 w-10 border-2 border-[#D4A373]">
-                      <AvatarFallback className="bg-[#2F3E32] text-white">
+                    <Avatar className="h-10 w-10 border-2 border-[#D4A574]">
+                      <AvatarFallback className="bg-[#2D4A3E] text-white">
                         {getInitials(user.name)}
                       </AvatarFallback>
                     </Avatar>
@@ -98,27 +99,43 @@ const Navbar = ({ onAuthClick }) => {
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-56">
                   <div className="px-3 py-2">
-                    <p className="text-sm font-medium text-[#2F3E32]">{user.name}</p>
-                    <p className="text-xs text-[#57534E]">{user.email}</p>
+                    <p className="text-sm font-medium text-[#2D4A3E]">{user.name}</p>
+                    <p className="text-xs text-[#5C6D5E]">{user.email}</p>
                   </div>
-                  {user.discount_code && (
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem asChild>
+                    <Link to="/account" className="cursor-pointer">
+                      <User className="w-4 h-4 mr-2" />
+                      My Account
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link to="/account" className="cursor-pointer">
+                      <Package className="w-4 h-4 mr-2" />
+                      Orders
+                    </Link>
+                  </DropdownMenuItem>
+                  {user.is_admin && (
                     <>
                       <DropdownMenuSeparator />
-                      <div className="px-3 py-2">
-                        <p className="text-xs text-[#57534E] flex items-center gap-1">
-                          <Gift className="w-3 h-3 text-[#D4A373]" />
-                          Your discount code:
-                        </p>
-                        <p className="text-sm font-mono font-semibold text-[#768A75]">
-                          {user.discount_code}
-                        </p>
-                      </div>
+                      <DropdownMenuItem asChild>
+                        <Link to="/admin" className="cursor-pointer">
+                          <Settings className="w-4 h-4 mr-2" />
+                          Admin Dashboard
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
+                        <Link to="/admin/agents" className="cursor-pointer">
+                          <Bot className="w-4 h-4 mr-2" />
+                          AI Agents
+                        </Link>
+                      </DropdownMenuItem>
                     </>
                   )}
                   <DropdownMenuSeparator />
                   <DropdownMenuItem 
-                    onClick={handleLogout}
-                    className="text-[#D66D5A] cursor-pointer"
+                    onClick={logout}
+                    className="text-[#C45C4A] cursor-pointer"
                     data-testid="logout-btn"
                   >
                     <LogOut className="w-4 h-4 mr-2" />
@@ -129,7 +146,7 @@ const Navbar = ({ onAuthClick }) => {
             ) : (
               <Button
                 onClick={onAuthClick}
-                className="bg-[#2F3E32] hover:bg-[#253229] text-white rounded-full px-6"
+                className="bg-[#2D4A3E] hover:bg-[#1F342B] text-white rounded-full px-6"
                 data-testid="nav-signin-btn"
               >
                 Sign In
@@ -139,7 +156,7 @@ const Navbar = ({ onAuthClick }) => {
             {/* Mobile Menu Button */}
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="md:hidden p-2 text-[#2F3E32]"
+              className="md:hidden p-2 text-[#2D4A3E]"
               data-testid="mobile-menu-btn"
             >
               {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
@@ -150,27 +167,22 @@ const Navbar = ({ onAuthClick }) => {
 
       {/* Mobile Menu */}
       {mobileMenuOpen && (
-        <div className="md:hidden bg-white border-t border-stone-100 animate-fade-in">
+        <div className="md:hidden bg-white border-t border-[#E8DFD5] animate-fade-in">
           <div className="px-4 py-4 space-y-2">
-            {navLinks.map((link) => {
-              if (link.protected && !user) return null;
-              return (
-                <Link
-                  key={link.path}
-                  to={link.path}
-                  onClick={() => setMobileMenuOpen(false)}
-                  className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${
-                    location.pathname === link.path 
-                      ? 'bg-[#2F3E32]/10 text-[#2F3E32]' 
-                      : 'text-[#57534E] hover:bg-[#F2F0E9]'
-                  }`}
-                  data-testid={`mobile-nav-${link.label.toLowerCase()}`}
-                >
-                  {link.icon}
-                  {link.label}
-                </Link>
-              );
-            })}
+            {navLinks.map((link) => (
+              <Link
+                key={link.path}
+                to={link.path}
+                onClick={() => setMobileMenuOpen(false)}
+                className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${
+                  location.pathname === link.path.split("?")[0]
+                    ? 'bg-[#2D4A3E]/10 text-[#2D4A3E]' 
+                    : 'text-[#5C6D5E] hover:bg-[#E8DFD5]'
+                }`}
+              >
+                {link.label}
+              </Link>
+            ))}
           </div>
         </div>
       )}

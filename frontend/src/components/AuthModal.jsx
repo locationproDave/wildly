@@ -3,7 +3,6 @@ import { useAuth } from "../App";
 import { toast } from "sonner";
 import { 
   X, 
-  Dog, 
   Mail, 
   Lock, 
   User,
@@ -63,26 +62,24 @@ const AuthModal = ({ isOpen, onClose }) => {
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-md bg-[#FDFCF8] border-stone-100">
+      <DialogContent className="sm:max-w-md bg-[#FDF8F3] border-[#E8DFD5]">
         <DialogHeader>
           <div className="flex items-center justify-center mb-4">
-            <div className="w-12 h-12 bg-[#2F3E32] rounded-xl flex items-center justify-center">
-              <Dog className="w-7 h-7 text-white" />
-            </div>
+            <span className="text-4xl">🐾</span>
           </div>
-          <DialogTitle className="text-center text-2xl font-bold text-[#2F3E32] font-['Fraunces']">
-            {isLogin ? "Welcome Back" : "Create Account"}
+          <DialogTitle className="text-center text-2xl font-bold text-[#2D4A3E] font-['Fraunces']">
+            {isLogin ? "Welcome Back" : "Join CalmTails"}
           </DialogTitle>
-          <DialogDescription className="text-center text-sm text-[#57534E]">
+          <DialogDescription className="text-center text-sm text-[#5C6D5E]">
             {isLogin 
-              ? "Sign in to access your saved products and research history."
-              : "Create a free account to save your product research."
+              ? "Sign in to view your orders and saved items."
+              : "Create an account and get 15% off your first order."
             }
           </DialogDescription>
           {!isLogin && (
-            <p className="text-center text-sm text-[#768A75] mt-2">
-              <Gift className="inline w-4 h-4 mr-1 text-[#D4A373]" />
-              Get 15% off your first month when you sign up!
+            <p className="text-center text-sm text-[#6B8F71] mt-2">
+              <Gift className="inline w-4 h-4 mr-1" />
+              15% off your first order when you sign up!
             </p>
           )}
         </DialogHeader>
@@ -90,9 +87,9 @@ const AuthModal = ({ isOpen, onClose }) => {
         <form onSubmit={handleSubmit} className="space-y-4 mt-4">
           {!isLogin && (
             <div className="space-y-2">
-              <Label htmlFor="name" className="text-[#2F3E32]">Name</Label>
+              <Label htmlFor="name" className="text-[#2D4A3E]">Name</Label>
               <div className="relative">
-                <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#A8A29E]" />
+                <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#5C6D5E]" />
                 <Input
                   id="name"
                   name="name"
@@ -100,7 +97,7 @@ const AuthModal = ({ isOpen, onClose }) => {
                   placeholder="Your name"
                   value={formData.name}
                   onChange={handleInputChange}
-                  className="pl-10 rounded-xl border-stone-200 focus:ring-2 focus:ring-[#2F3E32]/20 focus:border-[#2F3E32]"
+                  className="pl-10 rounded-xl border-[#E8DFD5] focus:ring-2 focus:ring-[#2D4A3E]/20 focus:border-[#2D4A3E]"
                   required={!isLogin}
                   data-testid="auth-name-input"
                 />
@@ -109,9 +106,9 @@ const AuthModal = ({ isOpen, onClose }) => {
           )}
 
           <div className="space-y-2">
-            <Label htmlFor="email" className="text-[#2F3E32]">Email</Label>
+            <Label htmlFor="email" className="text-[#2D4A3E]">Email</Label>
             <div className="relative">
-              <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#A8A29E]" />
+              <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#5C6D5E]" />
               <Input
                 id="email"
                 name="email"
@@ -119,7 +116,7 @@ const AuthModal = ({ isOpen, onClose }) => {
                 placeholder="you@example.com"
                 value={formData.email}
                 onChange={handleInputChange}
-                className="pl-10 rounded-xl border-stone-200 focus:ring-2 focus:ring-[#2F3E32]/20 focus:border-[#2F3E32]"
+                className="pl-10 rounded-xl border-[#E8DFD5] focus:ring-2 focus:ring-[#2D4A3E]/20 focus:border-[#2D4A3E]"
                 required
                 data-testid="auth-email-input"
               />
@@ -127,9 +124,9 @@ const AuthModal = ({ isOpen, onClose }) => {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="password" className="text-[#2F3E32]">Password</Label>
+            <Label htmlFor="password" className="text-[#2D4A3E]">Password</Label>
             <div className="relative">
-              <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#A8A29E]" />
+              <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#5C6D5E]" />
               <Input
                 id="password"
                 name="password"
@@ -137,7 +134,7 @@ const AuthModal = ({ isOpen, onClose }) => {
                 placeholder="••••••••"
                 value={formData.password}
                 onChange={handleInputChange}
-                className="pl-10 rounded-xl border-stone-200 focus:ring-2 focus:ring-[#2F3E32]/20 focus:border-[#2F3E32]"
+                className="pl-10 rounded-xl border-[#E8DFD5] focus:ring-2 focus:ring-[#2D4A3E]/20 focus:border-[#2D4A3E]"
                 required
                 minLength={6}
                 data-testid="auth-password-input"
@@ -148,7 +145,7 @@ const AuthModal = ({ isOpen, onClose }) => {
           <Button
             type="submit"
             disabled={loading}
-            className="w-full bg-[#2F3E32] hover:bg-[#253229] text-white rounded-xl py-6 font-medium"
+            className="w-full bg-[#2D4A3E] hover:bg-[#1F342B] text-white rounded-xl py-6 font-medium"
             data-testid="auth-submit-btn"
           >
             {loading ? (
@@ -163,13 +160,13 @@ const AuthModal = ({ isOpen, onClose }) => {
           <button
             type="button"
             onClick={switchMode}
-            className="text-sm text-[#57534E] hover:text-[#2F3E32] transition-colors"
+            className="text-sm text-[#5C6D5E] hover:text-[#2D4A3E] transition-colors"
             data-testid="auth-switch-mode-btn"
           >
             {isLogin ? (
-              <>Don't have an account? <span className="font-semibold text-[#D4A373]">Sign up</span></>
+              <>Don't have an account? <span className="font-semibold text-[#D4A574]">Sign up</span></>
             ) : (
-              <>Already have an account? <span className="font-semibold text-[#D4A373]">Sign in</span></>
+              <>Already have an account? <span className="font-semibold text-[#D4A574]">Sign in</span></>
             )}
           </button>
         </div>

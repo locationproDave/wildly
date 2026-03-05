@@ -7,12 +7,14 @@ import json
 import uuid
 from datetime import datetime
 
-class PetPulseAPITester:
+class CalmTailsAPITester:
     def __init__(self, base_url="https://pet-care-curator.preview.emergentagent.com"):
         self.base_url = base_url
+        self.api_url = f"{base_url}/api"
         self.token = None
+        self.admin_token = None
         self.user_id = None
-        self.session_id = None
+        self.cart_session_id = f"test_cart_{int(time.time())}"
         self.tests_run = 0
         self.tests_passed = 0
         self.test_results = []
@@ -38,10 +40,13 @@ class PetPulseAPITester:
 
     def run_test(self, name, method, endpoint, expected_status, data=None, timeout=30):
         """Run a single API test with timing"""
-        url = f"{self.base_url}/api/{endpoint}" if not endpoint.startswith('/') else f"{self.base_url}{endpoint}"
+        url = f"{self.api_url}/{endpoint}" if not endpoint.startswith('/') else f"{self.base_url}{endpoint}"
         headers = {'Content-Type': 'application/json'}
         
-        if self.token:
+        # Use admin token for admin endpoints, otherwise use regular token
+        if endpoint.startswith('admin/') and self.admin_token:
+            headers['Authorization'] = f'Bearer {self.admin_token}'
+        elif self.token:
             headers['Authorization'] = f'Bearer {self.token}'
 
         print(f"\n🔍 Testing {name}...")
@@ -67,7 +72,7 @@ class PetPulseAPITester:
             except:
                 response_data = {"text": response.text[:200]}
                 
-            message = f"Response: {json.dumps(response_data, indent=2)[:100]}..."
+            message = f"Response preview: {str(response_data)[:100]}..."
             self.log_test_result(name, success, response_time, response.status_code, message)
             
             return success, response_data, response_time
@@ -87,13 +92,107 @@ class PetPulseAPITester:
         self.run_test("API Root", "GET", "", 200)
         self.run_test("Health Check", "GET", "health", 200)
 
+    def test_seed_products(self):
+        """Test seeding products database"""
+        print("\n=== SEED PRODUCTS TEST ===")
+        
+        success, response, response_time = self.run_test(
+            "Seed Products", 
+            "POST", 
+            "seed-products", 
+            200,
+            timeout=60
+        )
+        
+        if success:
+            print(f"   ✅ Products seeded successfully")
+            return True
+        else:
+            print(f"   ❌ Failed to seed products - {response}")
+            return False
+
+    def test_products_api(self):
+        """Test products endpoints"""
+        print("\n=== PRODUCTS API TESTS ===")
+        
+        # Test get all products
+        success, response, _ = self.run_test(
+            "Get All Products",
+            "GET",
+            "products",
+            200
+        )
+        
+        product_count = len(response) if isinstance(response, list) else 0
+        print(f"   📦 Found {product_count} products")
+        
+        # Test featured products
+        success, response, _ = self.run_test(
+            "Get Featured Products",
+            "GET",
+            "products/featured",
+            200
+        )
+        
+        featured_count = len(response) if isinstance(response, list) else 0
+        print(f"   ⭐ Found {featured_count} featured products")
+        
+        # Test categories
+        success, response, _ = self.run_test(
+            "Get Categories",
+            "GET",
+            "products/categories",
+            200
+        )
+        
+        category_count = len(response) if isinstance(response, list) else 0
+        print(f"   📂 Found {category_count} categories")
+        
+        # Test product filters
+        self.run_test(
+            "Filter Products by Pet Type (dogs)",
+            "GET",
+            "products?pet_type=dog",
+            200
+        )
+        
+        self.run_test(
+            "Filter Products by Pet Type (cats)", 
+            "GET",
+            "products?pet_type=cat",
+            200
+        )
+        
+        # Test individual product by slug
+        if product_count > 0:
+            # Get first product to test slug endpoint
+            success, products, _ = self.run_test(
+                "Get Products for Slug Test",
+                "GET", 
+                "products",
+                200
+            )
+            
+            if success and products and len(products) > 0:
+                first_product = products[0]
+                slug = first_product.get('slug')
+                if slug:
+                    self.run_test(
+                        f"Get Product by Slug ({slug})",
+                        "GET",
+                        f"products/{slug}",
+                        200
+                    )
+                    return first_product
+        
+        return None
+
     def test_user_registration(self):
         """Test user registration with discount code"""
         print("\n=== USER REGISTRATION TEST ===")
         
-        # Create unique user for this test
         timestamp = int(time.time())
-        test_email = f"test_user_{timestamp}@petpulse.com"
+        test_email = f"test_user_{timestamp}@calmtails.com"
         
         user_data = {
             "email": test_email,
@@ -101,13 +200,13 @@ class PetPulseAPITester:
             "name": f"Test User {timestamp}"
         }
         
-        success, response, response_time = self.run_test(
+        success, response, _ = self.run_test(
             "User Registration", 
             "POST", 
             "auth/register", 
             200, 
             user_data,
-            timeout=60  # Allow more time for registration
+            timeout=60
         )
         
         if success and 'token' in response:
@@ -123,17 +222,17 @@ class PetPulseAPITester:
             print(f"   ❌ Registration failed - {response}")
             return False
 
-    def test_user_login(self):
-        """Test user login with existing demo user"""
-        print("\n=== USER LOGIN TEST ===")
+    def test_admin_login(self):
+        """Test admin login"""
+        print("\n=== ADMIN LOGIN TEST ===")
         
         login_data = {
-            "email": "demo@petpulse.com",
-            "password": "demo123456"
+            "email": "admin@calmtails.com",
+            "password": "admin123"
         }
         
-        success, response, response_time = self.run_test(
-            "User Login",
+        success, response, _ = self.run_test(
+            "Admin Login",
             "POST",
             "auth/login", 
             200,
@@ -142,21 +241,229 @@ class PetPulseAPITester:
         )
         
         if success and 'token' in response:
-            self.token = response['token']
-            self.user_id = response.get('user', {}).get('id')
-            print(f"   📝 Login successful!")
-            print(f"   👤 User: {response.get('user', {}).get('name')}")
-            print(f"   🎫 Discount: {response.get('user', {}).get('discount_code')}")
-            return True
+            self.admin_token = response['token']
+            user = response.get('user', {})
+            is_admin = user.get('is_admin', False)
+            
+            print(f"   📝 Admin login successful!")
+            print(f"   👤 User: {user.get('name')}")
+            print(f"   🔑 Is Admin: {is_admin}")
+            return is_admin
         else:
-            print(f"   ❌ Login failed - {response}")
+            print(f"   ❌ Admin login failed - {response}")
             return False
 
-    def test_protected_route(self):
-        """Test protected route authentication"""
-        print("\n=== PROTECTED ROUTE TEST ===")
+    def test_cart_functionality(self, product):
+        """Test cart operations"""
+        print("\n=== CART FUNCTIONALITY TESTS ===")
         
-        success, response, response_time = self.run_test(
+        if not product:
+            print("   ❌ No product available for cart testing")
+            return False
+        
+        product_id = product.get('id')
+        print(f"   🛒 Testing cart with product: {product.get('name', 'Unknown')}")
+        
+        # Get empty cart
+        success, response, _ = self.run_test(
+            "Get Empty Cart",
+            "GET",
+            f"cart/{self.cart_session_id}",
+            200
+        )
+        
+        # Add product to cart
+        cart_item = {
+            "product_id": product_id,
+            "quantity": 2
+        }
+        
+        success, response, _ = self.run_test(
+            "Add Product to Cart",
+            "POST",
+            f"cart/{self.cart_session_id}/add",
+            200,
+            cart_item
+        )
+        
+        if success:
+            items = response.get('items', [])
+            subtotal = response.get('subtotal', 0)
+            print(f"   ✅ Cart now has {len(items)} items, subtotal: ${subtotal}")
+        
+        # Update quantity
+        update_item = {
+            "product_id": product_id,
+            "quantity": 3
+        }
+        
+        self.run_test(
+            "Update Cart Item Quantity",
+            "POST",
+            f"cart/{self.cart_session_id}/update",
+            200,
+            update_item
+        )
+        
+        # Remove item
+        self.run_test(
+            "Remove Item from Cart",
+            "DELETE",
+            f"cart/{self.cart_session_id}/item/{product_id}",
+            200
+        )
+        
+        # Add back for checkout test
+        self.run_test(
+            "Re-add Product for Checkout Test",
+            "POST",
+            f"cart/{self.cart_session_id}/add",
+            200,
+            cart_item
+        )
+        
+        return True
+
+    def test_checkout_flow(self):
+        """Test checkout and Stripe integration"""
+        print("\n=== CHECKOUT FLOW TEST ===")
+        
+        checkout_data = {
+            "cart_session_id": self.cart_session_id,
+            "email": "test@calmtails.com",
+            "origin_url": self.base_url
+        }
+        
+        success, response, _ = self.run_test(
+            "Create Checkout Session",
+            "POST",
+            "checkout",
+            200,
+            checkout_data,
+            timeout=60
+        )
+        
+        if success and 'checkout_url' in response:
+            checkout_url = response['checkout_url']
+            session_id = response.get('session_id')
+            order_id = response.get('order_id')
+            
+            print(f"   ✅ Checkout session created!")
+            print(f"   🔗 Checkout URL: {checkout_url[:50]}...")
+            print(f"   📋 Order ID: {order_id}")
+            
+            # Test checkout status
+            if session_id:
+                self.run_test(
+                    "Get Checkout Status",
+                    "GET",
+                    f"checkout/status/{session_id}",
+                    200
+                )
+            
+            return order_id
+        else:
+            print(f"   ❌ Checkout failed - {response}")
+            return None
+
+    def test_orders_api(self):
+        """Test order endpoints"""
+        print("\n=== ORDERS API TEST ===")
+        
+        # Test get user orders (requires auth)
+        if self.token:
+            self.run_test(
+                "Get User Orders",
+                "GET",
+                "orders",
+                200
+            )
+
+    def test_admin_endpoints(self):
+        """Test admin-specific endpoints"""
+        print("\n=== ADMIN ENDPOINTS TEST ===")
+        
+        if not self.admin_token:
+            print("   ❌ No admin token available")
+            return False
+        
+        # Test admin stats
+        success, response, _ = self.run_test(
+            "Get Admin Stats",
+            "GET",
+            "admin/stats",
+            200
+        )
+        
+        if success:
+            stats = response
+            print(f"   📊 Total Orders: {stats.get('total_orders', 0)}")
+            print(f"   💰 Total Revenue: ${stats.get('total_revenue', 0)}")
+            print(f"   📦 Total Products: {stats.get('total_products', 0)}")
+            print(f"   👥 Total Customers: {stats.get('total_customers', 0)}")
+        
+        # Test admin orders
+        self.run_test(
+            "Get All Orders (Admin)",
+            "GET",
+            "admin/orders",
+            200
+        )
+        
+        return True
+
+    def test_agents_api(self):
+        """Test AI agents endpoints"""
+        print("\n=== AI AGENTS API TEST ===")
+        
+        # Test get agents list
+        success, response, _ = self.run_test(
+            "Get Agents List",
+            "GET",
+            "agents",
+            200
+        )
+        
+        if success and 'agents' in response:
+            agents = response['agents']
+            agent_count = len(agents)
+            print(f"   🤖 Found {agent_count} agents")
+            
+            # Test agent chat (requires auth)
+            if self.token and agent_count > 0:
+                agent_type = list(agents.keys())[0] if agents else "product_sourcing"
+                
+                chat_data = {
+                    "query": "Help me find calming products for anxious dogs",
+                    "agent_type": agent_type,
+                    "session_id": str(uuid.uuid4())
+                }
+                
+                print(f"   🤖 Testing agent chat with {agent_type} (may take 30-60 seconds)...")
+                success, response, _ = self.run_test(
+                    f"Agent Chat - {agent_type}",
+                    "POST",
+                    "agents/chat",
+                    200,
+                    chat_data,
+                    timeout=90
+                )
+                
+                if success and 'response' in response:
+                    ai_response = response['response']
+                    print(f"   ✅ Agent responded ({len(ai_response)} chars)")
+        
+        return True
+
+    def test_protected_routes(self):
+        """Test authentication on protected routes"""
+        print("\n=== PROTECTED ROUTES TEST ===")
+        
+        if not self.token:
+            print("   ❌ No user token available")
+            return False
+        
+        success, response, _ = self.run_test(
             "Get Current User (/auth/me)",
             "GET",
             "auth/me",
@@ -167,215 +474,6 @@ class PetPulseAPITester:
             print(f"   ✅ Protected route working - User: {response.get('name')}")
             return True
         return False
-
-    def test_chat_functionality(self):
-        """Test chat API with AI response"""
-        print("\n=== CHAT AI INTEGRATION TEST ===")
-        
-        self.session_id = str(uuid.uuid4())
-        
-        # Test simple chat query
-        chat_data = {
-            "query": "Hello, I need help finding premium dog anxiety relief products under $50.",
-            "session_id": self.session_id
-        }
-        
-        print("   🤖 Sending AI query (this may take 30-60 seconds)...")
-        success, response, response_time = self.run_test(
-            "Send Chat Message",
-            "POST",
-            "chat/send",
-            200,
-            chat_data,
-            timeout=90  # AI responses can be slow
-        )
-        
-        if success and 'response' in response:
-            ai_response = response['response']
-            print(f"   ✅ AI Response received ({len(ai_response)} chars)")
-            print(f"   📝 Preview: {ai_response[:150]}...")
-            return True
-        else:
-            print(f"   ❌ Chat failed - {response}")
-            return False
-
-    def test_search_history(self):
-        """Test search history saving and retrieval"""
-        print("\n=== SEARCH HISTORY TEST ===")
-        
-        success, response, response_time = self.run_test(
-            "Get Search History",
-            "GET",
-            "history",
-            200,
-            timeout=30
-        )
-        
-        if success and isinstance(response, list):
-            print(f"   ✅ History retrieved - {len(response)} items")
-            if len(response) > 0:
-                latest = response[0]
-                print(f"   📝 Latest search: {latest.get('query', 'N/A')}")
-            return True
-        else:
-            print(f"   ❌ History retrieval failed - {response}")
-            return False
-
-    def test_user_stats(self):
-        """Test user statistics endpoint"""
-        print("\n=== USER STATS TEST ===")
-        
-        success, response, response_time = self.run_test(
-            "Get User Statistics",
-            "GET",
-            "stats",
-            200,
-            timeout=30
-        )
-        
-        if success and 'saved_products' in response:
-            print(f"   ✅ Stats retrieved:")
-            print(f"   📊 Saved products: {response.get('saved_products', 0)}")
-            print(f"   🔍 Total searches: {response.get('total_searches', 0)}")
-            print(f"   ⭐ Recommended: {response.get('recommended_products', 0)}")
-            return True
-        else:
-            print(f"   ❌ Stats retrieval failed - {response}")
-            return False
-
-    def test_chat_sessions(self):
-        """Test chat sessions endpoint"""
-        print("\n=== CHAT SESSIONS TEST ===")
-        
-        success, response, response_time = self.run_test(
-            "Get Chat Sessions",
-            "GET", 
-            "chat/sessions",
-            200,
-            timeout=30
-        )
-        
-        if success and isinstance(response, list):
-            print(f"   ✅ Sessions retrieved - {len(response)} sessions")
-            if len(response) > 0:
-                session = response[0]
-                print(f"   💬 Latest session has {len(session.get('messages', []))} messages")
-            return True
-        else:
-            print(f"   ❌ Sessions retrieval failed - {response}")
-            return False
-
-    def test_agents_api(self):
-        """Test agents list API - should return all 7 agents"""
-        print("\n=== AGENTS API TEST ===")
-        
-        success, response, response_time = self.run_test(
-            "Get Agents List",
-            "GET",
-            "agents",
-            200,
-            timeout=30
-        )
-        
-        if success and 'agents' in response:
-            agents = response['agents']
-            expected_agents = [
-                "product_sourcing", "due_diligence", "copywriter",
-                "seo_content", "performance_marketing", "email_marketing", "customer_service"
-            ]
-            
-            all_present = all(agent in agents for agent in expected_agents)
-            agent_count = len(agents)
-            
-            print(f"   📊 Found {agent_count} agents")
-            print(f"   🤖 Agent types: {list(agents.keys())}")
-            
-            if all_present and agent_count == 7:
-                print(f"   ✅ All 7 expected agents present")
-                return True
-            else:
-                missing = [a for a in expected_agents if a not in agents]
-                print(f"   ❌ Missing agents: {missing}")
-                return False
-        else:
-            print(f"   ❌ Agents API failed - {response}")
-            return False
-
-    def test_agent_chat_api(self):
-        """Test agent-specific chat API"""
-        print("\n=== AGENT CHAT API TEST ===")
-        
-        # Test product sourcing agent
-        agent_chat_data = {
-            "query": "Find premium dog calming products under $50",
-            "agent_type": "product_sourcing",
-            "session_id": str(uuid.uuid4())
-        }
-        
-        print("   🤖 Testing Product Sourcing Agent (this may take 30-60 seconds)...")
-        success, response, response_time = self.run_test(
-            "Agent Chat - Product Sourcing",
-            "POST",
-            "agents/chat",
-            200,
-            agent_chat_data,
-            timeout=90
-        )
-        
-        if success and 'response' in response:
-            ai_response = response['response']
-            agent_type = response.get('agent_type', 'unknown')
-            print(f"   ✅ Agent {agent_type} responded ({len(ai_response)} chars)")
-            print(f"   📝 Preview: {ai_response[:150]}...")
-            return True
-        else:
-            print(f"   ❌ Agent chat failed - {response}")
-            return False
-
-    def test_agent_sessions_api(self):
-        """Test agent sessions API"""
-        print("\n=== AGENT SESSIONS API TEST ===")
-        
-        success, response, response_time = self.run_test(
-            "Get Agent Sessions",
-            "GET",
-            "agents/sessions", 
-            200,
-            timeout=30
-        )
-        
-        if success and isinstance(response, list):
-            print(f"   ✅ Agent sessions retrieved - {len(response)} sessions")
-            return True
-        else:
-            print(f"   ❌ Agent sessions retrieval failed - {response}")
-            return False
-
-    def test_unauthorized_access(self):
-        """Test that protected routes require authentication"""
-        print("\n=== UNAUTHORIZED ACCESS TEST ===")
-        
-        # Save current token
-        saved_token = self.token
-        self.token = None  # Remove token
-        
-        # Should get 401
-        success, response, response_time = self.run_test(
-            "Access Protected Route Without Token",
-            "GET",
-            "auth/me",
-            401
-        )
-        
-        # Restore token
-        self.token = saved_token
-        
-        if success:
-            print(f"   ✅ Properly rejected unauthorized access")
-            return True
-        else:
-            print(f"   ❌ Security issue - should have returned 401")
-            return False
 
     def save_test_results(self):
         """Save detailed test results to file"""
@@ -395,10 +493,10 @@ class PetPulseAPITester:
         print(f"\n📋 Detailed test results saved to: /app/test_results_backend.json")
 
 def main():
-    print("🚀 Starting PetPulse Sourcing Agent API Tests")
+    print("🚀 Starting CalmTails E-commerce API Tests")
     print("=" * 60)
     
-    tester = PetPulseAPITester()
+    tester = CalmTailsAPITester()
     
     # Run test suite
     tests_passed = []
@@ -406,48 +504,46 @@ def main():
     # Health checks
     tester.test_health_check()
     
-    # Test agents API first
-    if tester.test_agents_api():
-        tests_passed.append("agents_api")
+    # Seed products first
+    if tester.test_seed_products():
+        tests_passed.append("seed_products")
     
-    # Authentication flow
-    login_success = tester.test_user_login()
-    if login_success:
-        tests_passed.append("login")
+    # Test products API
+    product = tester.test_products_api()
+    if product:
+        tests_passed.append("products_api")
+    
+    # Test user registration
+    if tester.test_user_registration():
+        tests_passed.append("user_registration")
         
         # Test protected routes
-        if tester.test_protected_route():
+        if tester.test_protected_routes():
             tests_passed.append("protected_routes")
         
-        # Test AI chat
-        if tester.test_chat_functionality():
-            tests_passed.append("ai_chat")
+        # Test cart functionality
+        if tester.test_cart_functionality(product):
+            tests_passed.append("cart_functionality")
+            
+            # Test checkout
+            order_id = tester.test_checkout_flow()
+            if order_id:
+                tests_passed.append("checkout_flow")
         
-        # Test agent-specific chat
-        if tester.test_agent_chat_api():
-            tests_passed.append("agent_chat")
+        # Test orders API
+        tester.test_orders_api()
+        tests_passed.append("orders_api")
+    
+    # Test admin login and admin endpoints
+    if tester.test_admin_login():
+        tests_passed.append("admin_login")
         
-        # Test data endpoints
-        if tester.test_search_history():
-            tests_passed.append("search_history")
-            
-        if tester.test_user_stats():
-            tests_passed.append("user_stats")
-            
-        if tester.test_chat_sessions():
-            tests_passed.append("chat_sessions")
-            
-        if tester.test_agent_sessions_api():
-            tests_passed.append("agent_sessions")
+        if tester.test_admin_endpoints():
+            tests_passed.append("admin_endpoints")
     
-    # Test security
-    if tester.test_unauthorized_access():
-        tests_passed.append("security")
-    
-    # Try registration (might fail if user exists)
-    print("\n=== OPTIONAL: NEW USER REGISTRATION ===")
-    if tester.test_user_registration():
-        tests_passed.append("registration")
+    # Test AI agents
+    if tester.test_agents_api():
+        tests_passed.append("agents_api")
     
     # Save detailed results
     tester.save_test_results()

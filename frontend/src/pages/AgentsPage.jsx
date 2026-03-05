@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useAuth } from "../App";
+import { Link } from "react-router-dom";
 import axios from "axios";
 import { toast } from "sonner";
 import { 
@@ -22,7 +23,8 @@ import { Button } from "../components/ui/button";
 import { Textarea } from "../components/ui/textarea";
 import { ScrollArea } from "../components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
-import AuthModal from "../components/AuthModal";
+
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 
 const AGENT_ICONS = {
   product_sourcing: Search,
@@ -83,7 +85,8 @@ const AGENT_EXAMPLES = {
 };
 
 const AgentsPage = () => {
-  const { user, token, API } = useAuth();
+  const { user, token } = useAuth();
+  const API = `${BACKEND_URL}/api`;
   const [agents, setAgents] = useState({});
   const [activeAgent, setActiveAgent] = useState("product_sourcing");
   const [messages, setMessages] = useState([]);
@@ -91,7 +94,6 @@ const AgentsPage = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [sessionId, setSessionId] = useState(null);
   const [sessions, setSessions] = useState([]);
-  const [showAuth, setShowAuth] = useState(false);
   const messagesEndRef = useRef(null);
   const textareaRef = useRef(null);
 
@@ -252,8 +254,16 @@ const AgentsPage = () => {
   const examples = AGENT_EXAMPLES[activeAgent] || [];
 
   return (
-    <div className="min-h-screen pt-20 pb-8">
+    <div className="min-h-screen pt-24 pb-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        {/* Back Link */}
+        <Link 
+          to="/admin" 
+          className="inline-flex items-center text-[#5C6D5E] hover:text-[#2D4A3E] mb-6"
+        >
+          ← Back to Dashboard
+        </Link>
+        
         {/* Agent Tabs */}
         <Tabs value={activeAgent} onValueChange={setActiveAgent} className="w-full">
           <div className="mb-6">
@@ -305,16 +315,17 @@ const AgentsPage = () => {
                 
                 {!user ? (
                   <div className="text-center py-6">
-                    <p className="text-sm text-[#57534E] mb-3">Sign in to save your work</p>
-                    <Button
-                      onClick={() => setShowAuth(true)}
-                      variant="outline"
-                      size="sm"
-                      className="w-full"
-                      data-testid="agent-sidebar-signin-btn"
-                    >
-                      Sign In
-                    </Button>
+                    <p className="text-sm text-[#5C6D5E] mb-3">Sign in to save your work</p>
+                    <Link to="/admin">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="w-full"
+                        data-testid="agent-sidebar-signin-btn"
+                      >
+                        Go to Dashboard
+                      </Button>
+                    </Link>
                   </div>
                 ) : (
                   <ScrollArea className="h-[400px]">
@@ -468,16 +479,16 @@ const AgentsPage = () => {
                   </form>
                   
                   {!user && (
-                    <p className="text-xs text-[#57534E] text-center mt-3">
-                      <button 
-                        onClick={() => setShowAuth(true)} 
+                    <p className="text-xs text-[#5C6D5E] text-center mt-3">
+                      <Link 
+                        to="/admin"
                         className="hover:underline"
                         style={{ color: agentColor }}
                         data-testid="agent-inline-signin-btn"
                       >
                         Sign in
-                      </button>
-                      {" "}to save your work and get 15% off
+                      </Link>
+                      {" "}to save your work
                     </p>
                   )}
                 </div>
@@ -486,8 +497,6 @@ const AgentsPage = () => {
           </div>
         </Tabs>
       </div>
-
-      <AuthModal isOpen={showAuth} onClose={() => setShowAuth(false)} />
     </div>
   );
 };

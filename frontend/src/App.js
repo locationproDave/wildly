@@ -3,26 +3,38 @@ import "@/App.css";
 import { BrowserRouter, Routes, Route, Navigate, useNavigate, useLocation } from "react-router-dom";
 import axios from "axios";
 import { Toaster, toast } from "sonner";
-import LandingPage from "./pages/LandingPage";
-import ResearchPage from "./pages/ResearchPage";
-import PipelinePage from "./pages/PipelinePage";
-import HistoryPage from "./pages/HistoryPage";
+
+// Pages
+import HomePage from "./pages/HomePage";
+import ProductsPage from "./pages/ProductsPage";
+import ProductDetailPage from "./pages/ProductDetailPage";
+import CartPage from "./pages/CartPage";
+import CheckoutSuccessPage from "./pages/CheckoutSuccessPage";
+import AccountPage from "./pages/AccountPage";
+import AdminDashboard from "./pages/AdminDashboard";
 import AgentsPage from "./pages/AgentsPage";
-import AuthModal from "./components/AuthModal";
+
+// Components
 import Navbar from "./components/Navbar";
+import Footer from "./components/Footer";
+import AuthModal from "./components/AuthModal";
+import CartDrawer from "./components/CartDrawer";
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
 
 // Auth Context
 const AuthContext = createContext(null);
-
 export const useAuth = () => useContext(AuthContext);
+
+// Cart Context
+const CartContext = createContext(null);
+export const useCart = () => useContext(CartContext);
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [token, setToken] = useState(localStorage.getItem("petpulse_token"));
+  const [token, setToken] = useState(localStorage.getItem("calmtails_token"));
 
   useEffect(() => {
     if (token) {
@@ -39,7 +51,7 @@ export const AuthProvider = ({ children }) => {
       });
       setUser(response.data);
     } catch (error) {
-      localStorage.removeItem("petpulse_token");
+      localStorage.removeItem("calmtails_token");
       setToken(null);
       setUser(null);
     } finally {
@@ -50,7 +62,7 @@ export const AuthProvider = ({ children }) => {
   const login = async (email, password) => {
     const response = await axios.post(`${API}/auth/login`, { email, password });
     const { token: newToken, user: userData } = response.data;
-    localStorage.setItem("petpulse_token", newToken);
+    localStorage.setItem("calmtails_token", newToken);
     setToken(newToken);
     setUser(userData);
     return userData;
@@ -59,14 +71,14 @@ export const AuthProvider = ({ children }) => {
   const register = async (email, password, name) => {
     const response = await axios.post(`${API}/auth/register`, { email, password, name });
     const { token: newToken, user: userData, message } = response.data;
-    localStorage.setItem("petpulse_token", newToken);
+    localStorage.setItem("calmtails_token", newToken);
     setToken(newToken);
     setUser(userData);
     return { user: userData, message };
   };
 
   const logout = () => {
-    localStorage.removeItem("petpulse_token");
+    localStorage.removeItem("calmtails_token");
     setToken(null);
     setUser(null);
   };
@@ -78,15 +90,107 @@ export const AuthProvider = ({ children }) => {
   );
 };
 
+export const CartProvider = ({ children }) => {
+  const [cart, setCart] = useState({ items: [], subtotal: 0, item_count: 0 });
+  const [cartOpen, setCartOpen] = useState(false);
+  const [sessionId] = useState(() => {
+    const existing = localStorage.getItem("calmtails_cart_session");
+    if (existing) return existing;
+    const newId = `cart_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    localStorage.setItem("calmtails_cart_session", newId);
+    return newId;
+  });
+
+  useEffect(() => {
+    fetchCart();
+  }, [sessionId]);
+
+  const fetchCart = async () => {
+    try {
+      const response = await axios.get(`${API}/cart/${sessionId}`);
+      setCart(response.data);
+    } catch (error) {
+      console.error("Error fetching cart:", error);
+    }
+  };
+
+  const addToCart = async (productId, quantity = 1) => {
+    try {
+      const response = await axios.post(`${API}/cart/${sessionId}/add`, {
+        product_id: productId,
+        quantity
+      });
+      setCart(response.data);
+      setCartOpen(true);
+      toast.success("Added to cart!");
+      return response.data;
+    } catch (error) {
+      toast.error("Failed to add to cart");
+      throw error;
+    }
+  };
+
+  const updateQuantity = async (productId, quantity) => {
+    try {
+      const response = await axios.post(`${API}/cart/${sessionId}/update`, {
+        product_id: productId,
+        quantity
+      });
+      setCart(response.data);
+      return response.data;
+    } catch (error) {
+      toast.error("Failed to update cart");
+      throw error;
+    }
+  };
+
+  const removeFromCart = async (productId) => {
+    try {
+      const response = await axios.delete(`${API}/cart/${sessionId}/item/${productId}`);
+      setCart(response.data);
+      toast.success("Removed from cart");
+      return response.data;
+    } catch (error) {
+      toast.error("Failed to remove item");
+      throw error;
+    }
+  };
+
+  const clearCart = async () => {
+    try {
+      await axios.delete(`${API}/cart/${sessionId}`);
+      setCart({ items: [], subtotal: 0, item_count: 0 });
+    } catch (error) {
+      console.error("Error clearing cart:", error);
+    }
+  };
+
+  return (
+    <CartContext.Provider value={{
+      cart,
+      cartOpen,
+      setCartOpen,
+      sessionId,
+      addToCart,
+      updateQuantity,
+      removeFromCart,
+      clearCart,
+      fetchCart
+    }}>
+      {children}
+    </CartContext.Provider>
+  );
+};
+
 // Protected Route wrapper
-const ProtectedRoute = ({ children }) => {
+const ProtectedRoute = ({ children, adminOnly = false }) => {
   const { user, loading } = useAuth();
   const [showAuth, setShowAuth] = useState(false);
   
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#FDFCF8]">
-        <div className="animate-pulse-soft text-[#2F3E32] text-lg">Loading...</div>
+      <div className="min-h-screen flex items-center justify-center bg-[#FDF8F3]">
+        <div className="animate-pulse text-[#2D4A3E] text-lg">Loading...</div>
       </div>
     );
   }
@@ -94,17 +198,17 @@ const ProtectedRoute = ({ children }) => {
   if (!user) {
     return (
       <>
-        <div className="min-h-screen flex flex-col items-center justify-center bg-[#FDFCF8] p-8">
-          <h2 className="text-3xl font-bold text-[#2F3E32] mb-4 font-['Fraunces']">Sign in to continue</h2>
-          <p className="text-[#57534E] mb-6 text-center max-w-md">
-            Create a free account to save your product research, track your pipeline, and unlock exclusive features.
+        <div className="min-h-screen flex flex-col items-center justify-center bg-[#FDF8F3] p-8">
+          <h2 className="text-3xl font-bold text-[#2D4A3E] mb-4 font-['Fraunces']">Sign in to continue</h2>
+          <p className="text-[#5C6D5E] mb-6 text-center max-w-md">
+            Create a free account to access this feature and get 15% off your first order.
           </p>
           <button
             onClick={() => setShowAuth(true)}
-            className="bg-[#2F3E32] text-white px-8 py-4 rounded-full font-medium hover:bg-[#253229] transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5"
+            className="bg-[#2D4A3E] text-white px-8 py-4 rounded-full font-medium hover:bg-[#1F342B] transition-all"
             data-testid="signin-cta-btn"
           >
-            Get Started Free
+            Sign In or Create Account
           </button>
         </div>
         <AuthModal isOpen={showAuth} onClose={() => setShowAuth(false)} />
@@ -112,70 +216,75 @@ const ProtectedRoute = ({ children }) => {
     );
   }
   
+  if (adminOnly && !user.is_admin) {
+    return <Navigate to="/" replace />;
+  }
+  
   return children;
 };
 
 // Layout with Navbar
-const AppLayout = ({ children, showNavbar = true }) => {
+const AppLayout = ({ children }) => {
   const [showAuth, setShowAuth] = useState(false);
+  const { cartOpen, setCartOpen, cart } = useCart();
   
   return (
-    <div className="min-h-screen bg-[#FDFCF8]">
-      {showNavbar && <Navbar onAuthClick={() => setShowAuth(true)} />}
-      {children}
+    <div className="min-h-screen bg-[#FDF8F3] flex flex-col">
+      <Navbar onAuthClick={() => setShowAuth(true)} />
+      <main className="flex-1">{children}</main>
+      <Footer />
       <AuthModal isOpen={showAuth} onClose={() => setShowAuth(false)} />
+      <CartDrawer isOpen={cartOpen} onClose={() => setCartOpen(false)} />
     </div>
   );
 };
 
 function App() {
+  // Seed products on first load
+  useEffect(() => {
+    axios.post(`${API}/seed-products`).catch(() => {});
+  }, []);
+
   return (
     <AuthProvider>
-      <BrowserRouter>
-        <Toaster 
-          position="top-right"
-          toastOptions={{
-            style: {
-              background: '#F2F0E9',
-              color: '#2F3E32',
-              border: '1px solid #E8E6DE',
-              fontFamily: 'Manrope, sans-serif'
-            }
-          }}
-        />
-        <Routes>
-          <Route path="/" element={
-            <AppLayout>
-              <LandingPage />
-            </AppLayout>
-          } />
-          <Route path="/research" element={
-            <AppLayout>
-              <ResearchPage />
-            </AppLayout>
-          } />
-          <Route path="/agents" element={
-            <AppLayout>
-              <AgentsPage />
-            </AppLayout>
-          } />
-          <Route path="/pipeline" element={
-            <AppLayout>
-              <ProtectedRoute>
-                <PipelinePage />
-              </ProtectedRoute>
-            </AppLayout>
-          } />
-          <Route path="/history" element={
-            <AppLayout>
-              <ProtectedRoute>
-                <HistoryPage />
-              </ProtectedRoute>
-            </AppLayout>
-          } />
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
-      </BrowserRouter>
+      <CartProvider>
+        <BrowserRouter>
+          <Toaster 
+            position="top-right"
+            toastOptions={{
+              style: {
+                background: '#FDF8F3',
+                color: '#2D4A3E',
+                border: '1px solid #E8DFD5',
+                fontFamily: 'Nunito, sans-serif'
+              }
+            }}
+          />
+          <Routes>
+            <Route path="/" element={<AppLayout><HomePage /></AppLayout>} />
+            <Route path="/products" element={<AppLayout><ProductsPage /></AppLayout>} />
+            <Route path="/products/:slug" element={<AppLayout><ProductDetailPage /></AppLayout>} />
+            <Route path="/cart" element={<AppLayout><CartPage /></AppLayout>} />
+            <Route path="/order-confirmation" element={<AppLayout><CheckoutSuccessPage /></AppLayout>} />
+            <Route path="/account" element={
+              <AppLayout>
+                <ProtectedRoute><AccountPage /></ProtectedRoute>
+              </AppLayout>
+            } />
+            <Route path="/admin" element={
+              <AppLayout>
+                <ProtectedRoute adminOnly><AdminDashboard /></ProtectedRoute>
+              </AppLayout>
+            } />
+            <Route path="/admin/agents" element={
+              <AppLayout>
+                <ProtectedRoute adminOnly><AgentsPage /></ProtectedRoute>
+              </AppLayout>
+            } />
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </BrowserRouter>
+      </CartProvider>
     </AuthProvider>
   );
 }

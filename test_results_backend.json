@@ -1,114 +1,210 @@
 {
   "test_run_summary": {
-    "total_tests": 13,
-    "passed_tests": 6,
-    "success_rate": "46.2%",
-    "timestamp": "2026-03-05T22:04:44.127324"
+    "total_tests": 25,
+    "passed_tests": 21,
+    "success_rate": "84.0%",
+    "timestamp": "2026-03-05T22:42:07.134689"
   },
   "detailed_results": [
     {
       "test_name": "API Root",
       "passed": true,
-      "response_time": 0.24801182746887207,
+      "response_time": 0.3379693031311035,
       "status_code": 200,
-      "message": "Response: {\n  \"message\": \"PetPulse Sourcing Agent API\",\n  \"status\": \"healthy\"\n}...",
-      "timestamp": "2026-03-05T21:59:16.173343"
+      "message": "Response preview: {'message': 'CalmTails Pet Wellness Store API', 'status': 'healthy'}...",
+      "timestamp": "2026-03-05T22:41:00.214494"
     },
     {
       "test_name": "Health Check",
       "passed": true,
-      "response_time": 0.18211102485656738,
+      "response_time": 0.14316987991333008,
       "status_code": 200,
-      "message": "Response: {\n  \"status\": \"healthy\",\n  \"service\": \"PetPulse Sourcing Agent\"\n}...",
-      "timestamp": "2026-03-05T21:59:16.356034"
+      "message": "Response preview: {'status': 'healthy', 'service': 'CalmTails Pet Wellness'}...",
+      "timestamp": "2026-03-05T22:41:00.358132"
     },
     {
-      "test_name": "Get Agents List",
+      "test_name": "Seed Products",
       "passed": true,
-      "response_time": 0.1405620574951172,
+      "response_time": 0.14616060256958008,
       "status_code": 200,
-      "message": "Response: {\n  \"agents\": {\n    \"product_sourcing\": {\n      \"name\": \"Product Sourcing\",\n      \"description\": \"Fi...",
-      "timestamp": "2026-03-05T21:59:16.497269"
+      "message": "Response preview: {'message': 'Products already seeded (8 products)'}...",
+      "timestamp": "2026-03-05T22:41:00.504747"
     },
     {
-      "test_name": "User Login",
+      "test_name": "Get All Products",
       "passed": true,
-      "response_time": 0.33637285232543945,
+      "response_time": 0.1341102123260498,
       "status_code": 200,
-      "message": "Response: {\n  \"token\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiNDVkZjc4OTQtYTI4Yi00YmExLTg0NGItY...",
-      "timestamp": "2026-03-05T21:59:16.834169"
+      "message": "Response preview: [{'id': '00938ca1-0dca-4672-a703-e03c38e22b53', 'name': 'Calming Dog Bed - Deep Pressure Comfort', '...",
+      "timestamp": "2026-03-05T22:41:00.639449"
+    },
+    {
+      "test_name": "Get Featured Products",
+      "passed": true,
+      "response_time": 0.09848928451538086,
+      "status_code": 200,
+      "message": "Response preview: [{'id': '276e1895-5d10-4c52-bd81-4ad674370643', 'name': 'Premium CBD Oil for Pets', 'slug': 'premium...",
+      "timestamp": "2026-03-05T22:41:00.738489"
+    },
+    {
+      "test_name": "Get Categories",
+      "passed": true,
+      "response_time": 0.1232304573059082,
+      "status_code": 200,
+      "message": "Response preview: ['Beds & Blankets', 'Calming Aids', 'Supplements']...",
+      "timestamp": "2026-03-05T22:41:00.862161"
+    },
+    {
+      "test_name": "Filter Products by Pet Type (dogs)",
+      "passed": true,
+      "response_time": 0.1452479362487793,
+      "status_code": 200,
+      "message": "Response preview: [{'id': '00938ca1-0dca-4672-a703-e03c38e22b53', 'name': 'Calming Dog Bed - Deep Pressure Comfort', '...",
+      "timestamp": "2026-03-05T22:41:01.007971"
+    },
+    {
+      "test_name": "Filter Products by Pet Type (cats)",
+      "passed": true,
+      "response_time": 0.10920143127441406,
+      "status_code": 200,
+      "message": "Response preview: [{'id': '892f4b73-4388-4081-bd1d-6894a5873a51', 'name': 'Weighted Calming Blanket for Pets', 'slug':...",
+      "timestamp": "2026-03-05T22:41:01.117721"
+    },
+    {
+      "test_name": "Get Products for Slug Test",
+      "passed": true,
+      "response_time": 0.11925148963928223,
+      "status_code": 200,
+      "message": "Response preview: [{'id': '00938ca1-0dca-4672-a703-e03c38e22b53', 'name': 'Calming Dog Bed - Deep Pressure Comfort', '...",
+      "timestamp": "2026-03-05T22:41:01.237507"
+    },
+    {
+      "test_name": "Get Product by Slug (calming-dog-bed)",
+      "passed": true,
+      "response_time": 0.1761002540588379,
+      "status_code": 200,
+      "message": "Response preview: {'id': '00938ca1-0dca-4672-a703-e03c38e22b53', 'name': 'Calming Dog Bed - Deep Pressure Comfort', 's...",
+      "timestamp": "2026-03-05T22:41:01.414052"
+    },
+    {
+      "test_name": "User Registration",
+      "passed": true,
+      "response_time": 0.3369312286376953,
+      "status_code": 200,
+      "message": "Response preview: {'token': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiZTRkZGIwZDgtZGNhYi00YjQxLTg3OWMtZTQ2...",
+      "timestamp": "2026-03-05T22:41:01.751469"
     },
     {
       "test_name": "Get Current User (/auth/me)",
       "passed": true,
-      "response_time": 0.15732836723327637,
+      "response_time": 0.11279463768005371,
       "status_code": 200,
-      "message": "Response: {\n  \"id\": \"45df7894-a28b-4ba1-844b-a5a1fe22f404\",\n  \"email\": \"demo@petpulse.com\",\n  \"name\": \"Demo Us...",
-      "timestamp": "2026-03-05T21:59:16.992153"
+      "message": "Response preview: {'id': 'e4ddb0d8-dcab-4b41-879c-e46fb6dd5cc6', 'email': 'test_user_1772750461@calmtails.com', 'name'...",
+      "timestamp": "2026-03-05T22:41:01.864832"
     },
     {
-      "test_name": "Send Chat Message",
+      "test_name": "Get Empty Cart",
       "passed": false,
-      "response_time": 60.09441614151001,
-      "status_code": 502,
-      "message": "Response: {\n  \"text\": \"The preview environment is not responding. It may be starting up.\\n\"\n}...",
-      "timestamp": "2026-03-05T22:00:17.087187"
+      "response_time": 0.10645079612731934,
+      "status_code": 500,
+      "message": "Response preview: {'text': 'Internal Server Error'}...",
+      "timestamp": "2026-03-05T22:41:01.971749"
     },
     {
-      "test_name": "Agent Chat - Product Sourcing",
-      "passed": false,
-      "response_time": 60.23648428916931,
-      "status_code": 502,
-      "message": "Response: {\n  \"text\": \"The preview environment is not responding. It may be starting up.\\n\"\n}...",
-      "timestamp": "2026-03-05T22:01:17.324378"
-    },
-    {
-      "test_name": "Get Search History",
-      "passed": false,
-      "response_time": 30.127944946289062,
-      "status_code": 0,
-      "message": "Request timeout",
-      "timestamp": "2026-03-05T22:01:47.453753"
-    },
-    {
-      "test_name": "Get User Statistics",
-      "passed": false,
-      "response_time": 30.125986099243164,
-      "status_code": 0,
-      "message": "Request timeout",
-      "timestamp": "2026-03-05T22:02:17.579780"
-    },
-    {
-      "test_name": "Get Chat Sessions",
-      "passed": false,
-      "response_time": 30.13080859184265,
-      "status_code": 0,
-      "message": "Request timeout",
-      "timestamp": "2026-03-05T22:02:47.710632"
-    },
-    {
-      "test_name": "Get Agent Sessions",
+      "test_name": "Add Product to Cart",
       "passed": true,
-      "response_time": 26.150460720062256,
+      "response_time": 0.13364863395690918,
       "status_code": 200,
-      "message": "Response: []...",
-      "timestamp": "2026-03-05T22:03:13.861164"
+      "message": "Response preview: {'id': '881acf0f-3313-4115-8b20-2c3f4e017fdf', 'session_id': 'test_cart_1772750459', 'items': [{'pro...",
+      "timestamp": "2026-03-05T22:41:02.105861"
     },
     {
-      "test_name": "Access Protected Route Without Token",
-      "passed": false,
-      "response_time": 30.096158027648926,
-      "status_code": 0,
-      "message": "Request timeout",
-      "timestamp": "2026-03-05T22:03:43.957915"
+      "test_name": "Update Cart Item Quantity",
+      "passed": true,
+      "response_time": 0.0982353687286377,
+      "status_code": 200,
+      "message": "Response preview: {'id': '881acf0f-3313-4115-8b20-2c3f4e017fdf', 'session_id': 'test_cart_1772750459', 'items': [{'pro...",
+      "timestamp": "2026-03-05T22:41:02.204571"
     },
     {
-      "test_name": "User Registration",
+      "test_name": "Remove Item from Cart",
+      "passed": true,
+      "response_time": 0.12129926681518555,
+      "status_code": 200,
+      "message": "Response preview: {'id': '881acf0f-3313-4115-8b20-2c3f4e017fdf', 'session_id': 'test_cart_1772750459', 'items': [], 'c...",
+      "timestamp": "2026-03-05T22:41:02.326386"
+    },
+    {
+      "test_name": "Re-add Product for Checkout Test",
+      "passed": true,
+      "response_time": 0.11098527908325195,
+      "status_code": 200,
+      "message": "Response preview: {'id': '881acf0f-3313-4115-8b20-2c3f4e017fdf', 'session_id': 'test_cart_1772750459', 'items': [{'pro...",
+      "timestamp": "2026-03-05T22:41:02.437810"
+    },
+    {
+      "test_name": "Create Checkout Session",
+      "passed": true,
+      "response_time": 0.6000440120697021,
+      "status_code": 200,
+      "message": "Response preview: {'checkout_url': 'https://checkout.stripe.com/c/pay/cs_test_a1sIw0uKi7zXybecv761cqUst1N4SPLdX7U2bOt8...",
+      "timestamp": "2026-03-05T22:41:03.038284"
+    },
+    {
+      "test_name": "Get Checkout Status",
+      "passed": true,
+      "response_time": 3.120344638824463,
+      "status_code": 200,
+      "message": "Response preview: {'status': 'open', 'payment_status': 'unpaid', 'amount_total': 10798, 'currency': 'usd'}...",
+      "timestamp": "2026-03-05T22:41:06.159247"
+    },
+    {
+      "test_name": "Get User Orders",
+      "passed": true,
+      "response_time": 0.16188502311706543,
+      "status_code": 200,
+      "message": "Response preview: [{'id': 'bad87611-7fc2-4a31-a323-9dfd1d744a40', 'order_number': 'CT-DED84B31', 'user_id': 'e4ddb0d8-...",
+      "timestamp": "2026-03-05T22:41:06.321757"
+    },
+    {
+      "test_name": "Admin Login",
+      "passed": true,
+      "response_time": 0.3294379711151123,
+      "status_code": 200,
+      "message": "Response preview: {'token': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiZWU5MDA4MGUtOTM1ZC00YzRmLTllNDctOTk3...",
+      "timestamp": "2026-03-05T22:41:06.651615"
+    },
+    {
+      "test_name": "Get Admin Stats",
       "passed": false,
-      "response_time": 60.16931748390198,
-      "status_code": 0,
-      "message": "Request timeout",
-      "timestamp": "2026-03-05T22:04:44.127285"
+      "response_time": 0.1310715675354004,
+      "status_code": 403,
+      "message": "Response preview: {'detail': 'Admin access required'}...",
+      "timestamp": "2026-03-05T22:41:06.783191"
+    },
+    {
+      "test_name": "Get All Orders (Admin)",
+      "passed": false,
+      "response_time": 0.10654950141906738,
+      "status_code": 403,
+      "message": "Response preview: {'detail': 'Admin access required'}...",
+      "timestamp": "2026-03-05T22:41:06.890204"
+    },
+    {
+      "test_name": "Get Agents List",
+      "passed": true,
+      "response_time": 0.1113746166229248,
+      "status_code": 200,
+      "message": "Response preview: {'agents': {'product_sourcing': {'name': 'Product Sourcing', 'description': 'Find winning pet wellne...",
+      "timestamp": "2026-03-05T22:41:07.002067"
+    },
+    {
+      "test_name": "Agent Chat - product_sourcing",
+      "passed": false,
+      "response_time": 60.131489276885986,
+      "status_code": 502,
+      "message": "Response preview: {'text': 'The preview environment is not responding. It may be starting up.\\n'}...",
+      "timestamp": "2026-03-05T22:42:07.134068"
     }
   ]
 }

@@ -1,0 +1,333 @@
+import React, { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
+import axios from "axios";
+import { useCart } from "../App";
+import { 
+  ArrowRight, 
+  Star, 
+  Truck, 
+  Shield, 
+  Heart,
+  Sparkles,
+  Dog,
+  Cat
+} from "lucide-react";
+import { Button } from "../components/ui/button";
+
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
+
+const HomePage = () => {
+  const [featuredProducts, setFeaturedProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const { addToCart } = useCart();
+
+  useEffect(() => {
+    fetchFeaturedProducts();
+  }, []);
+
+  const fetchFeaturedProducts = async () => {
+    try {
+      const response = await axios.get(`${BACKEND_URL}/api/products/featured`);
+      setFeaturedProducts(response.data);
+    } catch (error) {
+      console.error("Error fetching products:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const features = [
+    {
+      icon: <Truck className="w-6 h-6" />,
+      title: "Free Shipping Over $50",
+      description: "Fast delivery from US warehouses"
+    },
+    {
+      icon: <Shield className="w-6 h-6" />,
+      title: "30-Day Returns",
+      description: "Not satisfied? Full refund, no questions"
+    },
+    {
+      icon: <Heart className="w-6 h-6" />,
+      title: "Vet-Informed",
+      description: "Science-backed, never overpromising"
+    }
+  ];
+
+  const categories = [
+    { name: "Calming Beds", slug: "beds-blankets", icon: "🛏️", pet: "dog" },
+    { name: "Anxiety Supplements", slug: "supplements", icon: "💊", pet: "both" },
+    { name: "Cat Diffusers", slug: "calming-aids", icon: "🌸", pet: "cat" },
+    { name: "CBD Products", slug: "supplements", icon: "🌿", pet: "both" }
+  ];
+
+  return (
+    <div className="min-h-screen">
+      {/* Hero Section */}
+      <section className="relative bg-gradient-to-b from-[#E8DFD5] to-[#FDF8F3] overflow-hidden">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-20">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+            {/* Left Content */}
+            <div className="animate-fade-in-up">
+              <div className="inline-flex items-center gap-2 bg-[#6B8F71]/20 text-[#6B8F71] px-4 py-2 rounded-full text-sm font-medium mb-6">
+                <Sparkles className="w-4 h-4" />
+                <span>Premium Pet Wellness</span>
+              </div>
+              
+              <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight leading-tight text-[#2D4A3E] mb-6 font-['Fraunces']">
+                Calm begins
+                <br />
+                <span className="text-[#D4A574]">with care</span>
+              </h1>
+              
+              <p className="text-lg md:text-xl leading-relaxed text-[#5C6D5E] mb-8 max-w-lg">
+                Science-backed wellness products designed to help your furry family members 
+                feel safe, relaxed, and loved. Because they deserve the world.
+              </p>
+              
+              <div className="flex flex-col sm:flex-row gap-4">
+                <Link to="/products">
+                  <Button 
+                    className="bg-[#2D4A3E] hover:bg-[#1F342B] text-white px-8 py-6 rounded-full font-semibold text-lg inline-flex items-center gap-2"
+                    data-testid="hero-shop-btn"
+                  >
+                    Shop Now
+                    <ArrowRight className="w-5 h-5" />
+                  </Button>
+                </Link>
+                <Link to="/products?pet_type=cat">
+                  <Button 
+                    variant="outline"
+                    className="border-2 border-[#2D4A3E] text-[#2D4A3E] px-8 py-6 rounded-full font-semibold text-lg hover:bg-[#2D4A3E] hover:text-white"
+                    data-testid="hero-cats-btn"
+                  >
+                    <Cat className="w-5 h-5 mr-2" />
+                    For Cats
+                  </Button>
+                </Link>
+              </div>
+            </div>
+            
+            {/* Right Image */}
+            <div className="relative animate-fade-in stagger-2">
+              <div className="relative rounded-3xl overflow-hidden shadow-2xl">
+                <img
+                  src="https://images.unsplash.com/photo-1587300003388-59208cc962cb?w=800"
+                  alt="Happy relaxed dog"
+                  className="w-full h-[500px] object-cover"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-[#2D4A3E]/20 to-transparent"></div>
+              </div>
+              
+              {/* Floating Card */}
+              <div className="absolute -bottom-6 -left-6 bg-white rounded-2xl shadow-xl p-4 animate-fade-in-up stagger-4">
+                <div className="flex items-center gap-3">
+                  <div className="flex -space-x-1">
+                    {[...Array(5)].map((_, i) => (
+                      <Star key={i} className="w-5 h-5 fill-[#D4A574] text-[#D4A574]" />
+                    ))}
+                  </div>
+                  <div>
+                    <p className="font-semibold text-[#2D4A3E] text-sm">4.8/5 Rating</p>
+                    <p className="text-xs text-[#5C6D5E]">2,000+ Happy Pets</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Trust Badges */}
+      <section className="bg-[#2D4A3E] py-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {features.map((feature, index) => (
+              <div key={index} className="flex items-center gap-4 text-white">
+                <div className="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center">
+                  {feature.icon}
+                </div>
+                <div>
+                  <h3 className="font-semibold">{feature.title}</h3>
+                  <p className="text-white/70 text-sm">{feature.description}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Categories */}
+      <section className="py-20">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <h2 className="text-4xl font-bold text-[#2D4A3E] mb-4 font-['Fraunces']">
+              Shop by Category
+            </h2>
+            <p className="text-[#5C6D5E] max-w-xl mx-auto">
+              Find the perfect wellness solution for your pet's needs
+            </p>
+          </div>
+          
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+            {categories.map((category, index) => (
+              <Link
+                key={index}
+                to={`/products?category=${encodeURIComponent(category.slug)}`}
+                className="bg-white rounded-2xl p-6 text-center hover:shadow-lg transition-all group"
+                data-testid={`category-${index}`}
+              >
+                <div className="text-4xl mb-4 group-hover:scale-110 transition-transform">
+                  {category.icon}
+                </div>
+                <h3 className="font-semibold text-[#2D4A3E]">{category.name}</h3>
+                <div className="flex items-center justify-center gap-1 mt-2 text-sm text-[#5C6D5E]">
+                  {category.pet === "dog" && <Dog className="w-4 h-4" />}
+                  {category.pet === "cat" && <Cat className="w-4 h-4" />}
+                  {category.pet === "both" && (
+                    <>
+                      <Dog className="w-4 h-4" />
+                      <Cat className="w-4 h-4" />
+                    </>
+                  )}
+                </div>
+              </Link>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Featured Products */}
+      <section className="py-20 bg-[#E8DFD5]/30">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between mb-12">
+            <div>
+              <h2 className="text-4xl font-bold text-[#2D4A3E] mb-2 font-['Fraunces']">
+                Bestsellers
+              </h2>
+              <p className="text-[#5C6D5E]">
+                Loved by thousands of pet parents
+              </p>
+            </div>
+            <Link to="/products">
+              <Button variant="outline" className="rounded-full" data-testid="view-all-products">
+                View All
+                <ArrowRight className="w-4 h-4 ml-2" />
+              </Button>
+            </Link>
+          </div>
+          
+          {loading ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              {[...Array(4)].map((_, i) => (
+                <div key={i} className="bg-white rounded-2xl p-4 animate-pulse">
+                  <div className="bg-gray-200 h-64 rounded-xl mb-4"></div>
+                  <div className="bg-gray-200 h-4 rounded w-3/4 mb-2"></div>
+                  <div className="bg-gray-200 h-4 rounded w-1/2"></div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              {featuredProducts.slice(0, 4).map((product, index) => (
+                <div
+                  key={product.id}
+                  className="product-card animate-fade-in-up"
+                  style={{ animationDelay: `${index * 0.1}s` }}
+                  data-testid={`product-card-${product.slug}`}
+                >
+                  <Link to={`/products/${product.slug}`}>
+                    <div className="relative overflow-hidden">
+                      <img
+                        src={product.images?.[0] || "https://via.placeholder.com/400"}
+                        alt={product.name}
+                        className="product-image"
+                      />
+                      {product.compare_at_price && (
+                        <span className="absolute top-4 left-4 bg-[#C45C4A] text-white px-3 py-1 rounded-full text-xs font-semibold">
+                          Sale
+                        </span>
+                      )}
+                    </div>
+                  </Link>
+                  <div className="p-4">
+                    <div className="flex items-center gap-1 mb-2">
+                      {[...Array(5)].map((_, i) => (
+                        <Star
+                          key={i}
+                          className={`w-4 h-4 ${i < Math.floor(product.rating) ? 'fill-[#D4A574] text-[#D4A574]' : 'text-[#E8DFD5]'}`}
+                        />
+                      ))}
+                      <span className="text-xs text-[#5C6D5E] ml-1">({product.review_count})</span>
+                    </div>
+                    <Link to={`/products/${product.slug}`}>
+                      <h3 className="font-semibold text-[#2D4A3E] mb-2 line-clamp-2 hover:text-[#D4A574] transition-colors">
+                        {product.name}
+                      </h3>
+                    </Link>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <span className="text-lg font-bold text-[#2D4A3E]">
+                          ${product.price.toFixed(2)}
+                        </span>
+                        {product.compare_at_price && (
+                          <span className="text-sm text-[#5C6D5E] line-through">
+                            ${product.compare_at_price.toFixed(2)}
+                          </span>
+                        )}
+                      </div>
+                      <Button
+                        size="sm"
+                        className="bg-[#D4A574] hover:bg-[#C49564] text-[#2D4A3E] rounded-full"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          addToCart(product.id);
+                        }}
+                        data-testid={`add-to-cart-${product.slug}`}
+                      >
+                        Add
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </section>
+
+      {/* CTA Section */}
+      <section className="py-20">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="bg-[#2D4A3E] rounded-3xl p-12 text-center relative overflow-hidden">
+            <div className="absolute inset-0 opacity-10">
+              <Heart className="w-96 h-96 absolute -right-20 -bottom-20" />
+            </div>
+            <div className="relative z-10">
+              <h2 className="text-3xl md:text-4xl font-bold text-white mb-4 font-['Fraunces']">
+                Join the CalmTails Family
+              </h2>
+              <p className="text-white/80 text-lg mb-8 max-w-xl mx-auto">
+                Sign up for 15% off your first order, plus exclusive tips on keeping your 
+                furry friend happy and healthy.
+              </p>
+              <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                <Link to="/products">
+                  <Button
+                    className="bg-[#D4A574] hover:bg-[#C49564] text-[#2D4A3E] px-8 py-6 rounded-full font-semibold text-lg"
+                    data-testid="cta-shop-btn"
+                  >
+                    Start Shopping
+                    <ArrowRight className="w-5 h-5 ml-2" />
+                  </Button>
+                </Link>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+  );
+};
+
+export default HomePage;
