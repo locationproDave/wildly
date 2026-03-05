@@ -1,90 +1,105 @@
-# PetPulse Sourcing Agent - Product Requirements Document
+# CalmTails - Pet Wellness E-Commerce Platform
 
 ## Original Problem Statement
-Build a specialist product sourcing agent for a premium pet wellness dropshipping business. The app helps identify winning products that meet strict sourcing quality standards with AI-powered analysis using Claude Opus 4.6.
+Build a pet wellness e-commerce store (like Shopify) with:
+1. Customer-facing storefront - Product browsing, shopping cart, Stripe checkout
+2. Admin dashboard with 7 AI agents built-in to help business owners manage operations
 
 ## User Personas
-1. **Dropshipping Entrepreneurs** - Looking to source premium pet wellness products
-2. **Pet Product Store Owners** - Need verified supplier analysis and margin calculations
-3. **E-commerce Business Owners** - Seeking trending pet wellness items with good ROI
+1. **Pet Parents (Customers)** - Shopping for premium pet wellness products
+2. **Store Owners (Admins)** - Managing orders, products, and using AI agents for business operations
 
 ## Core Requirements (Static)
-- AI-powered product research with Claude Opus 4.6
-- Product evaluation scoring (7 criteria: demand signal, emotional hook, visual appeal, supplier reliability, margin math, return risk, repeat purchase potential)
-- Supplier verification from CJdropshipping, Zendrop, Spocket
-- Product recommendation pipeline with RECOMMEND/INVESTIGATE/SKIP verdicts
-- User authentication with signup discount codes (15% off first month)
-- Search history and saved product evaluations
+- E-commerce storefront with product catalog
+- Shopping cart with Stripe checkout
+- Customer accounts with order history
+- Admin dashboard with order management
+- 7 specialized AI agents for business operations
+- Pre-populated product catalog
 
 ## What's Been Implemented (March 5, 2026)
 
-### Backend (FastAPI + MongoDB)
-- [x] User authentication (JWT-based) with registration and login
-- [x] Discount code generation on signup (PETPULSEXXXXXXXX format)
-- [x] Claude Opus 4.6 integration via emergentintegrations library
-- [x] AI fallback system (Claude Opus → Claude Sonnet → GPT-5.2)
-- [x] Chat sessions with conversation history
-- [x] Product saving and management
-- [x] Search history tracking
-- [x] User statistics dashboard
-- [x] **Multi-Agent System** - 7 specialized AI agents:
-  - Product Sourcing Agent
-  - Supplier Due Diligence Agent
-  - Product Copywriter Agent
-  - SEO Content Strategist Agent
-  - Performance Marketing Agent
-  - Email Marketing Agent
-  - Customer Service Agent
+### E-Commerce Backend (FastAPI + MongoDB + Stripe)
+- [x] Product catalog with categories and filtering
+- [x] Shopping cart system with session-based storage
+- [x] Stripe checkout integration
+- [x] Order management system
+- [x] User authentication (JWT) with discount codes
+- [x] Admin routes for order management
+- [x] 8 pre-seeded pet wellness products
 
-### Frontend (React + Tailwind + Shadcn UI)
-- [x] Landing page with hero, stats, features sections
-- [x] Research page with AI chat interface
-- [x] **Agents page** with tabbed interface for all 7 agents
-- [x] Pipeline page for saved products (protected route)
-- [x] History page for search queries (protected route)
-- [x] Authentication modal with login/register toggle
-- [x] Responsive navigation with user menu
-- [x] Warm, friendly design ("Scientific Naturalist" theme)
+### Customer Storefront (React + Tailwind)
+- [x] Homepage with hero, categories, featured products
+- [x] Products page with search and filters (Dogs/Cats)
+- [x] Product detail pages with add to cart
+- [x] Cart drawer and cart page
+- [x] Stripe checkout flow
+- [x] Order confirmation page
+- [x] Account page with order history
+
+### Admin Dashboard
+- [x] Stats overview (revenue, orders, customers)
+- [x] Order pipeline (pending → processing → shipped)
+- [x] Order status management
+- [x] Access to AI Agents
+
+### AI Agents (7 Specialized)
+- [x] Product Sourcing Agent - Find winning products
+- [x] Due Diligence Agent - Verify suppliers
+- [x] Product Copywriter - Generate Shopify listings
+- [x] SEO Blog Writer - Create ranking content
+- [x] Performance Marketing - Ads & social content
+- [x] Email Marketing - Klaviyo flows
+- [x] Customer Service - Support responses
+
+### Pre-seeded Products
+1. Calming Dog Bed ($49.99)
+2. Calming Soft Chews for Dogs ($29.99)
+3. Weighted Calming Blanket ($59.99)
+4. Cat Calming Diffuser ($34.99)
+5. Premium CBD Oil for Pets ($44.99)
+6. Orthopedic Memory Foam Bed ($79.99)
+7. Calming Collar for Dogs ($24.99)
+8. Anxiety Relief Chews for Cats ($32.99)
 
 ### Design System
-- Primary: Deep Forest Green (#2F3E32)
-- Secondary: Terracotta (#D4A373)
-- Background: Warm Cream (#FDFCF8)
-- Typography: Fraunces (headings) + Manrope (body)
+- Brand: CalmTails 🐾
+- Primary: Forest Green (#2D4A3E)
+- Accent: Terracotta (#D4A574)
+- Background: Warm Cream (#FDF8F3)
+- Typography: Fraunces (headings) + Nunito (body)
 
-## Known Issues
-- **EMERGENT LLM Key Budget**: May need balance top-up for continued AI usage
-- Error message added to guide users to Profile → Universal Key → Add Balance
+## Admin Credentials
+- Email: admin@calmtails.com
+- Password: admin123
+
+## Known Limitations
+- AI agents require EMERGENT LLM key balance
+- Order fulfillment is mocked (no real supplier API integration)
 
 ## Prioritized Backlog
 
-### P0 (Critical)
-- None currently
-
 ### P1 (High Priority)
-- [x] ~~**Supplier Due Diligence Agent**~~ ✅ Built & embedded
-- [x] ~~**Product Copywriter Agent**~~ ✅ Built & embedded
-- [x] ~~**SEO Content Strategist Agent**~~ ✅ Built & embedded
-- [x] ~~**Performance Marketing Agent**~~ ✅ Built & embedded
-- [x] ~~**Email Marketing Agent**~~ ✅ Built & embedded
-- [x] ~~**Customer Service Agent**~~ ✅ Built & embedded
-- [ ] Web scraping integration for real-time supplier verification
-- [ ] Product image previews in pipeline
-- [ ] Export products to CSV
+- [ ] Real supplier API integration (CJdropshipping, Zendrop)
+- [ ] Order tracking with 17Track/AfterShip
+- [ ] Customer reviews system
+- [ ] Email notifications (order confirmation, shipping)
 
 ### P2 (Medium Priority)
-- [ ] Email notifications for saved products
-- [ ] Team collaboration features
-- [ ] Supplier comparison tool
+- [ ] Discount code application at checkout
+- [ ] Inventory management
+- [ ] Customer support chat
+- [ ] Blog/content pages
 
-## Next Tasks
-1. Add balance to Universal Key for continued AI functionality
-2. Implement real-time supplier verification from CJdropshipping/Zendrop APIs
-3. Add product image previews and supplier links
-4. Consider Redis caching for improved performance
+### P3 (Nice to Have)
+- [ ] Wishlist functionality
+- [ ] Product recommendations
+- [ ] Multi-currency support
+- [ ] Mobile app
 
 ## Tech Stack
 - **Frontend**: React 19, Tailwind CSS, Shadcn UI, React Router
 - **Backend**: FastAPI, Motor (async MongoDB), JWT auth
+- **Payments**: Stripe via emergentintegrations
 - **AI**: Claude Opus 4.6 via emergentintegrations
 - **Database**: MongoDB

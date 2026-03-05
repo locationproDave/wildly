@@ -384,10 +384,13 @@ async def get_cart(session_id: str):
             "id": str(uuid.uuid4()),
             "session_id": session_id,
             "items": [],
+            "subtotal": 0.0,
+            "item_count": 0,
             "created_at": datetime.now(timezone.utc).isoformat(),
             "updated_at": datetime.now(timezone.utc).isoformat()
         }
-        await db.carts.insert_one(cart)
+        await db.carts.insert_one({**cart})
+        return cart
     
     # Populate product details
     populated_items = []
@@ -400,8 +403,8 @@ async def get_cart(session_id: str):
             })
     
     cart["items"] = populated_items
-    cart["subtotal"] = sum(item["product"]["price"] * item["quantity"] for item in populated_items)
-    cart["item_count"] = sum(item["quantity"] for item in populated_items)
+    cart["subtotal"] = sum(item["product"]["price"] * item["quantity"] for item in populated_items) if populated_items else 0.0
+    cart["item_count"] = sum(item["quantity"] for item in populated_items) if populated_items else 0
     
     return cart
 
