@@ -10,7 +10,8 @@ import {
   X,
   LogOut,
   User,
-  Gift
+  Gift,
+  Bot
 } from "lucide-react";
 import { Button } from "./ui/button";
 import {
@@ -30,6 +31,7 @@ const Navbar = ({ onAuthClick }) => {
 
   const navLinks = [
     { path: "/research", label: "Research", icon: <Search className="w-4 h-4" /> },
+    { path: "/agents", label: "Agents", icon: <Bot className="w-4 h-4" /> },
     { path: "/pipeline", label: "Pipeline", icon: <Package className="w-4 h-4" />, protected: true },
     { path: "/history", label: "History", icon: <History className="w-4 h-4" />, protected: true },
   ];

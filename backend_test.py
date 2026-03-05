@@ -265,6 +265,92 @@ class PetPulseAPITester:
             print(f"   ❌ Sessions retrieval failed - {response}")
             return False
 
+    def test_agents_api(self):
+        """Test agents list API - should return all 7 agents"""
+        print("\n=== AGENTS API TEST ===")
+        
+        success, response, response_time = self.run_test(
+            "Get Agents List",
+            "GET",
+            "agents",
+            200,
+            timeout=30
+        )
+        
+        if success and 'agents' in response:
+            agents = response['agents']
+            expected_agents = [
+                "product_sourcing", "due_diligence", "copywriter",
+                "seo_content", "performance_marketing", "email_marketing", "customer_service"
+            ]
+            
+            all_present = all(agent in agents for agent in expected_agents)
+            agent_count = len(agents)
+            
+            print(f"   📊 Found {agent_count} agents")
+            print(f"   🤖 Agent types: {list(agents.keys())}")
+            
+            if all_present and agent_count == 7:
+                print(f"   ✅ All 7 expected agents present")
+                return True
+            else:
+                missing = [a for a in expected_agents if a not in agents]
+                print(f"   ❌ Missing agents: {missing}")
+                return False
+        else:
+            print(f"   ❌ Agents API failed - {response}")
+            return False
+
+    def test_agent_chat_api(self):
+        """Test agent-specific chat API"""
+        print("\n=== AGENT CHAT API TEST ===")
+        
+        # Test product sourcing agent
+        agent_chat_data = {
+            "query": "Find premium dog calming products under $50",
+            "agent_type": "product_sourcing",
+            "session_id": str(uuid.uuid4())
+        }
+        
+        print("   🤖 Testing Product Sourcing Agent (this may take 30-60 seconds)...")
+        success, response, response_time = self.run_test(
+            "Agent Chat - Product Sourcing",
+            "POST",
+            "agents/chat",
+            200,
+            agent_chat_data,
+            timeout=90
+        )
+        
+        if success and 'response' in response:
+            ai_response = response['response']
+            agent_type = response.get('agent_type', 'unknown')
+            print(f"   ✅ Agent {agent_type} responded ({len(ai_response)} chars)")
+            print(f"   📝 Preview: {ai_response[:150]}...")
+            return True
+        else:
+            print(f"   ❌ Agent chat failed - {response}")
+            return False
+
+    def test_agent_sessions_api(self):
+        """Test agent sessions API"""
+        print("\n=== AGENT SESSIONS API TEST ===")
+        
+        success, response, response_time = self.run_test(
+            "Get Agent Sessions",
+            "GET",
+            "agents/sessions", 
+            200,
+            timeout=30
+        )
+        
+        if success and isinstance(response, list):
+            print(f"   ✅ Agent sessions retrieved - {len(response)} sessions")
+            return True
+        else:
+            print(f"   ❌ Agent sessions retrieval failed - {response}")
+            return False
+
     def test_unauthorized_access(self):
         """Test that protected routes require authentication"""
         print("\n=== UNAUTHORIZED ACCESS TEST ===")
@@ -320,6 +406,10 @@ def main():
     # Health checks
     tester.test_health_check()
     
+    # Test agents API first
+    if tester.test_agents_api():
+        tests_passed.append("agents_api")
+    
     # Authentication flow
     login_success = tester.test_user_login()
     if login_success:
@@ -333,6 +423,10 @@ def main():
         if tester.test_chat_functionality():
             tests_passed.append("ai_chat")
         
+        # Test agent-specific chat
+        if tester.test_agent_chat_api():
+            tests_passed.append("agent_chat")
+        
         # Test data endpoints
         if tester.test_search_history():
             tests_passed.append("search_history")
@@ -342,6 +436,9 @@ def main():
             
         if tester.test_chat_sessions():
             tests_passed.append("chat_sessions")
+            
+        if tester.test_agent_sessions_api():
+            tests_passed.append("agent_sessions")
     
     # Test security
     if tester.test_unauthorized_access():

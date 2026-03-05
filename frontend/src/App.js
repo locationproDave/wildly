@@ -7,6 +7,7 @@ import LandingPage from "./pages/LandingPage";
 import ResearchPage from "./pages/ResearchPage";
 import PipelinePage from "./pages/PipelinePage";
 import HistoryPage from "./pages/HistoryPage";
+import AgentsPage from "./pages/AgentsPage";
 import AuthModal from "./components/AuthModal";
 import Navbar from "./components/Navbar";
 
@@ -151,6 +152,11 @@ function App() {
           <Route path="/research" element={
             <AppLayout>
               <ResearchPage />
+            </AppLayout>
+          } />
+          <Route path="/agents" element={
+            <AppLayout>
+              <AgentsPage />
             </AppLayout>
           } />
           <Route path="/pipeline" element={

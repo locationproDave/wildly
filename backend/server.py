@@ -7,12 +7,13 @@ import os
 import logging
 from pathlib import Path
 from pydantic import BaseModel, Field, ConfigDict, EmailStr
-from typing import List, Optional, Dict, Any
+from typing import List, Optional, Dict, Any, Literal
 import uuid
 from datetime import datetime, timezone, timedelta
 import jwt
 import bcrypt
 from emergentintegrations.llm.chat import LlmChat, UserMessage
+from agents import AGENT_PROMPTS, AGENT_METADATA
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
@@ -82,6 +83,11 @@ class ProductEvaluation(BaseModel):
 
 class SearchQuery(BaseModel):
     query: str
+    session_id: Optional[str] = None
+
+class AgentQuery(BaseModel):
+    query: str
+    agent_type: Literal["product_sourcing", "due_diligence", "copywriter", "seo_content", "performance_marketing", "email_marketing", "customer_service"]
     session_id: Optional[str] = None
 
 class SearchHistory(BaseModel):
@@ -265,6 +271,62 @@ async def get_ai_response(query: str, session_id: str, chat_history: List[Dict[s
     
     raise HTTPException(status_code=503, detail=error_msg)
 
+async def get_agent_response(query: str, agent_type: str, session_id: str, chat_history: List[Dict[str, str]] = None) -> str:
+    """Get response from specific agent with Claude Opus 4.6"""
+    
+    system_prompt = AGENT_PROMPTS.get(agent_type, AGENT_PROMPTS["product_sourcing"])
+    
+    models = [
+        ("anthropic", "claude-opus-4-6"),
+        ("anthropic", "claude-sonnet-4-5-20250929"),
+        ("openai", "gpt-5.2"),
+    ]
+    
+    last_error = None
+    
+    for provider, model in models:
+        try:
+            chat = LlmChat(
+                api_key=EMERGENT_LLM_KEY,
+                session_id=f"{agent_type}_{session_id}",
+                system_message=system_prompt
+            )
+            chat.with_model(provider, model)
+            
+            context = ""
+            if chat_history:
+                for msg in chat_history[-6:]:
+                    role = "User" if msg.get("role") == "user" else "Assistant"
+                    context += f"{role}: {msg.get('content', '')}\n\n"
+            
+            full_query = f"{context}User: {query}" if context else query
+            user_message = UserMessage(text=full_query)
+            
+            try:
+                response = await asyncio.wait_for(
+                    chat.send_message(user_message),
+                    timeout=90.0
+                )
+                logging.info(f"Agent {agent_type} response from {provider}/{model} successful")
+                return response
+            except asyncio.TimeoutError:
+                logging.warning(f"Timeout with {provider}/{model} for agent {agent_type}")
+                last_error = f"Timeout with {model}"
+                continue
+                
+        except Exception as e:
+            logging.warning(f"Error with {provider}/{model} for agent {agent_type}: {str(e)}")
+            last_error = str(e)
+            continue
+    
+    logging.error(f"All AI models failed for agent {agent_type}. Last error: {last_error}")
+    
+    error_msg = "AI service temporarily unavailable. Please try again in a moment."
+    if "budget" in str(last_error).lower() or "cost" in str(last_error).lower():
+        error_msg = "AI usage limit reached. Please go to Profile → Universal Key → Add Balance to continue."
+    
+    raise HTTPException(status_code=503, detail=error_msg)
+
 # ==================== AUTH ROUTES ====================
 
 @api_router.post("/auth/register", response_model=dict)
@@ -408,6 +470,123 @@ async def delete_chat_session(session_id: str, user: dict = Depends(require_user
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="Session not found")
     return {"message": "Session deleted"}
+
+# ==================== AGENT ROUTES ====================
+
+@api_router.get("/agents", response_model=dict)
+async def get_agents():
+    """Get list of available agents with metadata"""
+    return {"agents": AGENT_METADATA}
+
+@api_router.post("/agents/chat", response_model=dict)
+async def agent_chat(query: AgentQuery, user: Optional[dict] = Depends(get_current_user)):
+    """Send message to a specific agent"""
+    session_id = query.session_id or str(uuid.uuid4())
+    user_id = user["id"] if user else None
+    agent_type = query.agent_type
+    
+    # Get or create agent session
+    agent_session_id = f"{agent_type}_{session_id}"
+    session = await db.agent_sessions.find_one({"id": agent_session_id}, {"_id": 0})
+    
+    if not session:
+        session = {
+            "id": agent_session_id,
+            "user_id": user_id,
+            "agent_type": agent_type,
+            "messages": [],
+            "created_at": datetime.now(timezone.utc).isoformat(),
+            "updated_at": datetime.now(timezone.utc).isoformat()
+        }
+        await db.agent_sessions.insert_one(session)
+    
+    # Add user message
+    user_message = {
+        "role": "user",
+        "content": query.query,
+        "timestamp": datetime.now(timezone.utc).isoformat()
+    }
+    
+    # Get agent response
+    response = await get_agent_response(query.query, agent_type, session_id, session.get("messages", []))
+    
+    # Add assistant message
+    assistant_message = {
+        "role": "assistant",
+        "content": response,
+        "timestamp": datetime.now(timezone.utc).isoformat()
+    }
+    
+    # Update session
+    await db.agent_sessions.update_one(
+        {"id": agent_session_id},
+        {
+            "$push": {"messages": {"$each": [user_message, assistant_message]}},
+            "$set": {"updated_at": datetime.now(timezone.utc).isoformat()}
+        }
+    )
+    
+    # Save to agent history
+    history_doc = {
+        "id": str(uuid.uuid4()),
+        "user_id": user_id,
+        "agent_type": agent_type,
+        "query": query.query,
+        "response": response[:1000] + "..." if len(response) > 1000 else response,
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    await db.agent_history.insert_one(history_doc)
+    
+    return {
+        "session_id": session_id,
+        "agent_type": agent_type,
+        "response": response,
+        "message": assistant_message
+    }
+
+@api_router.get("/agents/sessions", response_model=List[dict])
+async def get_agent_sessions(agent_type: Optional[str] = None, user: dict = Depends(require_user)):
+    """Get user's agent sessions, optionally filtered by agent type"""
+    query_filter = {"user_id": user["id"]}
+    if agent_type:
+        query_filter["agent_type"] = agent_type
+    
+    sessions = await db.agent_sessions.find(
+        query_filter,
+        {"_id": 0}
+    ).sort("updated_at", -1).to_list(50)
+    return sessions
+
+@api_router.get("/agents/session/{session_id}", response_model=dict)
+async def get_agent_session(session_id: str, agent_type: str, user: Optional[dict] = Depends(get_current_user)):
+    """Get a specific agent session"""
+    agent_session_id = f"{agent_type}_{session_id}"
+    session = await db.agent_sessions.find_one({"id": agent_session_id}, {"_id": 0})
+    if not session:
+        raise HTTPException(status_code=404, detail="Session not found")
+    return session
+
+@api_router.delete("/agents/session/{session_id}")
+async def delete_agent_session(session_id: str, agent_type: str, user: dict = Depends(require_user)):
+    """Delete an agent session"""
+    agent_session_id = f"{agent_type}_{session_id}"
+    result = await db.agent_sessions.delete_one({"id": agent_session_id, "user_id": user["id"]})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Session not found")
+    return {"message": "Session deleted"}
+
+@api_router.get("/agents/history", response_model=List[dict])
+async def get_agent_history(agent_type: Optional[str] = None, user: dict = Depends(require_user)):
+    """Get user's agent usage history"""
+    query_filter = {"user_id": user["id"]}
+    if agent_type:
+        query_filter["agent_type"] = agent_type
+    
+    history = await db.agent_history.find(
+        query_filter,
+        {"_id": 0}
+    ).sort("created_at", -1).to_list(100)
+    return history
 
 # ==================== PRODUCT ROUTES ====================
 

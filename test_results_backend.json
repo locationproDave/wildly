@@ -1,90 +1,114 @@
 {
   "test_run_summary": {
-    "total_tests": 10,
-    "passed_tests": 4,
-    "success_rate": "40.0%",
-    "timestamp": "2026-03-05T21:38:13.719149"
+    "total_tests": 13,
+    "passed_tests": 6,
+    "success_rate": "46.2%",
+    "timestamp": "2026-03-05T22:04:44.127324"
   },
   "detailed_results": [
     {
       "test_name": "API Root",
       "passed": true,
-      "response_time": 0.2957894802093506,
+      "response_time": 0.24801182746887207,
       "status_code": 200,
       "message": "Response: {\n  \"message\": \"PetPulse Sourcing Agent API\",\n  \"status\": \"healthy\"\n}...",
-      "timestamp": "2026-03-05T21:34:12.291961"
+      "timestamp": "2026-03-05T21:59:16.173343"
     },
     {
       "test_name": "Health Check",
       "passed": true,
-      "response_time": 0.11310315132141113,
+      "response_time": 0.18211102485656738,
       "status_code": 200,
       "message": "Response: {\n  \"status\": \"healthy\",\n  \"service\": \"PetPulse Sourcing Agent\"\n}...",
-      "timestamp": "2026-03-05T21:34:12.405596"
+      "timestamp": "2026-03-05T21:59:16.356034"
+    },
+    {
+      "test_name": "Get Agents List",
+      "passed": true,
+      "response_time": 0.1405620574951172,
+      "status_code": 200,
+      "message": "Response: {\n  \"agents\": {\n    \"product_sourcing\": {\n      \"name\": \"Product Sourcing\",\n      \"description\": \"Fi...",
+      "timestamp": "2026-03-05T21:59:16.497269"
     },
     {
       "test_name": "User Login",
       "passed": true,
-      "response_time": 0.367891788482666,
+      "response_time": 0.33637285232543945,
       "status_code": 200,
       "message": "Response: {\n  \"token\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiNDVkZjc4OTQtYTI4Yi00YmExLTg0NGItY...",
-      "timestamp": "2026-03-05T21:34:12.773959"
+      "timestamp": "2026-03-05T21:59:16.834169"
     },
     {
       "test_name": "Get Current User (/auth/me)",
       "passed": true,
-      "response_time": 0.11497807502746582,
+      "response_time": 0.15732836723327637,
       "status_code": 200,
       "message": "Response: {\n  \"id\": \"45df7894-a28b-4ba1-844b-a5a1fe22f404\",\n  \"email\": \"demo@petpulse.com\",\n  \"name\": \"Demo Us...",
-      "timestamp": "2026-03-05T21:34:12.889567"
+      "timestamp": "2026-03-05T21:59:16.992153"
     },
     {
       "test_name": "Send Chat Message",
       "passed": false,
-      "response_time": 60.126458168029785,
+      "response_time": 60.09441614151001,
       "status_code": 502,
       "message": "Response: {\n  \"text\": \"The preview environment is not responding. It may be starting up.\\n\"\n}...",
-      "timestamp": "2026-03-05T21:35:13.016547"
+      "timestamp": "2026-03-05T22:00:17.087187"
+    },
+    {
+      "test_name": "Agent Chat - Product Sourcing",
+      "passed": false,
+      "response_time": 60.23648428916931,
+      "status_code": 502,
+      "message": "Response: {\n  \"text\": \"The preview environment is not responding. It may be starting up.\\n\"\n}...",
+      "timestamp": "2026-03-05T22:01:17.324378"
     },
     {
       "test_name": "Get Search History",
       "passed": false,
-      "response_time": 30.145437717437744,
+      "response_time": 30.127944946289062,
       "status_code": 0,
       "message": "Request timeout",
-      "timestamp": "2026-03-05T21:35:43.162573"
+      "timestamp": "2026-03-05T22:01:47.453753"
     },
     {
       "test_name": "Get User Statistics",
       "passed": false,
-      "response_time": 30.136545658111572,
+      "response_time": 30.125986099243164,
       "status_code": 0,
       "message": "Request timeout",
-      "timestamp": "2026-03-05T21:36:13.299162"
+      "timestamp": "2026-03-05T22:02:17.579780"
     },
     {
       "test_name": "Get Chat Sessions",
       "passed": false,
-      "response_time": 30.116541862487793,
+      "response_time": 30.13080859184265,
       "status_code": 0,
       "message": "Request timeout",
-      "timestamp": "2026-03-05T21:36:43.415757"
+      "timestamp": "2026-03-05T22:02:47.710632"
+    },
+    {
+      "test_name": "Get Agent Sessions",
+      "passed": true,
+      "response_time": 26.150460720062256,
+      "status_code": 200,
+      "message": "Response: []...",
+      "timestamp": "2026-03-05T22:03:13.861164"
     },
     {
       "test_name": "Access Protected Route Without Token",
       "passed": false,
-      "response_time": 30.167813062667847,
+      "response_time": 30.096158027648926,
       "status_code": 0,
       "message": "Request timeout",
-      "timestamp": "2026-03-05T21:37:13.583615"
+      "timestamp": "2026-03-05T22:03:43.957915"
     },
     {
       "test_name": "User Registration",
       "passed": false,
-      "response_time": 60.13544535636902,
+      "response_time": 60.16931748390198,
       "status_code": 0,
       "message": "Request timeout",
-      "timestamp": "2026-03-05T21:38:13.719112"
+      "timestamp": "2026-03-05T22:04:44.127285"
     }
   ]
 }
