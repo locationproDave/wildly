@@ -204,31 +204,61 @@ Be helpful, warm, and professional. Use conversational language while maintainin
 
 # ==================== AI CHAT ====================
 
+import asyncio
+
 async def get_ai_response(query: str, session_id: str, chat_history: List[Dict[str, str]] = None) -> str:
-    """Get response from Claude Opus 4.6"""
-    try:
-        chat = LlmChat(
-            api_key=EMERGENT_LLM_KEY,
-            session_id=session_id,
-            system_message=SYSTEM_PROMPT
-        )
-        chat.with_model("anthropic", "claude-opus-4-6")
-        
-        # Build context from history
-        context = ""
-        if chat_history:
-            for msg in chat_history[-10:]:  # Last 10 messages for context
-                role = "User" if msg.get("role") == "user" else "Assistant"
-                context += f"{role}: {msg.get('content', '')}\n\n"
-        
-        full_query = f"{context}User: {query}" if context else query
-        
-        user_message = UserMessage(text=full_query)
-        response = await chat.send_message(user_message)
-        return response
-    except Exception as e:
-        logging.error(f"AI Error: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"AI service error: {str(e)}")
+    """Get response from Claude Opus 4.6 with fallback"""
+    
+    # List of models to try in order
+    models = [
+        ("anthropic", "claude-opus-4-6"),
+        ("anthropic", "claude-sonnet-4-5-20250929"),
+        ("openai", "gpt-5.2"),
+    ]
+    
+    last_error = None
+    
+    for provider, model in models:
+        try:
+            chat = LlmChat(
+                api_key=EMERGENT_LLM_KEY,
+                session_id=session_id,
+                system_message=SYSTEM_PROMPT
+            )
+            chat.with_model(provider, model)
+            
+            # Build context from history
+            context = ""
+            if chat_history:
+                for msg in chat_history[-6:]:  # Last 6 messages for context (reduced for speed)
+                    role = "User" if msg.get("role") == "user" else "Assistant"
+                    context += f"{role}: {msg.get('content', '')}\n\n"
+            
+            full_query = f"{context}User: {query}" if context else query
+            
+            user_message = UserMessage(text=full_query)
+            
+            # Add timeout of 60 seconds
+            try:
+                response = await asyncio.wait_for(
+                    chat.send_message(user_message),
+                    timeout=60.0
+                )
+                logging.info(f"AI response from {provider}/{model} successful")
+                return response
+            except asyncio.TimeoutError:
+                logging.warning(f"Timeout with {provider}/{model}, trying next...")
+                last_error = f"Timeout with {model}"
+                continue
+                
+        except Exception as e:
+            logging.warning(f"Error with {provider}/{model}: {str(e)}")
+            last_error = str(e)
+            continue
+    
+    # If all models fail, raise error
+    logging.error(f"All AI models failed. Last error: {last_error}")
+    raise HTTPException(status_code=503, detail=f"AI service temporarily unavailable. Please try again.")
 
 # ==================== AUTH ROUTES ====================
 

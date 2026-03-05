@@ -18,6 +18,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
 } from "./ui/dialog";
 
 const AuthModal = ({ isOpen, onClose }) => {
@@ -72,8 +73,14 @@ const AuthModal = ({ isOpen, onClose }) => {
           <DialogTitle className="text-center text-2xl font-bold text-[#2F3E32] font-['Fraunces']">
             {isLogin ? "Welcome Back" : "Create Account"}
           </DialogTitle>
+          <DialogDescription className="text-center text-sm text-[#57534E]">
+            {isLogin 
+              ? "Sign in to access your saved products and research history."
+              : "Create a free account to save your product research."
+            }
+          </DialogDescription>
           {!isLogin && (
-            <p className="text-center text-sm text-[#57534E] mt-2">
+            <p className="text-center text-sm text-[#768A75] mt-2">
               <Gift className="inline w-4 h-4 mr-1 text-[#D4A373]" />
               Get 15% off your first month when you sign up!
             </p>

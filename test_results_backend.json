@@ -1,95 +1,90 @@
 {
-  "summary": {
-    "total_tests": 14,
-    "passed": 8,
-    "failed": 6,
-    "success_rate": "57.1%"
+  "test_run_summary": {
+    "total_tests": 10,
+    "passed_tests": 4,
+    "success_rate": "40.0%",
+    "timestamp": "2026-03-05T21:38:13.719149"
   },
   "detailed_results": [
     {
       "test_name": "API Root",
-      "status": "PASSED",
-      "details": "Status: 200",
-      "timestamp": "2026-03-05T21:24:47.409367"
+      "passed": true,
+      "response_time": 0.2957894802093506,
+      "status_code": 200,
+      "message": "Response: {\n  \"message\": \"PetPulse Sourcing Agent API\",\n  \"status\": \"healthy\"\n}...",
+      "timestamp": "2026-03-05T21:34:12.291961"
     },
     {
       "test_name": "Health Check",
-      "status": "PASSED",
-      "details": "Status: 200",
-      "timestamp": "2026-03-05T21:24:47.553092"
-    },
-    {
-      "test_name": "User Registration",
-      "status": "PASSED",
-      "details": "Status: 200",
-      "timestamp": "2026-03-05T21:24:48.008273"
+      "passed": true,
+      "response_time": 0.11310315132141113,
+      "status_code": 200,
+      "message": "Response: {\n  \"status\": \"healthy\",\n  \"service\": \"PetPulse Sourcing Agent\"\n}...",
+      "timestamp": "2026-03-05T21:34:12.405596"
     },
     {
       "test_name": "User Login",
-      "status": "PASSED",
-      "details": "Status: 200",
-      "timestamp": "2026-03-05T21:24:48.445451"
+      "passed": true,
+      "response_time": 0.367891788482666,
+      "status_code": 200,
+      "message": "Response: {\n  \"token\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiNDVkZjc4OTQtYTI4Yi00YmExLTg0NGItY...",
+      "timestamp": "2026-03-05T21:34:12.773959"
     },
     {
-      "test_name": "Get Current User",
-      "status": "PASSED",
-      "details": "Status: 200",
-      "timestamp": "2026-03-05T21:24:48.606561"
+      "test_name": "Get Current User (/auth/me)",
+      "passed": true,
+      "response_time": 0.11497807502746582,
+      "status_code": 200,
+      "message": "Response: {\n  \"id\": \"45df7894-a28b-4ba1-844b-a5a1fe22f404\",\n  \"email\": \"demo@petpulse.com\",\n  \"name\": \"Demo Us...",
+      "timestamp": "2026-03-05T21:34:12.889567"
     },
     {
       "test_name": "Send Chat Message",
-      "status": "FAILED",
-      "details": "Exception: HTTPSConnectionPool(host='pet-care-curator.preview.emergentagent.com', port=443): Read timed out. (read timeout=30)",
-      "timestamp": "2026-03-05T21:25:18.693672"
-    },
-    {
-      "test_name": "Get Chat Sessions",
-      "status": "FAILED",
-      "details": "Exception: HTTPSConnectionPool(host='pet-care-curator.preview.emergentagent.com', port=443): Read timed out. (read timeout=30)",
-      "timestamp": "2026-03-05T21:25:48.839456"
-    },
-    {
-      "test_name": "Save Product",
-      "status": "FAILED",
-      "details": "Exception: HTTPSConnectionPool(host='pet-care-curator.preview.emergentagent.com', port=443): Read timed out. (read timeout=30)",
-      "timestamp": "2026-03-05T21:26:18.976175"
-    },
-    {
-      "test_name": "Get Saved Products",
-      "status": "FAILED",
-      "details": "Exception: HTTPSConnectionPool(host='pet-care-curator.preview.emergentagent.com', port=443): Read timed out. (read timeout=30)",
-      "timestamp": "2026-03-05T21:26:49.131891"
+      "passed": false,
+      "response_time": 60.126458168029785,
+      "status_code": 502,
+      "message": "Response: {\n  \"text\": \"The preview environment is not responding. It may be starting up.\\n\"\n}...",
+      "timestamp": "2026-03-05T21:35:13.016547"
     },
     {
       "test_name": "Get Search History",
-      "status": "FAILED",
-      "details": "Exception: HTTPSConnectionPool(host='pet-care-curator.preview.emergentagent.com', port=443): Read timed out. (read timeout=30)",
-      "timestamp": "2026-03-05T21:27:19.261645"
+      "passed": false,
+      "response_time": 30.145437717437744,
+      "status_code": 0,
+      "message": "Request timeout",
+      "timestamp": "2026-03-05T21:35:43.162573"
     },
     {
-      "test_name": "Get User Stats",
-      "status": "FAILED",
-      "details": "Exception: HTTPSConnectionPool(host='pet-care-curator.preview.emergentagent.com', port=443): Read timed out. (read timeout=30)",
-      "timestamp": "2026-03-05T21:27:49.387251"
+      "test_name": "Get User Statistics",
+      "passed": false,
+      "response_time": 30.136545658111572,
+      "status_code": 0,
+      "message": "Request timeout",
+      "timestamp": "2026-03-05T21:36:13.299162"
     },
     {
-      "test_name": "Invalid Login",
-      "status": "PASSED",
-      "details": "Status: 401",
-      "timestamp": "2026-03-05T21:27:50.508262"
+      "test_name": "Get Chat Sessions",
+      "passed": false,
+      "response_time": 30.116541862487793,
+      "status_code": 0,
+      "message": "Request timeout",
+      "timestamp": "2026-03-05T21:36:43.415757"
     },
     {
-      "test_name": "Unauthorized Access",
-      "status": "PASSED",
-      "details": "Status: 401",
-      "timestamp": "2026-03-05T21:27:50.625351"
+      "test_name": "Access Protected Route Without Token",
+      "passed": false,
+      "response_time": 30.167813062667847,
+      "status_code": 0,
+      "message": "Request timeout",
+      "timestamp": "2026-03-05T21:37:13.583615"
     },
     {
-      "test_name": "Invalid Endpoint",
-      "status": "PASSED",
-      "details": "Status: 404",
-      "timestamp": "2026-03-05T21:27:50.753586"
+      "test_name": "User Registration",
+      "passed": false,
+      "response_time": 60.13544535636902,
+      "status_code": 0,
+      "message": "Request timeout",
+      "timestamp": "2026-03-05T21:38:13.719112"
     }
-  ],
-  "timestamp": "2026-03-05T21:27:50.754244"
+  ]
 }
