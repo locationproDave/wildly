@@ -10,7 +10,15 @@ import {
   Heart,
   Sparkles,
   Dog,
-  Cat
+  Cat,
+  Bed,
+  Pill,
+  Wind,
+  Leaf,
+  Bird,
+  Rabbit,
+  Fish,
+  Squirrel
 } from "lucide-react";
 import { Button } from "../components/ui/button";
 
@@ -55,10 +63,14 @@ const HomePage = () => {
   ];
 
   const categories = [
-    { name: "Calming Beds", slug: "beds-blankets", icon: "🛏️", pet: "dog" },
-    { name: "Anxiety Supplements", slug: "supplements", icon: "💊", pet: "both" },
-    { name: "Cat Diffusers", slug: "calming-aids", icon: "🌸", pet: "cat" },
-    { name: "CBD Products", slug: "supplements", icon: "🌿", pet: "both" }
+    { name: "Dogs", slug: "dog", icon: Dog, pet: "dog", color: "#2D4A3E", isPetFilter: true },
+    { name: "Cats", slug: "cat", icon: Cat, pet: "cat", color: "#6B8F71", isPetFilter: true },
+    { name: "Birds", slug: "bird", icon: Bird, pet: "bird", color: "#D4A574", isPetFilter: true },
+    { name: "Fish", slug: "fish", icon: Fish, pet: "fish", color: "#7CA5B8", isPetFilter: true },
+    { name: "Rabbits", slug: "rabbit", icon: Rabbit, pet: "rabbit", color: "#9B8B7A", isPetFilter: true },
+    { name: "Small Pets", slug: "small_pet", icon: Squirrel, pet: "small_pet", color: "#D66D5A", isPetFilter: true },
+    { name: "Calming Beds", slug: "Beds & Blankets", icon: Bed, pet: "both", color: "#57534E", isPetFilter: false },
+    { name: "Supplements", slug: "Supplements", icon: Pill, pet: "both", color: "#768A75", isPetFilter: false }
   ];
 
   return (
@@ -170,29 +182,28 @@ const HomePage = () => {
           </div>
           
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-            {categories.map((category, index) => (
-              <Link
-                key={index}
-                to={`/products?category=${encodeURIComponent(category.slug)}`}
-                className="bg-white rounded-2xl p-6 text-center hover:shadow-lg transition-all group"
-                data-testid={`category-${index}`}
-              >
-                <div className="text-4xl mb-4 group-hover:scale-110 transition-transform">
-                  {category.icon}
-                </div>
-                <h3 className="font-semibold text-[#2D4A3E]">{category.name}</h3>
-                <div className="flex items-center justify-center gap-1 mt-2 text-sm text-[#5C6D5E]">
-                  {category.pet === "dog" && <Dog className="w-4 h-4" />}
-                  {category.pet === "cat" && <Cat className="w-4 h-4" />}
-                  {category.pet === "both" && (
-                    <>
-                      <Dog className="w-4 h-4" />
-                      <Cat className="w-4 h-4" />
-                    </>
-                  )}
-                </div>
-              </Link>
-            ))}
+            {categories.map((category, index) => {
+              const IconComponent = category.icon;
+              const linkUrl = category.isPetFilter 
+                ? `/products?pet_type=${encodeURIComponent(category.slug)}`
+                : `/products?category=${encodeURIComponent(category.slug)}`;
+              return (
+                <Link
+                  key={index}
+                  to={linkUrl}
+                  className="bg-white rounded-2xl p-6 text-center hover:shadow-lg transition-all group"
+                  data-testid={`category-${category.slug}`}
+                >
+                  <div 
+                    className="w-14 h-14 mx-auto mb-4 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform"
+                    style={{ backgroundColor: `${category.color}15` }}
+                  >
+                    <IconComponent className="w-7 h-7" style={{ color: category.color }} />
+                  </div>
+                  <h3 className="font-semibold text-[#2D4A3E]">{category.name}</h3>
+                </Link>
+              );
+            })}
           </div>
         </div>
       </section>

@@ -9,7 +9,11 @@ import {
   Dog, 
   Cat,
   X,
-  ChevronDown
+  ChevronDown,
+  Bird,
+  Fish,
+  Rabbit,
+  Squirrel
 } from "lucide-react";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
@@ -141,7 +145,7 @@ const ProductsPage = () => {
           </DropdownMenu>
 
           {/* Pet Type Filter */}
-          <div className="flex gap-2">
+          <div className="flex gap-2 flex-wrap">
             <Button
               variant={currentPetType === "dog" ? "default" : "outline"}
               className={`rounded-full ${currentPetType === "dog" ? "bg-[#2D4A3E]" : ""}`}
@@ -153,12 +157,56 @@ const ProductsPage = () => {
             </Button>
             <Button
               variant={currentPetType === "cat" ? "default" : "outline"}
-              className={`rounded-full ${currentPetType === "cat" ? "bg-[#2D4A3E]" : ""}`}
+              className={`rounded-full ${currentPetType === "cat" ? "bg-[#6B8F71]" : ""}`}
               onClick={() => setFilter("pet_type", currentPetType === "cat" ? "" : "cat")}
               data-testid="filter-cat"
             >
               <Cat className="w-4 h-4 mr-2" />
               Cats
+            </Button>
+            <Button
+              variant={currentPetType === "bird" ? "default" : "outline"}
+              className={`rounded-full ${currentPetType === "bird" ? "bg-[#D4A574]" : ""}`}
+              onClick={() => setFilter("pet_type", currentPetType === "bird" ? "" : "bird")}
+              data-testid="filter-bird"
+            >
+              <Bird className="w-4 h-4 mr-2" />
+              Birds
+            </Button>
+            <Button
+              variant={currentPetType === "fish" ? "default" : "outline"}
+              className={`rounded-full ${currentPetType === "fish" ? "bg-[#7CA5B8]" : ""}`}
+              onClick={() => setFilter("pet_type", currentPetType === "fish" ? "" : "fish")}
+              data-testid="filter-fish"
+            >
+              <Fish className="w-4 h-4 mr-2" />
+              Fish
+            </Button>
+            <Button
+              variant={currentPetType === "rabbit" ? "default" : "outline"}
+              className={`rounded-full ${currentPetType === "rabbit" ? "bg-[#9B8B7A]" : ""}`}
+              onClick={() => setFilter("pet_type", currentPetType === "rabbit" ? "" : "rabbit")}
+              data-testid="filter-rabbit"
+            >
+              <Rabbit className="w-4 h-4 mr-2" />
+              Rabbits
+            </Button>
+            <Button
+              variant={currentPetType === "small_pet" ? "default" : "outline"}
+              className={`rounded-full ${currentPetType === "small_pet" ? "bg-[#D66D5A]" : ""}`}
+              onClick={() => setFilter("pet_type", currentPetType === "small_pet" ? "" : "small_pet")}
+              data-testid="filter-small-pet"
+            >
+              <Squirrel className="w-4 h-4 mr-2" />
+              Small Pets
+            </Button>
+            <Button
+              variant={currentPetType === "reptile" ? "default" : "outline"}
+              className={`rounded-full ${currentPetType === "reptile" ? "bg-[#768A75]" : ""}`}
+              onClick={() => setFilter("pet_type", currentPetType === "reptile" ? "" : "reptile")}
+              data-testid="filter-reptile"
+            >
+              Reptiles
             </Button>
           </div>
 
@@ -230,7 +278,32 @@ const ProductsPage = () => {
                       )}
                       {(product.pet_type === "cat" || product.pet_type === "both") && (
                         <span className="bg-white/90 p-1.5 rounded-full">
-                          <Cat className="w-4 h-4 text-[#2D4A3E]" />
+                          <Cat className="w-4 h-4 text-[#6B8F71]" />
+                        </span>
+                      )}
+                      {product.pet_type === "bird" && (
+                        <span className="bg-white/90 p-1.5 rounded-full">
+                          <Bird className="w-4 h-4 text-[#D4A574]" />
+                        </span>
+                      )}
+                      {product.pet_type === "fish" && (
+                        <span className="bg-white/90 p-1.5 rounded-full">
+                          <Fish className="w-4 h-4 text-[#7CA5B8]" />
+                        </span>
+                      )}
+                      {product.pet_type === "rabbit" && (
+                        <span className="bg-white/90 p-1.5 rounded-full">
+                          <Rabbit className="w-4 h-4 text-[#9B8B7A]" />
+                        </span>
+                      )}
+                      {product.pet_type === "small_pet" && (
+                        <span className="bg-white/90 p-1.5 rounded-full">
+                          <Squirrel className="w-4 h-4 text-[#D66D5A]" />
+                        </span>
+                      )}
+                      {product.pet_type === "reptile" && (
+                        <span className="bg-white/90 p-1.5 rounded-full text-[#768A75] text-xs font-bold">
+                          R
                         </span>
                       )}
                     </div>

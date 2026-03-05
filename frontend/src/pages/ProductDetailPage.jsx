@@ -12,7 +12,8 @@ import {
   Minus,
   Plus,
   ChevronLeft,
-  Check
+  Check,
+  Egg
 } from "lucide-react";
 import { Button } from "../components/ui/button";
 
@@ -120,6 +121,12 @@ const ProductDetailPage = () => {
                 <span className="inline-flex items-center gap-1 bg-[#E8DFD5] text-[#2D4A3E] px-3 py-1 rounded-full text-sm">
                   <Cat className="w-4 h-4" />
                   For Cats
+                </span>
+              )}
+              {product.pet_type === "reptile" && (
+                <span className="inline-flex items-center gap-1 bg-[#9B8B7A]/20 text-[#9B8B7A] px-3 py-1 rounded-full text-sm">
+                  <Egg className="w-4 h-4" />
+                  For Reptiles
                 </span>
               )}
             </div>

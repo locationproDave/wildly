@@ -28,9 +28,13 @@ const Navbar = ({ onAuthClick }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const navLinks = [
-    { path: "/products", label: "Shop" },
+    { path: "/products", label: "Shop All" },
     { path: "/products?pet_type=dog", label: "Dogs" },
     { path: "/products?pet_type=cat", label: "Cats" },
+    { path: "/products?pet_type=bird", label: "Birds" },
+    { path: "/products?pet_type=fish", label: "Fish" },
+    { path: "/products?pet_type=rabbit", label: "Rabbits" },
+    { path: "/products?pet_type=small_pet", label: "Small Pets" },
   ];
 
   const getInitials = (name) => {

@@ -8,7 +8,7 @@ import uuid
 from datetime import datetime
 
 class CalmTailsAPITester:
-    def __init__(self, base_url="https://pet-care-curator.preview.emergentagent.com"):
+    def __init__(self, base_url="https://calm-tails-staging.preview.emergentagent.com"):
         self.base_url = base_url
         self.api_url = f"{base_url}/api"
         self.token = None
