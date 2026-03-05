@@ -64,6 +64,13 @@ Build a specialist product sourcing agent for a premium pet wellness dropshippin
   - Claims compliance built-in (no "treats/cures/heals" language)
   - Warm, premium brand voice
   - Meta titles, descriptions, and alt text
+- [ ] **SEO Content Strategist Agent** - Blog content writer:
+  - Keyword research with Google "People Also Ask" integration
+  - 1,200-1,600 word SEO-optimized posts
+  - Science-grounded claims, no fearmongering
+  - Natural product recommendations with internal linking
+  - FAQ section formatted for rich snippets
+  - Meta titles and descriptions
 - [ ] Web scraping integration for real-time supplier verification
 - [ ] Product image previews in pipeline
 - [ ] Export products to CSV
