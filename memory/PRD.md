@@ -71,6 +71,12 @@ Build a specialist product sourcing agent for a premium pet wellness dropshippin
   - Natural product recommendations with internal linking
   - FAQ section formatted for rich snippets
   - Meta titles and descriptions
+- [ ] **Performance Marketing Agent** - Ads & social content:
+  - Meta Ads: 5 short variations + 1 long-form story ad (policy compliant)
+  - TikTok/Reels: 3 UGC-style scripts (30-45 sec each)
+  - Instagram: 5 caption variations (question, educational, story, list, social proof)
+  - Pinterest: 2 SEO-optimized descriptions
+  - No medical claims, no before/after, no false scarcity
 - [ ] Web scraping integration for real-time supplier verification
 - [ ] Product image previews in pipeline
 - [ ] Export products to CSV
