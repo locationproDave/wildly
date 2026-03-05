@@ -1,7 +1,7 @@
 # CalmTails - Pet Wellness E-Commerce Platform
 
 ## Original Problem Statement
-Build a pet wellness e-commerce store (like Shopify) with:
+Build a pet wellness e-commerce store with:
 1. Customer-facing storefront - Product browsing, shopping cart, Stripe checkout
 2. Admin dashboard with 7 AI agents built-in to help business owners manage operations
 
@@ -26,11 +26,23 @@ Build a pet wellness e-commerce store (like Shopify) with:
 - [x] Order management system
 - [x] User authentication (JWT) with discount codes
 - [x] Admin routes for order management
-- [x] 8 pre-seeded pet wellness products
+- [x] **23 pre-seeded pet wellness products** (expanded from 12)
+
+### Expanded Pet Categories (NEW - March 5, 2026)
+- [x] **Dogs** - 4 products (calming beds, chews, orthopedic beds, collars)
+- [x] **Cats** - 2 products (diffuser, anxiety chews)
+- [x] **Both Dogs & Cats** - 2 products (weighted blanket, CBD oil)
+- [x] **Reptiles** - 3 products (calcium supplement, multivitamin, stress drops)
+- [x] **Birds** - 3 products (calming drops, vitamin blend, probiotic)
+- [x] **Rabbits** - 3 products (calming hay, joint supplement, papaya tablets)
+- [x] **Fish** - 3 products (stress coat, immune food, betta drops)
+- [x] **Small Pets** - 3 products (guinea pig vitamin C, hamster coat supplement, calming herbs)
 
 ### Customer Storefront (React + Tailwind)
 - [x] Homepage with hero, categories, featured products
-- [x] Products page with search and filters (Dogs/Cats)
+- [x] Products page with search and filters
+- [x] **8 category icons** (Dogs, Cats, Birds, Fish, Rabbits, Small Pets, Beds, Supplements)
+- [x] **7 pet type filter buttons** with unique colors
 - [x] Product detail pages with add to cart
 - [x] Cart drawer and cart page
 - [x] Stripe checkout flow
@@ -52,22 +64,19 @@ Build a pet wellness e-commerce store (like Shopify) with:
 - [x] Email Marketing - Klaviyo flows
 - [x] Customer Service - Support responses
 
-### Pre-seeded Products
-1. Calming Dog Bed ($49.99)
-2. Calming Soft Chews for Dogs ($29.99)
-3. Weighted Calming Blanket ($59.99)
-4. Cat Calming Diffuser ($34.99)
-5. Premium CBD Oil for Pets ($44.99)
-6. Orthopedic Memory Foam Bed ($79.99)
-7. Calming Collar for Dogs ($24.99)
-8. Anxiety Relief Chews for Cats ($32.99)
-
 ### Design System
-- Brand: CalmTails 🐾
+- Brand: CalmTails with paw icon
 - Primary: Forest Green (#2D4A3E)
 - Accent: Terracotta (#D4A574)
 - Background: Warm Cream (#FDF8F3)
 - Typography: Fraunces (headings) + Nunito (body)
+- Icons: Lucide React (Dog, Cat, Bird, Fish, Rabbit, Squirrel, Bed, Pill)
+- **All product images: Royalty-free from Unsplash**
+
+### Bug Fixes (March 5, 2026)
+- [x] Fixed reptile filter to exclude "both" products
+- [x] Fixed featured products loading (was timing issue)
+- [x] Fixed empty cart returning proper response (no 500 error)
 
 ## Admin Credentials
 - Email: admin@calmtails.com
@@ -78,6 +87,10 @@ Build a pet wellness e-commerce store (like Shopify) with:
 - Order fulfillment is mocked (no real supplier API integration)
 
 ## Prioritized Backlog
+
+### P0 (Next Priority)
+- [ ] PayPal integration for checkout (Stripe already working)
+- [ ] Product management CRUD in admin dashboard
 
 ### P1 (High Priority)
 - [ ] Real supplier API integration (CJdropshipping, Zendrop)
@@ -103,3 +116,16 @@ Build a pet wellness e-commerce store (like Shopify) with:
 - **Payments**: Stripe via emergentintegrations
 - **AI**: Claude Opus 4.6 via emergentintegrations
 - **Database**: MongoDB
+
+## API Endpoints
+- `POST /api/auth/register` - User registration
+- `POST /api/auth/login` - User login
+- `GET /api/auth/me` - Get current user
+- `GET /api/products` - Get products (supports ?pet_type= and ?category= filters)
+- `GET /api/products/featured` - Get featured products
+- `GET /api/products/{slug}` - Get single product
+- `GET /api/cart/{session_id}` - Get cart
+- `POST /api/cart/{session_id}/add` - Add to cart
+- `POST /api/checkout` - Create Stripe checkout session
+- `GET /api/checkout/status/{session_id}` - Get payment status
+- `POST /api/agents/chat` - Chat with AI agents
