@@ -53,6 +53,12 @@ Build a specialist product sourcing agent for a premium pet wellness dropshippin
 - None currently
 
 ### P1 (High Priority)
+- [ ] **Supplier Due Diligence Agent** - 5-step verification system:
+  - Supplier reliability check (rating, order volume, processing time, US warehouse)
+  - Product safety check (CPSC recalls, FDA, Amazon reviews, Reddit complaints)
+  - Claims compliance (medical claims, certifications, COA for CBD)
+  - Shipping & customs risk assessment
+  - Brand conflict/trademark check
 - [ ] Web scraping integration for real-time supplier verification
 - [ ] Product image previews in pipeline
 - [ ] Export products to CSV
