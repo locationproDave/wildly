@@ -77,6 +77,12 @@ Build a specialist product sourcing agent for a premium pet wellness dropshippin
   - Instagram: 5 caption variations (question, educational, story, list, social proof)
   - Pinterest: 2 SEO-optimized descriptions
   - No medical claims, no before/after, no false scarcity
+- [ ] **Email Marketing Agent** - Klaviyo email flows:
+  - Flow A: Abandoned Cart (5 emails over 5 days)
+  - Flow B: Welcome Series (4 emails over 7 days)
+  - Flow C: Post-Purchase (3 emails)
+  - Flow D: Win-Back (3 emails for 90+ day inactive)
+  - 80-130 word emails, no spam triggers, claims compliant
 - [ ] Web scraping integration for real-time supplier verification
 - [ ] Product image previews in pipeline
 - [ ] Export products to CSV
