@@ -59,6 +59,11 @@ Build a specialist product sourcing agent for a premium pet wellness dropshippin
   - Claims compliance (medical claims, certifications, COA for CBD)
   - Shipping & customs risk assessment
   - Brand conflict/trademark check
+- [ ] **Product Copywriter Agent** - Shopify listing generator:
+  - 10-section product page structure (SEO title, hook, differentiators, specs, etc.)
+  - Claims compliance built-in (no "treats/cures/heals" language)
+  - Warm, premium brand voice
+  - Meta titles, descriptions, and alt text
 - [ ] Web scraping integration for real-time supplier verification
 - [ ] Product image previews in pipeline
 - [ ] Export products to CSV
