@@ -12,6 +12,7 @@ import CartPage from "./pages/CartPage";
 import CheckoutSuccessPage from "./pages/CheckoutSuccessPage";
 import AccountPage from "./pages/AccountPage";
 import AdminDashboard from "./pages/AdminDashboard";
+import AdminPromotionsPage from "./pages/AdminPromotionsPage";
 import AgentsPage from "./pages/AgentsPage";
 
 // Components
@@ -274,6 +275,11 @@ function App() {
             <Route path="/admin" element={
               <AppLayout>
                 <ProtectedRoute adminOnly><AdminDashboard /></ProtectedRoute>
+              </AppLayout>
+            } />
+            <Route path="/admin/promotions" element={
+              <AppLayout>
+                <ProtectedRoute adminOnly><AdminPromotionsPage /></ProtectedRoute>
               </AppLayout>
             } />
             <Route path="/admin/agents" element={

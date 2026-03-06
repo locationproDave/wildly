@@ -1,6 +1,7 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
+import { PayPalScriptProvider, PayPalButtons } from "@paypal/react-paypal-js";
 import { useCart, useAuth } from "../App";
 import { toast } from "sonner";
 import { 
@@ -10,27 +11,67 @@ import {
   ShoppingBag,
   ChevronLeft,
   Truck,
-  Lock
+  Lock,
+  Tag,
+  X,
+  CreditCard,
+  CheckCircle
 } from "lucide-react";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
+const PAYPAL_CLIENT_ID = process.env.REACT_APP_PAYPAL_CLIENT_ID || "sb"; // sandbox default
 
 const CartPage = () => {
-  const { cart, sessionId, updateQuantity, removeFromCart } = useCart();
+  const { cart, sessionId, updateQuantity, removeFromCart, refreshCart } = useCart();
   const { user, token } = useAuth();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState(user?.email || "");
+  const [promoCode, setPromoCode] = useState("");
+  const [promoLoading, setPromoLoading] = useState(false);
+  const [appliedPromo, setAppliedPromo] = useState(null);
+  const [paymentMethod, setPaymentMethod] = useState("stripe"); // stripe or paypal
 
   const subtotal = cart.subtotal || 0;
   const shipping = subtotal >= 50 ? 0 : 5.99;
-  const tax = subtotal * 0.08;
-  const total = subtotal + shipping + tax;
+  const promoDiscount = appliedPromo?.discount_amount || 0;
+  const discountedSubtotal = Math.max(0, subtotal - promoDiscount);
+  const tax = discountedSubtotal * 0.08;
+  const total = discountedSubtotal + shipping + tax;
 
-  const handleCheckout = async () => {
+  const applyPromoCode = async () => {
+    if (!promoCode.trim()) {
+      toast.error("Please enter a promo code");
+      return;
+    }
+
+    setPromoLoading(true);
+    try {
+      const response = await axios.get(
+        `${BACKEND_URL}/api/promotions/validate/${promoCode.trim()}?subtotal=${subtotal}`,
+        { headers: token ? { Authorization: `Bearer ${token}` } : {} }
+      );
+      
+      setAppliedPromo(response.data);
+      toast.success(`Promo code applied! You save $${response.data.discount_amount.toFixed(2)}`);
+    } catch (error) {
+      toast.error(error.response?.data?.detail || "Invalid promo code");
+      setAppliedPromo(null);
+    } finally {
+      setPromoLoading(false);
+    }
+  };
+
+  const removePromoCode = () => {
+    setAppliedPromo(null);
+    setPromoCode("");
+    toast.info("Promo code removed");
+  };
+
+  const handleStripeCheckout = async () => {
     if (!email) {
       toast.error("Please enter your email address");
       return;
@@ -43,7 +84,8 @@ const CartPage = () => {
         {
           cart_session_id: sessionId,
           email: email,
-          origin_url: window.location.origin
+          origin_url: window.location.origin,
+          promo_code: appliedPromo?.promotion?.code || null
         },
         {
           headers: token ? { Authorization: `Bearer ${token}` } : {}
@@ -54,6 +96,50 @@ const CartPage = () => {
       window.location.href = response.data.checkout_url;
     } catch (error) {
       toast.error(error.response?.data?.detail || "Failed to create checkout");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const createPayPalOrder = async () => {
+    if (!email) {
+      toast.error("Please enter your email address");
+      throw new Error("Email required");
+    }
+
+    try {
+      const response = await axios.post(
+        `${BACKEND_URL}/api/paypal/create-order`,
+        {
+          cart_session_id: sessionId,
+          email: email,
+          promo_code: appliedPromo?.promotion?.code || null
+        },
+        {
+          headers: token ? { Authorization: `Bearer ${token}` } : {}
+        }
+      );
+      return response.data.order_id;
+    } catch (error) {
+      toast.error(error.response?.data?.detail || "Failed to create PayPal order");
+      throw error;
+    }
+  };
+
+  const onPayPalApprove = async (data) => {
+    try {
+      setLoading(true);
+      const response = await axios.post(
+        `${BACKEND_URL}/api/paypal/capture-order/${data.orderID}`,
+        {},
+        { headers: token ? { Authorization: `Bearer ${token}` } : {} }
+      );
+      
+      toast.success("Payment successful!");
+      refreshCart();
+      navigate(`/order-confirmation?order_id=${response.data.order_id}`);
+    } catch (error) {
+      toast.error(error.response?.data?.detail || "Payment capture failed");
     } finally {
       setLoading(false);
     }
@@ -166,11 +252,65 @@ const CartPage = () => {
                 Order Summary
               </h2>
 
+              {/* Promo Code Input */}
+              <div className="mb-6">
+                <Label className="text-[#2D4A3E] flex items-center gap-2 mb-2">
+                  <Tag className="w-4 h-4" />
+                  Promo Code
+                </Label>
+                {appliedPromo ? (
+                  <div className="flex items-center justify-between bg-[#6B8F71]/10 p-3 rounded-xl">
+                    <div className="flex items-center gap-2">
+                      <CheckCircle className="w-5 h-5 text-[#6B8F71]" />
+                      <div>
+                        <p className="font-semibold text-[#2D4A3E]">{appliedPromo.promotion.code}</p>
+                        <p className="text-xs text-[#5C6D5E]">-${appliedPromo.discount_amount.toFixed(2)} off</p>
+                      </div>
+                    </div>
+                    <button
+                      onClick={removePromoCode}
+                      className="p-1 hover:bg-[#2D4A3E]/10 rounded-full"
+                      data-testid="remove-promo"
+                    >
+                      <X className="w-4 h-4 text-[#5C6D5E]" />
+                    </button>
+                  </div>
+                ) : (
+                  <div className="flex gap-2">
+                    <Input
+                      value={promoCode}
+                      onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
+                      placeholder="Enter code"
+                      className="rounded-xl flex-1"
+                      data-testid="promo-input"
+                    />
+                    <Button
+                      onClick={applyPromoCode}
+                      disabled={promoLoading}
+                      variant="outline"
+                      className="rounded-xl"
+                      data-testid="apply-promo-btn"
+                    >
+                      {promoLoading ? "..." : "Apply"}
+                    </Button>
+                  </div>
+                )}
+                <p className="text-xs text-[#5C6D5E] mt-2">
+                  Try: WELCOME15, PAWS10, SPRING25
+                </p>
+              </div>
+
               <div className="space-y-3 mb-6">
                 <div className="flex justify-between text-[#5C6D5E]">
                   <span>Subtotal</span>
                   <span>${subtotal.toFixed(2)}</span>
                 </div>
+                {appliedPromo && (
+                  <div className="flex justify-between text-[#6B8F71]">
+                    <span>Promo Discount</span>
+                    <span>-${promoDiscount.toFixed(2)}</span>
+                  </div>
+                )}
                 <div className="flex justify-between text-[#5C6D5E]">
                   <span className="flex items-center gap-1">
                     <Truck className="w-4 h-4" />
@@ -212,24 +352,82 @@ const CartPage = () => {
                 />
               </div>
 
-              <Button
-                onClick={handleCheckout}
-                disabled={loading}
-                className="w-full bg-[#2D4A3E] hover:bg-[#1F342B] text-white py-6 rounded-full font-semibold"
-                data-testid="checkout-btn"
-              >
-                {loading ? (
-                  "Processing..."
-                ) : (
-                  <>
-                    <Lock className="w-4 h-4 mr-2" />
-                    Secure Checkout
-                  </>
-                )}
-              </Button>
+              {/* Payment Method Selection */}
+              <div className="mb-6">
+                <Label className="text-[#2D4A3E] mb-3 block">Payment Method</Label>
+                <div className="grid grid-cols-2 gap-3">
+                  <button
+                    onClick={() => setPaymentMethod("stripe")}
+                    className={`p-4 rounded-xl border-2 transition-all flex flex-col items-center gap-2 ${
+                      paymentMethod === "stripe" 
+                        ? "border-[#2D4A3E] bg-[#2D4A3E]/5" 
+                        : "border-[#E8DFD5] hover:border-[#D4A574]"
+                    }`}
+                    data-testid="payment-stripe"
+                  >
+                    <CreditCard className="w-6 h-6 text-[#2D4A3E]" />
+                    <span className="text-sm font-medium text-[#2D4A3E]">Card</span>
+                  </button>
+                  <button
+                    onClick={() => setPaymentMethod("paypal")}
+                    className={`p-4 rounded-xl border-2 transition-all flex flex-col items-center gap-2 ${
+                      paymentMethod === "paypal" 
+                        ? "border-[#0070BA] bg-[#0070BA]/5" 
+                        : "border-[#E8DFD5] hover:border-[#0070BA]"
+                    }`}
+                    data-testid="payment-paypal"
+                  >
+                    <svg className="w-6 h-6" viewBox="0 0 24 24" fill="#0070BA">
+                      <path d="M7.076 21.337H2.47a.641.641 0 0 1-.633-.74L4.944.901C5.026.382 5.474 0 5.998 0h7.46c2.57 0 4.578.543 5.69 1.81 1.01 1.15 1.304 2.42 1.012 4.287-.023.143-.047.288-.077.437-.983 5.05-4.349 6.797-8.647 6.797h-2.19c-.524 0-.968.382-1.05.9l-1.12 7.106zm14.146-14.42a3.35 3.35 0 0 0-.607-.541c1.025 4.54-1.563 6.818-5.818 6.818H12.1l-1.35 8.559h3.727a.64.64 0 0 0 .632-.54l.026-.165.49-3.103.031-.169a.64.64 0 0 1 .632-.54h.398c2.58 0 4.597-.849 5.187-3.303.25-1.037.17-1.903-.31-2.516-.145-.183-.326-.343-.541-.5z"/>
+                    </svg>
+                    <span className="text-sm font-medium text-[#0070BA]">PayPal</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Checkout Buttons */}
+              {paymentMethod === "stripe" ? (
+                <Button
+                  onClick={handleStripeCheckout}
+                  disabled={loading || !email}
+                  className="w-full bg-[#2D4A3E] hover:bg-[#1F342B] text-white py-6 rounded-full font-semibold"
+                  data-testid="checkout-btn"
+                >
+                  {loading ? (
+                    "Processing..."
+                  ) : (
+                    <>
+                      <Lock className="w-4 h-4 mr-2" />
+                      Pay ${total.toFixed(2)} with Card
+                    </>
+                  )}
+                </Button>
+              ) : (
+                <PayPalScriptProvider options={{ 
+                  clientId: PAYPAL_CLIENT_ID,
+                  currency: "USD"
+                }}>
+                  <PayPalButtons
+                    style={{ 
+                      layout: "vertical",
+                      shape: "pill",
+                      label: "pay"
+                    }}
+                    disabled={!email || loading}
+                    createOrder={createPayPalOrder}
+                    onApprove={onPayPalApprove}
+                    onError={(err) => {
+                      console.error("PayPal Error:", err);
+                      toast.error("PayPal payment failed. Please try again.");
+                    }}
+                  />
+                </PayPalScriptProvider>
+              )}
 
               <p className="text-xs text-[#5C6D5E] text-center mt-4">
-                Secure payment powered by Stripe
+                {paymentMethod === "stripe" 
+                  ? "Secure payment powered by Stripe" 
+                  : "Secure payment powered by PayPal"}
               </p>
             </div>
           </div>

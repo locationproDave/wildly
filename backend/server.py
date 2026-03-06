@@ -33,6 +33,9 @@ JWT_EXPIRATION_HOURS = 24
 # Emergent Keys
 EMERGENT_LLM_KEY = os.environ.get('EMERGENT_LLM_KEY')
 STRIPE_API_KEY = os.environ.get('STRIPE_API_KEY')
+PAYPAL_CLIENT_ID = os.environ.get('PAYPAL_CLIENT_ID', 'sb')
+PAYPAL_CLIENT_SECRET = os.environ.get('PAYPAL_CLIENT_SECRET', '')
+PAYPAL_MODE = os.environ.get('PAYPAL_MODE', 'sandbox')  # sandbox or live
 
 # Create the main app
 app = FastAPI(title="CalmTails Pet Wellness Store")
@@ -145,6 +148,12 @@ class CheckoutRequest(BaseModel):
     email: str
     origin_url: str
     shipping_address: Optional[ShippingAddress] = None
+    promo_code: Optional[str] = None
+
+class PayPalOrderRequest(BaseModel):
+    cart_session_id: str
+    email: str
+    promo_code: Optional[str] = None
 
 class AgentQuery(BaseModel):
     query: str
@@ -565,9 +574,41 @@ async def create_checkout(checkout_data: CheckoutRequest, request: Request, user
                 "image": product["images"][0] if product.get("images") else None
             })
     
+    # Apply promo code discount
+    promo_discount = 0.0
+    applied_promo = None
+    if checkout_data.promo_code:
+        now = datetime.now(timezone.utc).isoformat()
+        promo = await db.promotions.find_one({
+            "code": checkout_data.promo_code.upper(),
+            "is_active": True,
+            "valid_from": {"$lte": now}
+        })
+        if promo:
+            # Check validity
+            valid = True
+            if promo.get("valid_until") and promo["valid_until"] < now:
+                valid = False
+            if promo.get("max_uses") and promo["uses_count"] >= promo["max_uses"]:
+                valid = False
+            if subtotal < promo.get("min_purchase", 0):
+                valid = False
+            if promo.get("is_first_order_only") and user:
+                order_count = await db.orders.count_documents({"user_id": user["id"], "payment_status": "paid"})
+                if order_count > 0:
+                    valid = False
+            
+            if valid:
+                if promo["discount_type"] == "percentage":
+                    promo_discount = subtotal * (promo["discount_value"] / 100)
+                elif promo["discount_type"] == "fixed_amount":
+                    promo_discount = min(promo["discount_value"], subtotal)
+                applied_promo = promo
+    
+    discounted_subtotal = max(0, subtotal - promo_discount)
     shipping_cost = 0.0 if subtotal >= 50 else 5.99
-    tax = round(subtotal * 0.08, 2)  # 8% tax
-    total = round(subtotal + shipping_cost + tax, 2)
+    tax = round(discounted_subtotal * 0.08, 2)  # 8% tax
+    total = round(discounted_subtotal + shipping_cost + tax, 2)
     
     # Create order
     order_id = str(uuid.uuid4())
@@ -580,12 +621,15 @@ async def create_checkout(checkout_data: CheckoutRequest, request: Request, user
         "email": checkout_data.email,
         "items": items,
         "subtotal": subtotal,
+        "promo_code": applied_promo["code"] if applied_promo else None,
+        "promo_discount": promo_discount,
         "shipping_cost": shipping_cost,
         "tax": tax,
         "total": total,
         "shipping_address": checkout_data.shipping_address.model_dump() if checkout_data.shipping_address else None,
         "status": "pending",
         "payment_status": "pending",
+        "payment_method": "stripe",
         "created_at": datetime.now(timezone.utc).isoformat(),
         "updated_at": datetime.now(timezone.utc).isoformat()
     }
@@ -704,6 +748,201 @@ async def stripe_webhook(request: Request):
     except Exception as e:
         logging.error(f"Webhook error: {str(e)}")
         return {"received": True, "error": str(e)}
+
+# ==================== PAYPAL ROUTES ====================
+
+import paypalrestsdk
+
+# Configure PayPal
+paypalrestsdk.configure({
+    "mode": PAYPAL_MODE,
+    "client_id": PAYPAL_CLIENT_ID,
+    "client_secret": PAYPAL_CLIENT_SECRET
+})
+
+@api_router.post("/paypal/create-order", response_model=dict)
+async def create_paypal_order(order_data: PayPalOrderRequest, user: Optional[dict] = Depends(get_current_user)):
+    """Create a PayPal order for checkout"""
+    # Get cart
+    cart = await db.carts.find_one({"session_id": order_data.cart_session_id})
+    if not cart or not cart.get("items"):
+        raise HTTPException(status_code=400, detail="Cart is empty")
+    
+    # Calculate totals
+    items = []
+    subtotal = 0.0
+    
+    for cart_item in cart["items"]:
+        product = await db.products.find_one({"id": cart_item["product_id"]}, {"_id": 0})
+        if product:
+            item_total = product["price"] * cart_item["quantity"]
+            subtotal += item_total
+            items.append({
+                "product_id": product["id"],
+                "product_name": product["name"],
+                "quantity": cart_item["quantity"],
+                "price": product["price"],
+                "image": product["images"][0] if product.get("images") else None
+            })
+    
+    # Apply promo code discount
+    promo_discount = 0.0
+    applied_promo = None
+    if order_data.promo_code:
+        now = datetime.now(timezone.utc).isoformat()
+        promo = await db.promotions.find_one({
+            "code": order_data.promo_code.upper(),
+            "is_active": True,
+            "valid_from": {"$lte": now}
+        })
+        if promo:
+            valid = True
+            if promo.get("valid_until") and promo["valid_until"] < now:
+                valid = False
+            if promo.get("max_uses") and promo["uses_count"] >= promo["max_uses"]:
+                valid = False
+            if subtotal < promo.get("min_purchase", 0):
+                valid = False
+            if promo.get("is_first_order_only") and user:
+                order_count = await db.orders.count_documents({"user_id": user["id"], "payment_status": "paid"})
+                if order_count > 0:
+                    valid = False
+            
+            if valid:
+                if promo["discount_type"] == "percentage":
+                    promo_discount = subtotal * (promo["discount_value"] / 100)
+                elif promo["discount_type"] == "fixed_amount":
+                    promo_discount = min(promo["discount_value"], subtotal)
+                applied_promo = promo
+    
+    discounted_subtotal = max(0, subtotal - promo_discount)
+    shipping_cost = 0.0 if subtotal >= 50 else 5.99
+    tax = round(discounted_subtotal * 0.08, 2)
+    total = round(discounted_subtotal + shipping_cost + tax, 2)
+    
+    # Create internal order
+    order_id = str(uuid.uuid4())
+    order_number = f"CT-{str(uuid.uuid4())[:8].upper()}"
+    
+    order_doc = {
+        "id": order_id,
+        "order_number": order_number,
+        "user_id": user["id"] if user else None,
+        "email": order_data.email,
+        "items": items,
+        "subtotal": subtotal,
+        "promo_code": applied_promo["code"] if applied_promo else None,
+        "promo_discount": promo_discount,
+        "shipping_cost": shipping_cost,
+        "tax": tax,
+        "total": total,
+        "status": "pending",
+        "payment_status": "pending",
+        "payment_method": "paypal",
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "updated_at": datetime.now(timezone.utc).isoformat()
+    }
+    await db.orders.insert_one(order_doc)
+    
+    # Create PayPal payment
+    payment = paypalrestsdk.Payment({
+        "intent": "sale",
+        "payer": {"payment_method": "paypal"},
+        "transactions": [{
+            "amount": {
+                "total": f"{total:.2f}",
+                "currency": "USD",
+                "details": {
+                    "subtotal": f"{discounted_subtotal:.2f}",
+                    "shipping": f"{shipping_cost:.2f}",
+                    "tax": f"{tax:.2f}"
+                }
+            },
+            "description": f"CalmTails Order {order_number}",
+            "custom": order_id,
+            "item_list": {
+                "items": [
+                    {
+                        "name": item["product_name"][:127],
+                        "price": f"{item['price']:.2f}",
+                        "currency": "USD",
+                        "quantity": item["quantity"]
+                    }
+                    for item in items[:10]  # PayPal limits items
+                ]
+            }
+        }],
+        "redirect_urls": {
+            "return_url": "https://calmtails.com/paypal/success",
+            "cancel_url": "https://calmtails.com/cart"
+        }
+    })
+    
+    if payment.create():
+        # Update order with PayPal payment ID
+        await db.orders.update_one(
+            {"id": order_id},
+            {"$set": {"paypal_payment_id": payment.id}}
+        )
+        
+        return {
+            "order_id": payment.id,
+            "internal_order_id": order_id,
+            "order_number": order_number,
+            "total": total
+        }
+    else:
+        logging.error(f"PayPal payment creation failed: {payment.error}")
+        raise HTTPException(status_code=500, detail="Failed to create PayPal order")
+
+@api_router.post("/paypal/capture-order/{paypal_order_id}", response_model=dict)
+async def capture_paypal_order(paypal_order_id: str, user: Optional[dict] = Depends(get_current_user)):
+    """Capture/execute a PayPal payment after user approval"""
+    # Find our order by PayPal payment ID
+    order = await db.orders.find_one({"paypal_payment_id": paypal_order_id})
+    if not order:
+        raise HTTPException(status_code=404, detail="Order not found")
+    
+    # Execute the payment
+    payment = paypalrestsdk.Payment.find(paypal_order_id)
+    
+    if payment.execute({"payer_id": payment.payer.payer_info.payer_id}):
+        # Payment successful - update order
+        await db.orders.update_one(
+            {"id": order["id"]},
+            {"$set": {
+                "payment_status": "paid",
+                "status": "processing",
+                "paypal_payer_id": payment.payer.payer_info.payer_id,
+                "updated_at": datetime.now(timezone.utc).isoformat()
+            }}
+        )
+        
+        # Update promo code usage if applicable
+        if order.get("promo_code"):
+            await db.promotions.update_one(
+                {"code": order["promo_code"]},
+                {"$inc": {"uses_count": 1}}
+            )
+        
+        # Award loyalty points if user is logged in
+        if order.get("user_id"):
+            await award_loyalty_points(order["user_id"], order["total"], order["id"])
+        
+        # Clear the cart
+        if order.get("user_id"):
+            await db.carts.delete_many({"user_id": order["user_id"]})
+        
+        return {
+            "success": True,
+            "order_id": order["id"],
+            "order_number": order["order_number"],
+            "total": order["total"],
+            "payment_status": "paid"
+        }
+    else:
+        logging.error(f"PayPal execution failed: {payment.error}")
+        raise HTTPException(status_code=400, detail="Payment execution failed")
 
 # ==================== ORDER ROUTES ====================
 

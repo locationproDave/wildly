@@ -11,7 +11,8 @@ import {
   ChevronRight,
   Clock,
   Truck,
-  CheckCircle
+  CheckCircle,
+  Tag
 } from "lucide-react";
 import { Button } from "../components/ui/button";
 import { Badge } from "../components/ui/badge";
@@ -107,6 +108,12 @@ const AdminDashboard = () => {
             <Button className="bg-[#2D4A3E] hover:bg-[#1F342B] rounded-full" data-testid="agents-btn">
               <Bot className="w-4 h-4 mr-2" />
               AI Agents
+            </Button>
+          </Link>
+          <Link to="/admin/promotions">
+            <Button variant="outline" className="rounded-full ml-3" data-testid="promotions-btn">
+              <Tag className="w-4 h-4 mr-2" />
+              Promotions
             </Button>
           </Link>
         </div>
