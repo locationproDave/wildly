@@ -20,6 +20,7 @@ import {
   DropdownMenuTrigger,
 } from "./ui/dropdown-menu";
 import { Avatar, AvatarFallback } from "./ui/avatar";
+import RealTimeNotifications from "./RealTimeNotifications";
 
 const Navbar = ({ onAuthClick }) => {
   const { user, logout } = useAuth();
@@ -70,7 +71,10 @@ const Navbar = ({ onAuthClick }) => {
           </div>
 
           {/* Right Section */}
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2 sm:gap-4">
+            {/* Real-time Notifications (Admin only) */}
+            {user?.is_admin && <RealTimeNotifications />}
+            
             {/* Cart */}
             <button
               onClick={() => setCartOpen(true)}

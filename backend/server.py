@@ -1,4 +1,4 @@
-from fastapi import FastAPI, APIRouter, HTTPException, Depends, status, Request
+from fastapi import FastAPI, APIRouter, HTTPException, Depends, status, Request, WebSocket, WebSocketDisconnect
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
@@ -16,6 +16,10 @@ import asyncio
 from emergentintegrations.llm.chat import LlmChat, UserMessage
 from emergentintegrations.payments.stripe.checkout import StripeCheckout, CheckoutSessionResponse, CheckoutStatusResponse, CheckoutSessionRequest
 from agents import AGENT_PROMPTS, AGENT_METADATA
+from core.websocket import (
+    manager, NotificationType, notify_new_order, notify_order_update,
+    notify_low_stock, notify_new_customer, notify_revenue_update
+)
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
@@ -388,6 +392,9 @@ async def register(user_data: UserCreate):
     
     await db.users.insert_one(user_doc)
     token = create_token(user_id)
+    
+    # Notify admin of new customer
+    asyncio.create_task(notify_new_customer(user_doc))
     
     return {
         "token": token,
@@ -810,6 +817,16 @@ async def stripe_webhook(request: Request):
                 order = await db.orders.find_one({"id": order_id}, {"_id": 0})
                 if order:
                     asyncio.create_task(send_order_confirmation_email(order))
+                    
+                    # Send real-time notification to admin
+                    asyncio.create_task(notify_new_order(order))
+                    asyncio.create_task(notify_revenue_update(order.get("total", 0), order.get("order_number", "")))
+                    
+                    # Check for low stock items and notify
+                    for item in order.get("items", []):
+                        product = await db.products.find_one({"id": item.get("product_id")}, {"_id": 0})
+                        if product and product.get("stock_quantity", 100) <= 10:
+                            asyncio.create_task(notify_low_stock(product))
                     
                     # Award loyalty points
                     if order.get("user_id"):
@@ -2529,12 +2546,136 @@ async def get_email_automation_stats(user: dict = Depends(require_admin)):
         "review_requests": {
             "eligible_orders": review_eligible
         },
+        "low_stock": await get_low_stock_count(),
         "automation_status": {
             "abandoned_cart": True,
             "review_request": True,
-            "low_stock_alert": False
+            "low_stock_alert": True
         }
     }
+
+async def get_low_stock_count():
+    """Get count of low stock products"""
+    low_stock_threshold = 10
+    return await db.products.count_documents({"stock_quantity": {"$lte": low_stock_threshold}, "in_stock": True})
+
+@api_router.get("/admin/low-stock-products", response_model=dict)
+async def get_low_stock_products(user: dict = Depends(require_admin)):
+    """Get all products with low stock"""
+    low_stock_threshold = 10
+    products = await db.products.find(
+        {"stock_quantity": {"$lte": low_stock_threshold}, "in_stock": True},
+        {"_id": 0}
+    ).sort("stock_quantity", 1).to_list(100)
+    
+    return {
+        "products": products,
+        "count": len(products),
+        "threshold": low_stock_threshold
+    }
+
+async def send_low_stock_alert_email(products: list):
+    """Send low stock alert email to admin"""
+    if not RESEND_API_KEY or not products:
+        return
+    
+    products_html = ""
+    for product in products[:10]:
+        products_html += f"""
+        <tr>
+            <td style="padding: 12px; border-bottom: 1px solid #E8DFD5;">
+                <strong>{product.get('name', 'Unknown')}</strong><br>
+                <span style="color: #5C6D5E; font-size: 12px;">SKU: {product.get('slug', 'N/A')}</span>
+            </td>
+            <td style="padding: 12px; border-bottom: 1px solid #E8DFD5; text-align: center;">
+                <span style="color: #E74C3C; font-weight: bold;">{product.get('stock_quantity', 0)}</span>
+            </td>
+        </tr>
+        """
+    
+    html_content = f"""
+    <!DOCTYPE html>
+    <html>
+    <head><meta charset="UTF-8"></head>
+    <body style="margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #FDF8F3;">
+        <table width="100%" cellpadding="0" cellspacing="0" style="max-width: 600px; margin: 0 auto; background-color: #FFFFFF;">
+            <tr>
+                <td style="background-color: #2D4A3E; padding: 24px; text-align: center;">
+                    <h1 style="color: #FFFFFF; margin: 0; font-size: 28px;">🐾 Wildly Ones</h1>
+                </td>
+            </tr>
+            <tr>
+                <td style="padding: 32px 24px;">
+                    <div style="background-color: #FEE2E2; border-left: 4px solid #E74C3C; padding: 16px; margin-bottom: 24px;">
+                        <h2 style="color: #E74C3C; margin: 0 0 8px 0;">⚠️ Low Stock Alert</h2>
+                        <p style="color: #5C6D5E; margin: 0;">{len(products)} products are running low on inventory.</p>
+                    </div>
+                    
+                    <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom: 24px;">
+                        <thead>
+                            <tr>
+                                <th style="padding: 12px; background-color: #E8DFD5; text-align: left;">Product</th>
+                                <th style="padding: 12px; background-color: #E8DFD5; text-align: center;">Stock</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {products_html}
+                        </tbody>
+                    </table>
+                    
+                    <table width="100%" cellpadding="0" cellspacing="0">
+                        <tr>
+                            <td style="text-align: center;">
+                                <a href="https://wildlyones.com/admin/products" style="display: inline-block; background-color: #D4A574; color: #2D4A3E; padding: 14px 32px; text-decoration: none; border-radius: 25px; font-weight: bold;">
+                                    Manage Inventory
+                                </a>
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+            <tr>
+                <td style="background-color: #2D4A3E; padding: 24px; text-align: center;">
+                    <p style="color: #D4A574; margin: 0; font-size: 12px;">© 2026 Wildly Ones Pet Wellness</p>
+                </td>
+            </tr>
+        </table>
+    </body>
+    </html>
+    """
+    
+    try:
+        # Get admin email
+        admin = await db.users.find_one({"is_admin": True}, {"email": 1})
+        if admin:
+            params = {
+                "from": SENDER_EMAIL,
+                "to": [admin.get("email")],
+                "subject": f"⚠️ Low Stock Alert: {len(products)} products need restocking",
+                "html": html_content
+            }
+            await asyncio.to_thread(resend.Emails.send, params)
+            logging.info(f"Low stock alert email sent")
+    except Exception as e:
+        logging.error(f"Failed to send low stock alert email: {str(e)}")
+
+@api_router.post("/admin/email-automation/send-low-stock", response_model=dict)
+async def trigger_low_stock_alerts(user: dict = Depends(require_admin)):
+    """Manually trigger low stock alert emails"""
+    low_stock_threshold = 10
+    products = await db.products.find(
+        {"stock_quantity": {"$lte": low_stock_threshold}, "in_stock": True},
+        {"_id": 0}
+    ).to_list(100)
+    
+    if products:
+        await send_low_stock_alert_email(products)
+        # Also send real-time notifications
+        for product in products:
+            await notify_low_stock(product)
+        return {"message": f"Low stock alert sent for {len(products)} products"}
+    
+    return {"message": "No low stock products found"}
 
 @api_router.post("/admin/email-automation/send-abandoned", response_model=dict)
 async def trigger_abandoned_cart_emails(user: dict = Depends(require_admin)):
@@ -3571,6 +3712,23 @@ logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
 logger = logging.getLogger(__name__)
+
+# ==================== WEBSOCKET ROUTES ====================
+
+@app.websocket("/ws/admin")
+async def websocket_admin_endpoint(websocket: WebSocket):
+    """WebSocket endpoint for real-time admin dashboard notifications"""
+    await manager.connect(websocket, "admin")
+    try:
+        while True:
+            # Keep connection alive and listen for messages
+            data = await websocket.receive_text()
+            # Can handle client messages here if needed
+    except WebSocketDisconnect:
+        manager.disconnect(websocket, "admin")
+    except Exception as e:
+        logger.error(f"WebSocket error: {e}")
+        manager.disconnect(websocket, "admin")
 
 @app.on_event("shutdown")
 async def shutdown_db_client():

@@ -25,7 +25,7 @@ const AdminEmailAutomationPage = () => {
   const { token } = useAuth();
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [sending, setSending] = useState({ abandoned: false, reviews: false });
+  const [sending, setSending] = useState({ abandoned: false, reviews: false, lowStock: false });
 
   useEffect(() => {
     fetchStats();
@@ -76,6 +76,23 @@ const AdminEmailAutomationPage = () => {
       toast.error("Failed to send review request emails");
     } finally {
       setSending(prev => ({ ...prev, reviews: false }));
+    }
+  };
+
+  const sendLowStockAlerts = async () => {
+    setSending(prev => ({ ...prev, lowStock: true }));
+    try {
+      const response = await axios.post(
+        `${BACKEND_URL}/api/admin/email-automation/send-low-stock`,
+        {},
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      toast.success(response.data.message);
+      fetchStats();
+    } catch (error) {
+      toast.error("Failed to send low stock alerts");
+    } finally {
+      setSending(prev => ({ ...prev, lowStock: false }));
     }
   };
 
@@ -223,23 +240,23 @@ const AdminEmailAutomationPage = () => {
           </div>
 
           {/* Low Stock Alerts */}
-          <div className="bg-white rounded-2xl p-6 shadow-sm opacity-75" data-testid="low-stock-card">
+          <div className="bg-white rounded-2xl p-6 shadow-sm" data-testid="low-stock-card">
             <div className="flex items-center justify-between mb-4">
               <div className="w-12 h-12 bg-red-100 rounded-xl flex items-center justify-center">
                 <AlertTriangle className="w-6 h-6 text-red-600" />
               </div>
-              <Badge className="bg-gray-100 text-gray-600">
-                Coming Soon
+              <Badge className={stats?.automation_status?.low_stock_alert ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-600"}>
+                {stats?.automation_status?.low_stock_alert ? "Active" : "Inactive"}
               </Badge>
             </div>
             <h3 className="text-lg font-semibold text-[#2D4A3E] mb-2">Low Stock Alerts</h3>
             <p className="text-sm text-[#5C6D5E] mb-4">
-              Get notified when products are running low on inventory.
+              Get notified when products are running low on inventory (below 10 units).
             </p>
             
             <div className="bg-[#FDF8F3] rounded-xl p-4 mb-4">
               <div className="text-center">
-                <p className="text-2xl font-bold text-gray-400">--</p>
+                <p className="text-2xl font-bold text-red-600">{stats?.low_stock || 0}</p>
                 <p className="text-xs text-[#5C6D5E]">Low stock products</p>
               </div>
             </div>
@@ -250,10 +267,19 @@ const AdminEmailAutomationPage = () => {
             </div>
             
             <Button 
-              disabled
-              className="w-full bg-gray-300 rounded-full cursor-not-allowed"
+              onClick={sendLowStockAlerts}
+              disabled={sending.lowStock || (stats?.low_stock || 0) === 0}
+              className="w-full bg-red-500 hover:bg-red-600 rounded-full"
+              data-testid="send-low-stock-btn"
             >
-              Configure Alerts
+              {sending.lowStock ? (
+                <>Sending...</>
+              ) : (
+                <>
+                  <Send className="w-4 h-4 mr-2" />
+                  Send Low Stock Alert
+                </>
+              )}
             </Button>
           </div>
         </div>

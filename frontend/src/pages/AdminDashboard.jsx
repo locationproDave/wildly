@@ -100,80 +100,82 @@ const AdminDashboard = () => {
   ];
 
   return (
-    <div className="min-h-screen pt-24 pb-12">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between mb-8">
+    <div className="min-h-screen pt-20 sm:pt-24 pb-12">
+      <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
+        {/* Header - Mobile Optimized */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6 sm:mb-8">
           <div>
-            <h1 className="text-3xl font-bold text-[#2D4A3E] font-['Fraunces']">
+            <h1 className="text-2xl sm:text-3xl font-bold text-[#2D4A3E] font-['Fraunces']">
               Admin Dashboard
             </h1>
-            <p className="text-[#5C6D5E]">Manage your store</p>
+            <p className="text-sm sm:text-base text-[#5C6D5E]">Manage your store</p>
           </div>
-          <div className="flex items-center gap-3 flex-wrap">
+          {/* Navigation - Scrollable on mobile */}
+          <div className="flex items-center gap-2 overflow-x-auto pb-2 -mx-3 px-3 sm:mx-0 sm:px-0 sm:gap-3 sm:flex-wrap scrollbar-hide">
             <Link to="/admin/analytics">
-              <Button variant="outline" className="rounded-full" data-testid="analytics-btn">
-                <BarChart3 className="w-4 h-4 mr-2" />
-                Analytics
+              <Button variant="outline" size="sm" className="rounded-full whitespace-nowrap" data-testid="analytics-btn">
+                <BarChart3 className="w-4 h-4 sm:mr-2" />
+                <span className="hidden sm:inline">Analytics</span>
               </Button>
             </Link>
             <Link to="/admin/segments">
-              <Button variant="outline" className="rounded-full" data-testid="segments-btn">
-                <UserCircle className="w-4 h-4 mr-2" />
-                Segments
+              <Button variant="outline" size="sm" className="rounded-full whitespace-nowrap" data-testid="segments-btn">
+                <UserCircle className="w-4 h-4 sm:mr-2" />
+                <span className="hidden sm:inline">Segments</span>
               </Button>
             </Link>
             <Link to="/admin/emails">
-              <Button variant="outline" className="rounded-full" data-testid="emails-btn">
-                <Mail className="w-4 h-4 mr-2" />
-                Emails
+              <Button variant="outline" size="sm" className="rounded-full whitespace-nowrap" data-testid="emails-btn">
+                <Mail className="w-4 h-4 sm:mr-2" />
+                <span className="hidden sm:inline">Emails</span>
               </Button>
             </Link>
             <Link to="/admin/orders">
-              <Button variant="outline" className="rounded-full" data-testid="orders-btn">
-                <ClipboardList className="w-4 h-4 mr-2" />
-                Orders
+              <Button variant="outline" size="sm" className="rounded-full whitespace-nowrap" data-testid="orders-btn">
+                <ClipboardList className="w-4 h-4 sm:mr-2" />
+                <span className="hidden sm:inline">Orders</span>
               </Button>
             </Link>
             <Link to="/admin/products">
-              <Button variant="outline" className="rounded-full" data-testid="products-btn">
-                <PackagePlus className="w-4 h-4 mr-2" />
-                Products
+              <Button variant="outline" size="sm" className="rounded-full whitespace-nowrap" data-testid="products-btn">
+                <PackagePlus className="w-4 h-4 sm:mr-2" />
+                <span className="hidden sm:inline">Products</span>
               </Button>
             </Link>
             <Link to="/admin/promotions">
-              <Button variant="outline" className="rounded-full" data-testid="promotions-btn">
-                <Tag className="w-4 h-4 mr-2" />
-                Promotions
+              <Button variant="outline" size="sm" className="rounded-full whitespace-nowrap" data-testid="promotions-btn">
+                <Tag className="w-4 h-4 sm:mr-2" />
+                <span className="hidden sm:inline">Promotions</span>
               </Button>
             </Link>
             <Link to="/admin/agents">
-              <Button className="bg-[#2D4A3E] hover:bg-[#1F342B] rounded-full" data-testid="agents-btn">
-                <Bot className="w-4 h-4 mr-2" />
-                AI Agents
+              <Button size="sm" className="bg-[#2D4A3E] hover:bg-[#1F342B] rounded-full whitespace-nowrap" data-testid="agents-btn">
+                <Bot className="w-4 h-4 sm:mr-2" />
+                <span className="hidden sm:inline">AI Agents</span>
               </Button>
             </Link>
           </div>
         </div>
 
-        {/* Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        {/* Stats - Responsive Grid */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6 mb-6 sm:mb-8">
           {statCards.map((stat, index) => (
-            <div key={index} className="bg-white rounded-2xl p-6 shadow-sm" data-testid={`stat-${index}`}>
-              <div className="flex items-center gap-4">
-                <div className={`w-12 h-12 ${stat.color} rounded-xl flex items-center justify-center text-white`}>
+            <div key={index} className="bg-white rounded-xl sm:rounded-2xl p-4 sm:p-6 shadow-sm" data-testid={`stat-${index}`}>
+              <div className="flex items-center gap-3 sm:gap-4">
+                <div className={`w-10 h-10 sm:w-12 sm:h-12 ${stat.color} rounded-lg sm:rounded-xl flex items-center justify-center text-white flex-shrink-0`}>
                   {stat.icon}
                 </div>
-                <div>
-                  <p className="text-2xl font-bold text-[#2D4A3E]">{stat.value}</p>
-                  <p className="text-sm text-[#5C6D5E]">{stat.label}</p>
+                <div className="min-w-0">
+                  <p className="text-lg sm:text-2xl font-bold text-[#2D4A3E] truncate">{stat.value}</p>
+                  <p className="text-xs sm:text-sm text-[#5C6D5E]">{stat.label}</p>
                 </div>
               </div>
             </div>
           ))}
         </div>
 
-        {/* Order Pipeline */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+        {/* Order Pipeline - Scrollable on mobile */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-4 mb-6 sm:mb-8">
           <div 
             className={`bg-white rounded-xl p-4 cursor-pointer transition-all ${statusFilter === "" ? "ring-2 ring-[#2D4A3E]" : ""}`}
             onClick={() => setStatusFilter("")}
