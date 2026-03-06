@@ -39,7 +39,6 @@ const SupportPage = () => {
   const handleTabChange = (tabId) => {
     if (tabId !== activeTab) {
       setActiveTab(tabId);
-      window.scrollTo(0, 0);
     }
   };
 

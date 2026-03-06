@@ -1,16 +1,73 @@
-import React, { useState, useEffect, createContext, useContext } from "react";
+import React, { useState, useEffect, createContext, useContext, useRef } from "react";
 import "@/App.css";
 import { BrowserRouter, Routes, Route, Navigate, useNavigate, useLocation } from "react-router-dom";
 import axios from "axios";
 import { Toaster, toast } from "sonner";
 
-// Scroll to top on route change
+// Scroll to top on new navigation, preserve position on back/forward
 const ScrollToTop = () => {
-  const { pathname } = useLocation();
+  const location = useLocation();
+  const isPopState = useRef(false);
   
   useEffect(() => {
-    window.scrollTo(0, 0);
-  }, [pathname]);
+    // Enable manual scroll restoration
+    if ('scrollRestoration' in window.history) {
+      window.history.scrollRestoration = 'manual';
+    }
+    
+    // Listen for popstate (back/forward)
+    const handlePopState = () => {
+      isPopState.current = true;
+    };
+    
+    window.addEventListener('popstate', handlePopState);
+    return () => {
+      window.removeEventListener('popstate', handlePopState);
+    };
+  }, []);
+  
+  useEffect(() => {
+    // Small delay to allow popstate to be detected
+    const timer = setTimeout(() => {
+      if (!isPopState.current) {
+        // New navigation - scroll to top
+        window.scrollTo(0, 0);
+      }
+      // Reset the flag
+      isPopState.current = false;
+    }, 10);
+    
+    return () => clearTimeout(timer);
+  }, [location.pathname, location.search]);
+  
+  // Save scroll position before leaving page
+  useEffect(() => {
+    const saveScrollPos = () => {
+      const key = location.pathname + location.search;
+      sessionStorage.setItem(`scroll_${key}`, String(window.scrollY));
+    };
+    
+    window.addEventListener('beforeunload', saveScrollPos);
+    
+    // Also save on route change
+    return () => {
+      saveScrollPos();
+      window.removeEventListener('beforeunload', saveScrollPos);
+    };
+  }, [location.pathname, location.search]);
+  
+  // Restore scroll position for back/forward
+  useEffect(() => {
+    if (isPopState.current) {
+      const key = location.pathname + location.search;
+      const savedPos = sessionStorage.getItem(`scroll_${key}`);
+      if (savedPos) {
+        setTimeout(() => {
+          window.scrollTo(0, parseInt(savedPos, 10));
+        }, 50);
+      }
+    }
+  }, [location.pathname, location.search]);
   
   return null;
 };
