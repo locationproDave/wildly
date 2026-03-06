@@ -121,14 +121,13 @@ const HomePage = () => {
               </div>
               
               <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight leading-tight text-[#2D4A3E] mb-4 sm:mb-6 font-['Fraunces']">
-                Calm begins
+                Happy pets start
                 <br />
-                <span className="text-[#D4A574]">with care</span>
+                <span className="text-[#D4A574]">with better care.</span>
               </h1>
               
               <p className="text-base sm:text-lg md:text-xl leading-relaxed text-[#5C6D5E] mb-6 sm:mb-8 max-w-lg">
-                Science-backed wellness products designed to help your furry family members 
-                feel safe, relaxed, and loved.
+                Nature-inspired, science-backed wellness for the animals who fill your life with joy.
               </p>
               
               <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
