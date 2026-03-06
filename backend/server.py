@@ -38,6 +38,7 @@ PAYPAL_CLIENT_SECRET = os.environ.get('PAYPAL_CLIENT_SECRET', '')
 PAYPAL_MODE = os.environ.get('PAYPAL_MODE', 'sandbox')  # sandbox or live
 RESEND_API_KEY = os.environ.get('RESEND_API_KEY', '')
 SENDER_EMAIL = os.environ.get('SENDER_EMAIL', 'onboarding@resend.dev')
+TRACK17_API_KEY = os.environ.get('TRACK17_API_KEY', '')
 
 # Configure Resend
 import resend
@@ -226,6 +227,31 @@ class ReviewCreate(BaseModel):
     content: str
     images: List[str] = []
 
+class Referral(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    referrer_id: str  # User who shared the code
+    referrer_code: str  # Unique referral code
+    referee_id: Optional[str] = None  # User who used the code
+    referee_email: Optional[str] = None
+    status: str = "pending"  # pending, completed, expired
+    referrer_reward: float = 10.0  # $10 for referrer
+    referee_reward: float = 10.0  # $10 for referee
+    order_id: Optional[str] = None  # Order that completed the referral
+    created_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
+    completed_at: Optional[str] = None
+
+class OrderTracking(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    carrier: str  # ups, fedex, usps, dhl, etc.
+    tracking_number: str
+    status: str = "in_transit"  # pending, in_transit, out_for_delivery, delivered, exception
+    status_description: str = ""
+    estimated_delivery: Optional[str] = None
+    last_location: Optional[str] = None
+    events: List[dict] = []  # List of tracking events
+    last_updated: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
+
 # ==================== AUTH HELPERS ====================
 
 def hash_password(password: str) -> str:
@@ -243,6 +269,14 @@ def create_token(user_id: str) -> str:
 
 def generate_discount_code() -> str:
     return f"CALM{str(uuid.uuid4())[:8].upper()}"
+
+def generate_referral_code(user_name: str) -> str:
+    """Generate a unique referral code based on user name"""
+    prefix = ''.join(c for c in user_name.upper() if c.isalpha())[:4]
+    if len(prefix) < 4:
+        prefix = prefix.ljust(4, 'X')
+    suffix = str(uuid.uuid4())[:4].upper()
+    return f"{prefix}{suffix}"
 
 async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)) -> Optional[dict]:
     if not credentials:
@@ -780,6 +814,8 @@ async def stripe_webhook(request: Request):
                     # Award loyalty points
                     if order.get("user_id"):
                         await award_loyalty_points(order["user_id"], order["total"], order_id)
+                        # Complete any pending referral
+                        await complete_referral(order["user_id"], order_id)
         
         return {"received": True}
     except Exception as e:
@@ -965,6 +1001,8 @@ async def capture_paypal_order(paypal_order_id: str, user: Optional[dict] = Depe
         # Award loyalty points if user is logged in
         if order.get("user_id"):
             await award_loyalty_points(order["user_id"], order["total"], order["id"])
+            # Complete any pending referral
+            await complete_referral(order["user_id"], order["id"])
         
         # Clear the cart
         if order.get("user_id"):
@@ -1656,6 +1694,448 @@ async def mark_review_helpful(review_id: str, user: Optional[dict] = Depends(get
     )
     
     return {"message": "Marked as helpful", "helpful_count": review.get("helpful_count", 0) + 1}
+
+# ==================== REFERRAL ROUTES ====================
+
+@api_router.get("/referral/code", response_model=dict)
+async def get_referral_code(user: dict = Depends(require_user)):
+    """Get or create user's referral code"""
+    # Check if user already has a referral code
+    existing = await db.referrals.find_one({"referrer_id": user["id"], "referee_id": None}, {"_id": 0})
+    
+    if existing:
+        referral_code = existing["referrer_code"]
+    else:
+        # Generate new referral code
+        user_name = user.get("name", user.get("email", "").split("@")[0])
+        referral_code = generate_referral_code(user_name)
+        
+        # Make sure code is unique
+        while await db.referrals.find_one({"referrer_code": referral_code}):
+            referral_code = generate_referral_code(user_name)
+        
+        # Create referral entry
+        referral = {
+            "id": str(uuid.uuid4()),
+            "referrer_id": user["id"],
+            "referrer_code": referral_code,
+            "referee_id": None,
+            "referee_email": None,
+            "status": "pending",
+            "referrer_reward": 10.0,
+            "referee_reward": 10.0,
+            "created_at": datetime.now(timezone.utc).isoformat()
+        }
+        await db.referrals.insert_one(referral)
+    
+    # Get referral stats
+    completed_referrals = await db.referrals.count_documents({
+        "referrer_id": user["id"],
+        "status": "completed"
+    })
+    total_earned = completed_referrals * 10.0
+    
+    return {
+        "referral_code": referral_code,
+        "share_url": f"https://calmtails.com/ref/{referral_code}",
+        "reward_amount": 10.0,
+        "completed_referrals": completed_referrals,
+        "total_earned": total_earned
+    }
+
+@api_router.get("/referral/validate/{code}", response_model=dict)
+async def validate_referral_code(code: str, user: Optional[dict] = Depends(get_current_user)):
+    """Validate a referral code and check if it can be used"""
+    referral = await db.referrals.find_one({"referrer_code": code.upper()}, {"_id": 0})
+    
+    if not referral:
+        raise HTTPException(status_code=404, detail="Invalid referral code")
+    
+    # Check if user is trying to use their own code
+    if user and referral["referrer_id"] == user["id"]:
+        raise HTTPException(status_code=400, detail="You cannot use your own referral code")
+    
+    # Check if user has already used a referral code
+    if user:
+        existing_use = await db.referrals.find_one({
+            "referee_id": user["id"],
+            "status": "completed"
+        })
+        if existing_use:
+            raise HTTPException(status_code=400, detail="You have already used a referral code")
+    
+    # Get referrer info
+    referrer = await db.users.find_one({"id": referral["referrer_id"]}, {"_id": 0, "name": 1, "email": 1})
+    referrer_name = referrer.get("name", referrer.get("email", "").split("@")[0]) if referrer else "A friend"
+    
+    return {
+        "valid": True,
+        "code": code.upper(),
+        "referrer_name": referrer_name,
+        "reward_amount": referral["referee_reward"],
+        "message": f"{referrer_name} wants to give you ${referral['referee_reward']:.0f} off your first order!"
+    }
+
+@api_router.post("/referral/apply/{code}", response_model=dict)
+async def apply_referral_code(code: str, user: dict = Depends(require_user)):
+    """Apply a referral code and create discount for user"""
+    referral = await db.referrals.find_one({"referrer_code": code.upper()})
+    
+    if not referral:
+        raise HTTPException(status_code=404, detail="Invalid referral code")
+    
+    if referral["referrer_id"] == user["id"]:
+        raise HTTPException(status_code=400, detail="You cannot use your own referral code")
+    
+    # Check if user already has a pending referral
+    existing = await db.referrals.find_one({
+        "referee_id": user["id"],
+        "status": {"$in": ["pending", "completed"]}
+    })
+    if existing:
+        raise HTTPException(status_code=400, detail="You have already used a referral code")
+    
+    # Create a promo code for the referee
+    promo_code = f"REF{str(uuid.uuid4())[:6].upper()}"
+    promotion = {
+        "id": str(uuid.uuid4()),
+        "code": promo_code,
+        "name": f"Referral Reward - ${referral['referee_reward']:.0f} Off",
+        "description": "Referral discount for new customer",
+        "discount_type": "fixed_amount",
+        "discount_value": referral["referee_reward"],
+        "min_purchase": 0,
+        "max_uses": 1,
+        "uses_count": 0,
+        "is_active": True,
+        "is_first_order_only": True,
+        "is_loyalty_reward": False,
+        "valid_from": datetime.now(timezone.utc).isoformat(),
+        "valid_until": (datetime.now(timezone.utc) + timedelta(days=30)).isoformat(),
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    await db.promotions.insert_one(promotion)
+    
+    # Update the referral with referee info
+    await db.referrals.update_one(
+        {"id": referral["id"]},
+        {"$set": {
+            "referee_id": user["id"],
+            "referee_email": user.get("email"),
+            "status": "pending"
+        }}
+    )
+    
+    return {
+        "message": f"You got ${referral['referee_reward']:.0f} off! Use code {promo_code} at checkout.",
+        "promo_code": promo_code,
+        "discount_amount": referral["referee_reward"]
+    }
+
+async def complete_referral(user_id: str, order_id: str):
+    """Complete a referral after successful first order"""
+    # Find pending referral for this user
+    referral = await db.referrals.find_one({
+        "referee_id": user_id,
+        "status": "pending"
+    })
+    
+    if not referral:
+        return
+    
+    # Mark referral as completed
+    await db.referrals.update_one(
+        {"id": referral["id"]},
+        {"$set": {
+            "status": "completed",
+            "order_id": order_id,
+            "completed_at": datetime.now(timezone.utc).isoformat()
+        }}
+    )
+    
+    # Create promo code reward for referrer
+    promo_code = f"THANKYOU{str(uuid.uuid4())[:4].upper()}"
+    promotion = {
+        "id": str(uuid.uuid4()),
+        "code": promo_code,
+        "name": f"Referral Reward - ${referral['referrer_reward']:.0f} Off",
+        "description": "Thank you for referring a friend!",
+        "discount_type": "fixed_amount",
+        "discount_value": referral["referrer_reward"],
+        "min_purchase": 0,
+        "max_uses": 1,
+        "uses_count": 0,
+        "is_active": True,
+        "is_first_order_only": False,
+        "is_loyalty_reward": False,
+        "valid_from": datetime.now(timezone.utc).isoformat(),
+        "valid_until": (datetime.now(timezone.utc) + timedelta(days=90)).isoformat(),
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    await db.promotions.insert_one(promotion)
+    
+    # Award bonus loyalty points to referrer
+    referrer_loyalty = await db.loyalty_points.find_one({"user_id": referral["referrer_id"]})
+    if referrer_loyalty:
+        bonus_points = 100  # Bonus points for successful referral
+        await db.loyalty_points.update_one(
+            {"user_id": referral["referrer_id"]},
+            {"$inc": {"points": bonus_points, "lifetime_points": bonus_points}}
+        )
+        transaction = {
+            "id": str(uuid.uuid4()),
+            "user_id": referral["referrer_id"],
+            "points": bonus_points,
+            "transaction_type": "bonus",
+            "description": "Referral bonus - friend completed their first order!",
+            "created_at": datetime.now(timezone.utc).isoformat()
+        }
+        await db.points_transactions.insert_one(transaction)
+    
+    logging.info(f"Referral completed: {referral['id']}, referrer gets code {promo_code}")
+
+@api_router.get("/referral/stats", response_model=dict)
+async def get_referral_stats(user: dict = Depends(require_user)):
+    """Get user's referral statistics"""
+    referrals = await db.referrals.find({
+        "referrer_id": user["id"]
+    }, {"_id": 0}).to_list(100)
+    
+    completed = [r for r in referrals if r.get("status") == "completed"]
+    pending = [r for r in referrals if r.get("status") == "pending" and r.get("referee_id")]
+    
+    return {
+        "total_referrals": len(completed),
+        "pending_referrals": len(pending),
+        "total_earned": len(completed) * 10.0,
+        "referrals": [
+            {
+                "referee_email": r.get("referee_email", "")[:3] + "***",
+                "status": r.get("status"),
+                "completed_at": r.get("completed_at"),
+                "reward": r.get("referrer_reward", 10.0)
+            }
+            for r in referrals if r.get("referee_id")
+        ]
+    }
+
+# ==================== ORDER TRACKING ROUTES ====================
+
+CARRIER_NAMES = {
+    "ups": "UPS",
+    "fedex": "FedEx",
+    "usps": "USPS",
+    "dhl": "DHL",
+    "amazon": "Amazon Logistics",
+    "ontrac": "OnTrac",
+    "lasership": "LaserShip"
+}
+
+@api_router.get("/orders/{order_id}/tracking", response_model=dict)
+async def get_order_tracking(order_id: str, user: dict = Depends(require_user)):
+    """Get tracking info for an order"""
+    order = await db.orders.find_one({
+        "id": order_id,
+        "$or": [{"user_id": user["id"]}, {"email": user.get("email")}]
+    }, {"_id": 0})
+    
+    if not order:
+        raise HTTPException(status_code=404, detail="Order not found")
+    
+    tracking = order.get("tracking")
+    if not tracking:
+        return {
+            "has_tracking": False,
+            "message": "Tracking information not yet available. You'll receive an email when your order ships."
+        }
+    
+    return {
+        "has_tracking": True,
+        "carrier": CARRIER_NAMES.get(tracking.get("carrier", "").lower(), tracking.get("carrier", "")),
+        "tracking_number": tracking.get("tracking_number"),
+        "status": tracking.get("status"),
+        "status_description": tracking.get("status_description"),
+        "estimated_delivery": tracking.get("estimated_delivery"),
+        "last_location": tracking.get("last_location"),
+        "events": tracking.get("events", []),
+        "last_updated": tracking.get("last_updated"),
+        "tracking_url": get_carrier_tracking_url(tracking.get("carrier"), tracking.get("tracking_number"))
+    }
+
+def get_carrier_tracking_url(carrier: str, tracking_number: str) -> str:
+    """Generate tracking URL for various carriers"""
+    carrier = carrier.lower() if carrier else ""
+    urls = {
+        "ups": f"https://www.ups.com/track?tracknum={tracking_number}",
+        "fedex": f"https://www.fedex.com/fedextrack/?trknbr={tracking_number}",
+        "usps": f"https://tools.usps.com/go/TrackConfirmAction?tLabels={tracking_number}",
+        "dhl": f"https://www.dhl.com/en/express/tracking.html?AWB={tracking_number}",
+        "amazon": f"https://track.amazon.com/tracking/{tracking_number}"
+    }
+    return urls.get(carrier, f"https://www.17track.net/en/track?nums={tracking_number}")
+
+@api_router.post("/admin/orders/{order_id}/tracking", response_model=dict)
+async def add_order_tracking(
+    order_id: str,
+    carrier: str,
+    tracking_number: str,
+    user: dict = Depends(require_admin)
+):
+    """Add tracking information to an order (admin only)"""
+    order = await db.orders.find_one({"id": order_id})
+    if not order:
+        raise HTTPException(status_code=404, detail="Order not found")
+    
+    tracking = {
+        "carrier": carrier.lower(),
+        "tracking_number": tracking_number,
+        "status": "in_transit",
+        "status_description": "Package is on its way",
+        "estimated_delivery": (datetime.now(timezone.utc) + timedelta(days=5)).isoformat(),
+        "last_location": None,
+        "events": [
+            {
+                "status": "shipped",
+                "description": f"Shipped via {CARRIER_NAMES.get(carrier.lower(), carrier)}",
+                "location": "Warehouse",
+                "timestamp": datetime.now(timezone.utc).isoformat()
+            }
+        ],
+        "last_updated": datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.orders.update_one(
+        {"id": order_id},
+        {"$set": {
+            "tracking": tracking,
+            "status": "shipped",
+            "updated_at": datetime.now(timezone.utc).isoformat()
+        }}
+    )
+    
+    # Send shipping notification email
+    updated_order = await db.orders.find_one({"id": order_id}, {"_id": 0})
+    if updated_order and updated_order.get("email"):
+        asyncio.create_task(send_shipping_notification_email(updated_order, tracking))
+    
+    return {
+        "message": "Tracking added successfully",
+        "tracking": tracking,
+        "tracking_url": get_carrier_tracking_url(carrier, tracking_number)
+    }
+
+@api_router.put("/admin/orders/{order_id}/tracking", response_model=dict)
+async def update_order_tracking(
+    order_id: str,
+    status: str,
+    status_description: str,
+    location: Optional[str] = None,
+    user: dict = Depends(require_admin)
+):
+    """Update tracking status for an order (admin only)"""
+    order = await db.orders.find_one({"id": order_id})
+    if not order or not order.get("tracking"):
+        raise HTTPException(status_code=404, detail="Order or tracking not found")
+    
+    tracking = order["tracking"]
+    
+    # Add new event
+    event = {
+        "status": status,
+        "description": status_description,
+        "location": location,
+        "timestamp": datetime.now(timezone.utc).isoformat()
+    }
+    tracking["events"].append(event)
+    tracking["status"] = status
+    tracking["status_description"] = status_description
+    if location:
+        tracking["last_location"] = location
+    tracking["last_updated"] = datetime.now(timezone.utc).isoformat()
+    
+    # Update order status if delivered
+    order_status = "shipped"
+    if status == "delivered":
+        order_status = "delivered"
+    elif status == "out_for_delivery":
+        order_status = "shipped"
+    
+    await db.orders.update_one(
+        {"id": order_id},
+        {"$set": {
+            "tracking": tracking,
+            "status": order_status,
+            "updated_at": datetime.now(timezone.utc).isoformat()
+        }}
+    )
+    
+    return {"message": "Tracking updated", "tracking": tracking}
+
+async def send_shipping_notification_email(order: dict, tracking: dict):
+    """Send shipping notification email to customer"""
+    if not RESEND_API_KEY:
+        logging.warning("RESEND_API_KEY not configured - skipping shipping email")
+        return None
+    
+    carrier_name = CARRIER_NAMES.get(tracking.get("carrier", "").lower(), tracking.get("carrier", ""))
+    tracking_url = get_carrier_tracking_url(tracking.get("carrier"), tracking.get("tracking_number"))
+    
+    html_content = f"""
+    <!DOCTYPE html>
+    <html>
+    <head><meta charset="UTF-8"></head>
+    <body style="margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #FDF8F3;">
+        <table width="100%" cellpadding="0" cellspacing="0" style="max-width: 600px; margin: 0 auto; background-color: #FFFFFF;">
+            <tr>
+                <td style="background-color: #2D4A3E; padding: 24px; text-align: center;">
+                    <h1 style="color: #FFFFFF; margin: 0; font-size: 28px;">🐾 CalmTails</h1>
+                </td>
+            </tr>
+            <tr>
+                <td style="padding: 32px 24px;">
+                    <h2 style="color: #2D4A3E; margin: 0 0 8px 0;">Your order is on its way! 📦</h2>
+                    <p style="color: #5C6D5E; margin: 0 0 24px 0;">
+                        Great news! Your order <strong>{order.get('order_number', '')}</strong> has shipped.
+                    </p>
+                    
+                    <div style="background-color: #E8DFD5; padding: 20px; border-radius: 12px; margin-bottom: 24px;">
+                        <p style="margin: 0 0 8px 0; color: #2D4A3E;"><strong>Carrier:</strong> {carrier_name}</p>
+                        <p style="margin: 0 0 8px 0; color: #2D4A3E;"><strong>Tracking Number:</strong> {tracking.get('tracking_number', '')}</p>
+                        <p style="margin: 0; color: #5C6D5E;">Estimated delivery: 3-5 business days</p>
+                    </div>
+                    
+                    <table width="100%" cellpadding="0" cellspacing="0">
+                        <tr>
+                            <td style="text-align: center;">
+                                <a href="{tracking_url}" style="display: inline-block; background-color: #D4A574; color: #2D4A3E; padding: 14px 32px; text-decoration: none; border-radius: 25px; font-weight: bold;">
+                                    Track Your Package
+                                </a>
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+            <tr>
+                <td style="background-color: #2D4A3E; padding: 24px; text-align: center;">
+                    <p style="color: #D4A574; margin: 0; font-size: 12px;">© 2026 CalmTails Pet Wellness</p>
+                </td>
+            </tr>
+        </table>
+    </body>
+    </html>
+    """
+    
+    try:
+        params = {
+            "from": SENDER_EMAIL,
+            "to": [order.get("email")],
+            "subject": f"Your CalmTails order is on its way! 📦",
+            "html": html_content
+        }
+        await asyncio.to_thread(resend.Emails.send, params)
+        logging.info(f"Shipping notification email sent to {order.get('email')}")
+    except Exception as e:
+        logging.error(f"Failed to send shipping email: {str(e)}")
 
 # ==================== AGENT ROUTES ====================
 

@@ -380,7 +380,7 @@ const HomePage = () => {
                 <span className="text-sm text-white/70">Bronze → Platinum</span>
               </div>
             </div>
-            <Link to="/account">
+            <Link to="/referral">
               <Button 
                 className="bg-[#D4A574] hover:bg-[#C49564] text-[#2D4A3E] rounded-full font-semibold px-6"
                 data-testid="join-rewards-btn"

@@ -14,6 +14,7 @@ import AccountPage from "./pages/AccountPage";
 import AdminDashboard from "./pages/AdminDashboard";
 import AdminPromotionsPage from "./pages/AdminPromotionsPage";
 import AgentsPage from "./pages/AgentsPage";
+import ReferralPage from "./pages/ReferralPage";
 
 // Components
 import Navbar from "./components/Navbar";
@@ -270,6 +271,11 @@ function App() {
             <Route path="/account" element={
               <AppLayout>
                 <ProtectedRoute><AccountPage /></ProtectedRoute>
+              </AppLayout>
+            } />
+            <Route path="/referral" element={
+              <AppLayout>
+                <ReferralPage />
               </AppLayout>
             } />
             <Route path="/admin" element={
