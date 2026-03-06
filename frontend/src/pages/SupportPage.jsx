@@ -36,6 +36,13 @@ const SupportPage = () => {
     }
   }, [searchParams]);
 
+  const handleTabChange = (tabId) => {
+    if (tabId !== activeTab) {
+      setActiveTab(tabId);
+      window.scrollTo(0, 0);
+    }
+  };
+
   const tabs = [
     { id: "contact", label: "Contact Us", icon: Mail },
     { id: "shipping", label: "Shipping Info", icon: Truck },
@@ -160,7 +167,7 @@ const SupportPage = () => {
             return (
               <button
                 key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
+                onClick={() => handleTabChange(tab.id)}
                 className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all ${
                   activeTab === tab.id
                     ? "bg-[#2D4A3E] text-white"
@@ -463,7 +470,7 @@ const SupportPage = () => {
           <p className="text-white/80 mb-4">Our pet-loving support team is here for you</p>
           <div className="flex flex-wrap justify-center gap-3">
             <Button 
-              onClick={() => setActiveTab("contact")}
+              onClick={() => handleTabChange("contact")}
               className="bg-white text-[#2D4A3E] hover:bg-[#E8DFD5] rounded-full"
             >
               <Mail className="w-4 h-4 mr-2" />
