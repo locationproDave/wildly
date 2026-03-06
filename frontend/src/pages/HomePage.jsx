@@ -121,9 +121,9 @@ const HomePage = () => {
               </div>
               
               <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight leading-tight text-[#2D4A3E] mb-4 sm:mb-6 font-['Fraunces']">
-                Happy pets <span className="text-[#E8C9A0]">start</span>
+                Happy pets <span className="text-[#d4899a]">start</span>
                 <br />
-                <span className="text-[#E8C9A0]">with</span> <span className="text-[#D4A574]">better care.</span>
+                <span className="text-[#d4899a]">with</span> <span className="text-[#d4899a]">better care.</span>
               </h1>
               
               <p className="text-base sm:text-lg md:text-xl leading-relaxed text-[#5C6D5E] mb-6 sm:mb-8 max-w-lg">
