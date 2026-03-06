@@ -13,7 +13,8 @@ import {
   Bird,
   Fish,
   Rabbit,
-  Squirrel
+  Squirrel,
+  Egg
 } from "lucide-react";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
@@ -207,6 +208,15 @@ const ProductsPage = () => {
               data-testid="filter-reptile"
             >
               Reptiles
+            </Button>
+            <Button
+              variant={currentPetType === "chicken" ? "default" : "outline"}
+              className={`rounded-full ${currentPetType === "chicken" ? "bg-[#E8B05C]" : ""}`}
+              onClick={() => setFilter("pet_type", currentPetType === "chicken" ? "" : "chicken")}
+              data-testid="filter-chicken"
+            >
+              <Egg className="w-4 h-4 mr-2" />
+              Chickens
             </Button>
           </div>
 

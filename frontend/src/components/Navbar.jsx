@@ -15,7 +15,8 @@ import {
   Bird,
   Fish,
   Squirrel,
-  Sparkles
+  Sparkles,
+  Egg
 } from "lucide-react";
 import { Button } from "./ui/button";
 import {
@@ -46,6 +47,7 @@ const Navbar = ({ onAuthClick }) => {
     { path: "/products?pet_type=fish", label: "Fish", icon: Fish },
     { path: "/products?pet_type=rabbit", label: "Rabbits", icon: Squirrel },
     { path: "/products?pet_type=small_pet", label: "Small Pets", icon: Sparkles },
+    { path: "/products?pet_type=chicken", label: "Chickens", icon: Egg },
   ];
 
   const productCategories = [
@@ -62,20 +64,20 @@ const Navbar = ({ onAuthClick }) => {
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 glass border-b border-[#E8DFD5]/50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
-          {/* Logo */}
-          <Link to="/" className="flex items-center" data-testid="nav-logo">
+          {/* Logo - 15% larger */}
+          <Link to="/" className="flex items-center flex-shrink-0" data-testid="nav-logo">
             <span 
-              className="text-[#2D4A3E] text-3xl sm:text-4xl font-['Dancing_Script'] font-bold tracking-wide"
-              style={{ WebkitTextStroke: '1.2px #2D4A3E' }}
+              className="text-[#2D4A3E] text-4xl sm:text-5xl font-['Dancing_Script'] font-bold tracking-wide"
+              style={{ WebkitTextStroke: '1.4px #2D4A3E' }}
             >
               Wildly Ones
             </span>
           </Link>
 
           {/* Desktop Navigation - Pet types with hover dropdowns */}
-          <div className="hidden md:flex items-center gap-5">
+          <div className="hidden lg:flex items-center gap-4 flex-1 justify-center">
             {/* Each pet type as main nav item with hover dropdown for categories */}
             {petCategories.map((pet) => {
               const Icon = pet.icon;
@@ -84,7 +86,7 @@ const Navbar = ({ onAuthClick }) => {
                   <HoverCardTrigger asChild>
                     <Link
                       to={pet.path}
-                      className="flex items-center gap-1.5 text-base font-semibold text-[#2D4A3E] hover:text-[#1F342B] transition-colors"
+                      className="flex items-center gap-1 text-sm font-semibold text-[#2D4A3E] hover:text-[#1F342B] transition-colors whitespace-nowrap"
                       data-testid={`nav-link-${pet.label.toLowerCase()}`}
                     >
                       <Icon className="w-4 h-4" />
@@ -107,19 +109,19 @@ const Navbar = ({ onAuthClick }) => {
                 </HoverCard>
               );
             })}
+          </div>
 
-            {/* Refer & Earn */}
+          {/* Right Section - Refer & Earn moved here */}
+          <div className="flex items-center gap-3 sm:gap-4">
+            {/* Refer & Earn - Now next to cart */}
             <Link
               to="/referral"
-              className="text-base font-semibold text-[#D4A574] hover:text-[#B8956A] transition-colors"
+              className="hidden md:block text-sm font-semibold text-[#D4A574] hover:text-[#B8956A] transition-colors whitespace-nowrap"
               data-testid="nav-link-referral"
             >
               Refer & Earn
             </Link>
-          </div>
-
-          {/* Right Section */}
-          <div className="flex items-center gap-2 sm:gap-4">
+            
             {/* Real-time Notifications (Admin only) */}
             {user?.is_admin && <RealTimeNotifications />}
             

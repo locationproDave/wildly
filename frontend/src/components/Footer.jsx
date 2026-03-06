@@ -16,8 +16,8 @@ const Footer = () => {
           <div className="md:col-span-1">
             <div className="flex items-center mb-4">
               <span 
-                className="text-3xl sm:text-4xl font-['Dancing_Script'] font-bold tracking-wide text-white"
-                style={{ WebkitTextStroke: '1.2px white' }}
+                className="text-4xl sm:text-5xl font-['Dancing_Script'] font-bold tracking-wide text-white"
+                style={{ WebkitTextStroke: '1.4px white' }}
               >
                 Wildly Ones
               </span>

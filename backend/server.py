@@ -453,7 +453,7 @@ async def get_products(
         query_filter["category"] = category
     if pet_type:
         # "both" means dogs and cats only, other pet types are standalone
-        if pet_type in ["reptile", "bird", "rabbit", "fish", "small_pet"]:
+        if pet_type in ["reptile", "bird", "rabbit", "fish", "small_pet", "chicken"]:
             query_filter["pet_type"] = pet_type
         else:
             query_filter["pet_type"] = {"$in": [pet_type, "both"]}
