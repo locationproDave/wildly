@@ -70,7 +70,7 @@ const Navbar = ({ onAuthClick }) => {
           <Link to="/" className="flex items-center" data-testid="nav-logo">
             <span 
               className="text-[#2D4A3E] text-3xl sm:text-4xl font-['Dancing_Script'] font-bold tracking-wide"
-              style={{ textShadow: '0.5px 0 0 currentColor, -0.5px 0 0 currentColor' }}
+              style={{ WebkitTextStroke: '1.2px #2D4A3E' }}
             >
               Wildly Ones
             </span>
