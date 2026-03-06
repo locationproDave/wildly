@@ -67,9 +67,8 @@ const Navbar = ({ onAuthClick }) => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
-          <Link to="/" className="flex items-center gap-2" data-testid="nav-logo">
-            <span className="text-2xl">🐾</span>
-            <span className="font-bold text-[#2D4A3E] text-xl font-['Fraunces']">Wildly Ones</span>
+          <Link to="/" className="flex items-center" data-testid="nav-logo">
+            <span className="text-[#2D4A3E] text-2xl sm:text-3xl font-['Dancing_Script'] font-bold tracking-wide">Wildly Ones</span>
           </Link>
 
           {/* Desktop Navigation - Larger font, dark green, hover dropdowns */}
@@ -136,13 +135,6 @@ const Navbar = ({ onAuthClick }) => {
               data-testid="nav-link-dogs"
             >
               Dogs
-            </Link>
-            <Link
-              to="/products?pet_type=cat"
-              className="text-base font-semibold text-[#2D4A3E] hover:text-[#1F342B] transition-colors"
-              data-testid="nav-link-cats"
-            >
-              Cats
             </Link>
             <Link
               to="/referral"

@@ -141,14 +141,14 @@ const HomePage = () => {
                     <ArrowRight className="w-5 h-5" />
                   </Button>
                 </Link>
-                <Link to="/products?pet_type=cat">
+                <Link to="/products?pet_type=dog">
                   <Button 
                     variant="outline"
                     className="border-2 border-[#2D4A3E] text-[#2D4A3E] px-6 sm:px-8 py-5 sm:py-6 rounded-full font-semibold text-base sm:text-lg hover:bg-[#2D4A3E] hover:text-white w-full sm:w-auto justify-center"
-                    data-testid="hero-cats-btn"
+                    data-testid="hero-dogs-btn"
                   >
-                    <Cat className="w-5 h-5 mr-2" />
-                    For Cats
+                    <Dog className="w-5 h-5 mr-2" />
+                    For Dogs
                   </Button>
                 </Link>
               </div>

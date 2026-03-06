@@ -14,9 +14,8 @@ const Footer = () => {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           {/* Brand */}
           <div className="md:col-span-1">
-            <div className="flex items-center gap-2 mb-4">
-              <span className="text-2xl">🐾</span>
-              <span className="font-bold text-xl font-['Fraunces']">Wildly Ones</span>
+            <div className="flex items-center mb-4">
+              <span className="text-2xl sm:text-3xl font-['Dancing_Script'] font-bold tracking-wide">Wildly Ones</span>
             </div>
             <p className="text-white/70 text-sm leading-relaxed">
               Premium pet wellness products designed with science and love. 
