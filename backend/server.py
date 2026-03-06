@@ -1095,19 +1095,58 @@ async def get_admin_stats(user: dict = Depends(require_admin)):
         "total_customers": total_customers
     }
 
+@api_router.get("/admin/products", response_model=List[dict])
+async def get_all_products_admin(
+    search: Optional[str] = None,
+    pet_type: Optional[str] = None,
+    category: Optional[str] = None,
+    user: dict = Depends(require_admin)
+):
+    """Get all products for admin (including out of stock)"""
+    query_filter = {}
+    
+    if search:
+        query_filter["$or"] = [
+            {"name": {"$regex": search, "$options": "i"}},
+            {"description": {"$regex": search, "$options": "i"}},
+            {"slug": {"$regex": search, "$options": "i"}}
+        ]
+    if pet_type:
+        query_filter["pet_type"] = pet_type
+    if category:
+        query_filter["category"] = category
+    
+    products = await db.products.find(query_filter, {"_id": 0}).sort("created_at", -1).to_list(500)
+    return products
+
+@api_router.get("/admin/products/{product_id}", response_model=dict)
+async def get_product_admin(product_id: str, user: dict = Depends(require_admin)):
+    """Get single product by ID for admin"""
+    product = await db.products.find_one({"id": product_id}, {"_id": 0})
+    if not product:
+        raise HTTPException(status_code=404, detail="Product not found")
+    return product
+
 @api_router.post("/admin/products", response_model=dict)
 async def create_product(product: Product, user: dict = Depends(require_admin)):
     product_dict = product.model_dump()
     await db.products.insert_one(product_dict)
-    return {"message": "Product created", "id": product_dict["id"]}
+    # Exclude MongoDB _id from response
+    product_dict.pop("_id", None)
+    return {"message": "Product created", "id": product_dict["id"], "product": product_dict}
 
 @api_router.put("/admin/products/{product_id}", response_model=dict)
 async def update_product(product_id: str, product: Product, user: dict = Depends(require_admin)):
     product_dict = product.model_dump()
+    # Preserve the original product ID - don't let the model generate a new one
+    product_dict["id"] = product_id
+    product_dict["updated_at"] = datetime.now(timezone.utc).isoformat()
     result = await db.products.update_one({"id": product_id}, {"$set": product_dict})
     if result.matched_count == 0:
         raise HTTPException(status_code=404, detail="Product not found")
-    return {"message": "Product updated"}
+    # Exclude MongoDB _id from response
+    product_dict.pop("_id", None)
+    return {"message": "Product updated", "product": product_dict}
 
 @api_router.delete("/admin/products/{product_id}", response_model=dict)
 async def delete_product(product_id: str, user: dict = Depends(require_admin)):

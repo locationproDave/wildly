@@ -12,7 +12,9 @@ import {
   Clock,
   Truck,
   CheckCircle,
-  Tag
+  Tag,
+  PackagePlus,
+  ClipboardList
 } from "lucide-react";
 import { Button } from "../components/ui/button";
 import { Badge } from "../components/ui/badge";
@@ -104,18 +106,32 @@ const AdminDashboard = () => {
             </h1>
             <p className="text-[#5C6D5E]">Manage your store</p>
           </div>
-          <Link to="/admin/agents">
-            <Button className="bg-[#2D4A3E] hover:bg-[#1F342B] rounded-full" data-testid="agents-btn">
-              <Bot className="w-4 h-4 mr-2" />
-              AI Agents
-            </Button>
-          </Link>
-          <Link to="/admin/promotions">
-            <Button variant="outline" className="rounded-full ml-3" data-testid="promotions-btn">
-              <Tag className="w-4 h-4 mr-2" />
-              Promotions
-            </Button>
-          </Link>
+          <div className="flex items-center gap-3">
+            <Link to="/admin/orders">
+              <Button variant="outline" className="rounded-full" data-testid="orders-btn">
+                <ClipboardList className="w-4 h-4 mr-2" />
+                Orders
+              </Button>
+            </Link>
+            <Link to="/admin/products">
+              <Button variant="outline" className="rounded-full" data-testid="products-btn">
+                <PackagePlus className="w-4 h-4 mr-2" />
+                Products
+              </Button>
+            </Link>
+            <Link to="/admin/promotions">
+              <Button variant="outline" className="rounded-full" data-testid="promotions-btn">
+                <Tag className="w-4 h-4 mr-2" />
+                Promotions
+              </Button>
+            </Link>
+            <Link to="/admin/agents">
+              <Button className="bg-[#2D4A3E] hover:bg-[#1F342B] rounded-full" data-testid="agents-btn">
+                <Bot className="w-4 h-4 mr-2" />
+                AI Agents
+              </Button>
+            </Link>
+          </div>
         </div>
 
         {/* Stats */}

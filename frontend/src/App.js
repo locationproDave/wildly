@@ -13,6 +13,8 @@ import CheckoutSuccessPage from "./pages/CheckoutSuccessPage";
 import AccountPage from "./pages/AccountPage";
 import AdminDashboard from "./pages/AdminDashboard";
 import AdminPromotionsPage from "./pages/AdminPromotionsPage";
+import AdminProductsPage from "./pages/AdminProductsPage";
+import AdminOrdersPage from "./pages/AdminOrdersPage";
 import AgentsPage from "./pages/AgentsPage";
 import ReferralPage from "./pages/ReferralPage";
 
@@ -286,6 +288,16 @@ function App() {
             <Route path="/admin/promotions" element={
               <AppLayout>
                 <ProtectedRoute adminOnly><AdminPromotionsPage /></ProtectedRoute>
+              </AppLayout>
+            } />
+            <Route path="/admin/products" element={
+              <AppLayout>
+                <ProtectedRoute adminOnly><AdminProductsPage /></ProtectedRoute>
+              </AppLayout>
+            } />
+            <Route path="/admin/orders" element={
+              <AppLayout>
+                <ProtectedRoute adminOnly><AdminOrdersPage /></ProtectedRoute>
               </AppLayout>
             } />
             <Route path="/admin/agents" element={
