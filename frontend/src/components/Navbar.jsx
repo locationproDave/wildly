@@ -69,8 +69,8 @@ const Navbar = ({ onAuthClick }) => {
           {/* Logo */}
           <Link to="/" className="flex items-center flex-shrink-0" data-testid="nav-logo">
             <span 
-              className="text-[#2D4A3E] text-[2.1rem] sm:text-[2.85rem] font-['Dancing_Script'] font-bold tracking-wide"
-              style={{ WebkitTextStroke: '1.3px #2D4A3E' }}
+              className="text-[#2D4A3E] text-[2rem] sm:text-[2.7rem] font-['Dancing_Script'] font-bold tracking-wide"
+              style={{ WebkitTextStroke: '1.2px #2D4A3E' }}
             >
               Wildly Ones
             </span>
