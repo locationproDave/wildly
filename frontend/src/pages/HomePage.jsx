@@ -177,9 +177,9 @@ const HomePage = () => {
       {/* Trust Badges */}
       <section className="bg-[#2D4A3E] py-4 sm:py-8">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-3 gap-4 sm:gap-8">
+          <div className="flex justify-between items-center">
             {features.map((feature, index) => (
-              <div key={index} className="flex flex-col sm:flex-row items-center gap-2 sm:gap-4 text-white text-center sm:text-left">
+              <div key={index} className={`flex flex-col sm:flex-row items-center gap-2 sm:gap-4 text-white text-center sm:text-left ${index === 2 ? 'sm:flex-row-reverse sm:text-right' : ''}`}>
                 <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white/10 flex items-center justify-center flex-shrink-0">
                   {feature.icon}
                 </div>
