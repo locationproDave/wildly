@@ -50,8 +50,7 @@ const Navbar = ({ onAuthClick }) => {
 
   const productCategories = [
     { path: "/products?category=supplements", label: "Supplements" },
-    { path: "/products?category=calming", label: "Calming" },
-    { path: "/products?category=beds", label: "Beds & Blankets" },
+    { path: "/products?category=home_goods", label: "Home Goods" },
     { path: "/products?category=grooming", label: "Grooming" },
     { path: "/products?category=toys", label: "Toys" },
     { path: "/products?category=food", label: "Food & Treats" },
