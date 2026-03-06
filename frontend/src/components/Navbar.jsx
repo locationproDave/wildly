@@ -64,8 +64,8 @@ const Navbar = ({ onAuthClick }) => {
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-[#F5F0E8] border-b border-[#E8DFD5]/50 shadow-sm">
-      <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
+      <div className="max-w-[1600px] mx-auto px-4 sm:px-6">
+        <div className="flex items-center justify-between h-16 gap-6">
           {/* Logo */}
           <Link to="/" className="flex items-center flex-shrink-0" data-testid="nav-logo">
             <span 
@@ -77,7 +77,7 @@ const Navbar = ({ onAuthClick }) => {
           </Link>
 
           {/* Desktop Navigation - Pet types with hover dropdowns */}
-          <div className="hidden lg:flex items-center gap-8 flex-1 justify-center px-4">
+          <div className="hidden lg:flex items-center gap-6">
             {/* Each pet type as main nav item with hover dropdown for categories */}
             {petCategories.map((pet) => {
               const Icon = pet.icon;
@@ -86,10 +86,10 @@ const Navbar = ({ onAuthClick }) => {
                   <HoverCardTrigger asChild>
                     <Link
                       to={pet.path}
-                      className="flex items-center gap-2 text-base font-semibold text-[#2D4A3E] hover:text-white transition-colors whitespace-nowrap"
+                      className="flex items-center gap-1.5 text-[15px] font-semibold text-[#2D4A3E] hover:text-[#6B8F71] transition-colors whitespace-nowrap"
                       data-testid={`nav-link-${pet.label.toLowerCase()}`}
                     >
-                      <Icon className="w-[18px] h-[18px]" />
+                      <Icon className="w-4 h-4" />
                       {pet.label}
                     </Link>
                   </HoverCardTrigger>
