@@ -31,6 +31,7 @@ import AdminEmailAutomationPage from "./pages/AdminEmailAutomationPage";
 import AdminCustomerSegmentsPage from "./pages/AdminCustomerSegmentsPage";
 import AgentsPage from "./pages/AgentsPage";
 import ReferralPage from "./pages/ReferralPage";
+import SupportPage from "./pages/SupportPage";
 
 // Components
 import Navbar from "./components/Navbar";
@@ -292,6 +293,11 @@ function App() {
             <Route path="/referral" element={
               <AppLayout>
                 <ReferralPage />
+              </AppLayout>
+            } />
+            <Route path="/support" element={
+              <AppLayout>
+                <SupportPage />
               </AppLayout>
             } />
             <Route path="/admin" element={

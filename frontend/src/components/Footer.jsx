@@ -60,16 +60,24 @@ const Footer = () => {
             <h3 className="font-semibold mb-4">Support</h3>
             <ul className="space-y-2">
               <li>
-                <span className="text-white/70 text-sm">Contact Us</span>
+                <Link to="/support" className="text-white/70 hover:text-white text-sm transition-colors">
+                  Contact Us
+                </Link>
               </li>
               <li>
-                <span className="text-white/70 text-sm">Shipping Info</span>
+                <Link to="/support?tab=shipping" className="text-white/70 hover:text-white text-sm transition-colors">
+                  Shipping Info
+                </Link>
               </li>
               <li>
-                <span className="text-white/70 text-sm">Returns & Refunds</span>
+                <Link to="/support?tab=returns" className="text-white/70 hover:text-white text-sm transition-colors">
+                  Returns & Refunds
+                </Link>
               </li>
               <li>
-                <span className="text-white/70 text-sm">FAQ</span>
+                <Link to="/support?tab=faq" className="text-white/70 hover:text-white text-sm transition-colors">
+                  FAQ
+                </Link>
               </li>
             </ul>
           </div>

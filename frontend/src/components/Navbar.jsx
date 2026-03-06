@@ -50,13 +50,59 @@ const Navbar = ({ onAuthClick }) => {
     { path: "/products?pet_type=chicken", label: "Chickens", icon: Egg },
   ];
 
-  const productCategories = [
-    { path: "/products?category=supplements", label: "Supplements" },
-    { path: "/products?category=home_goods", label: "Home Goods" },
-    { path: "/products?category=grooming", label: "Grooming" },
-    { path: "/products?category=toys", label: "Toys" },
-    { path: "/products?category=food", label: "Food & Treats" },
-  ];
+  // Pet-specific product categories
+  const petProductCategories = {
+    dog: [
+      { path: "supplements", label: "Supplements" },
+      { path: "food", label: "Food & Treats" },
+      { path: "grooming", label: "Grooming" },
+      { path: "toys", label: "Toys" },
+      { path: "home_goods", label: "Beds & Crates" },
+    ],
+    cat: [
+      { path: "supplements", label: "Supplements" },
+      { path: "food", label: "Food & Treats" },
+      { path: "grooming", label: "Grooming" },
+      { path: "toys", label: "Toys & Scratchers" },
+      { path: "home_goods", label: "Beds & Litter" },
+    ],
+    bird: [
+      { path: "supplements", label: "Vitamins" },
+      { path: "food", label: "Seeds & Treats" },
+      { path: "toys", label: "Perches & Toys" },
+      { path: "home_goods", label: "Cages & Accessories" },
+    ],
+    fish: [
+      { path: "supplements", label: "Water Care" },
+      { path: "food", label: "Fish Food" },
+      { path: "home_goods", label: "Tank & Decor" },
+      { path: "toys", label: "Plants & Hideouts" },
+    ],
+    rabbit: [
+      { path: "supplements", label: "Supplements" },
+      { path: "food", label: "Hay & Treats" },
+      { path: "grooming", label: "Grooming" },
+      { path: "toys", label: "Chews & Toys" },
+      { path: "home_goods", label: "Hutches & Bedding" },
+    ],
+    small_pet: [
+      { path: "supplements", label: "Vitamins" },
+      { path: "food", label: "Food & Treats" },
+      { path: "home_goods", label: "Cages & Bedding" },
+      { path: "toys", label: "Wheels & Toys" },
+    ],
+    chicken: [
+      { path: "supplements", label: "Supplements" },
+      { path: "food", label: "Feed & Treats" },
+      { path: "home_goods", label: "Coops & Nesting" },
+      { path: "toys", label: "Enrichment" },
+    ],
+  };
+
+  const getProductCategories = (petType) => {
+    const type = petType.split('=')[1];
+    return petProductCategories[type] || petProductCategories.dog;
+  };
 
   const getInitials = (name) => {
     return name?.split(" ").map(n => n[0]).join("").toUpperCase() || "U";
@@ -93,12 +139,12 @@ const Navbar = ({ onAuthClick }) => {
                       {pet.label}
                     </Link>
                   </HoverCardTrigger>
-                  <HoverCardContent className="w-36 p-1.5" align="center" sideOffset={8}>
+                  <HoverCardContent className="w-40 p-1.5" align="center" sideOffset={8}>
                     <div className="space-y-0.5">
-                      {productCategories.map((cat) => (
+                      {getProductCategories(pet.path).map((cat) => (
                         <Link
                           key={cat.path}
-                          to={`${pet.path}&category=${cat.path.split('=')[1]}`}
+                          to={`${pet.path}&category=${cat.path}`}
                           className="flex items-center justify-center px-2 py-1.5 text-sm text-[#2D4A3E] hover:bg-[#E8DFD5] rounded-md transition-colors"
                         >
                           {cat.label}
