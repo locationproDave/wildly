@@ -86,10 +86,10 @@ const Navbar = ({ onAuthClick }) => {
                   <HoverCardTrigger asChild>
                     <Link
                       to={pet.path}
-                      className="flex items-center gap-1.5 text-sm font-semibold text-[#2D4A3E] hover:text-[#1F342B] transition-colors whitespace-nowrap"
+                      className="flex items-center gap-2 text-base font-semibold text-[#2D4A3E] hover:text-[#1F342B] transition-colors whitespace-nowrap"
                       data-testid={`nav-link-${pet.label.toLowerCase()}`}
                     >
-                      <Icon className="w-4 h-4" />
+                      <Icon className="w-[18px] h-[18px]" />
                       {pet.label}
                     </Link>
                   </HoverCardTrigger>
