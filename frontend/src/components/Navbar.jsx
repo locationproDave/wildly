@@ -9,7 +9,14 @@ import {
   LogOut,
   Package,
   Settings,
-  Bot
+  Bot,
+  ChevronDown,
+  Dog,
+  Cat,
+  Bird,
+  Fish,
+  Squirrel,
+  Sparkles
 } from "lucide-react";
 import { Button } from "./ui/button";
 import {
@@ -19,6 +26,11 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "./ui/dropdown-menu";
+import {
+  HoverCard,
+  HoverCardContent,
+  HoverCardTrigger,
+} from "./ui/hover-card";
 import { Avatar, AvatarFallback } from "./ui/avatar";
 import RealTimeNotifications from "./RealTimeNotifications";
 
@@ -28,14 +40,22 @@ const Navbar = ({ onAuthClick }) => {
   const location = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  const navLinks = [
-    { path: "/products", label: "Shop All" },
-    { path: "/products?pet_type=dog", label: "Dogs" },
-    { path: "/products?pet_type=cat", label: "Cats" },
-    { path: "/products?pet_type=bird", label: "Birds" },
-    { path: "/products?pet_type=fish", label: "Fish" },
-    { path: "/products?pet_type=rabbit", label: "Rabbits" },
-    { path: "/products?pet_type=small_pet", label: "Small Pets" },
+  const petCategories = [
+    { path: "/products?pet_type=dog", label: "Dogs", icon: Dog },
+    { path: "/products?pet_type=cat", label: "Cats", icon: Cat },
+    { path: "/products?pet_type=bird", label: "Birds", icon: Bird },
+    { path: "/products?pet_type=fish", label: "Fish", icon: Fish },
+    { path: "/products?pet_type=rabbit", label: "Rabbits", icon: Squirrel },
+    { path: "/products?pet_type=small_pet", label: "Small Pets", icon: Sparkles },
+  ];
+
+  const productCategories = [
+    { path: "/products?category=supplements", label: "Supplements" },
+    { path: "/products?category=calming", label: "Calming" },
+    { path: "/products?category=beds", label: "Beds & Blankets" },
+    { path: "/products?category=grooming", label: "Grooming" },
+    { path: "/products?category=toys", label: "Toys" },
+    { path: "/products?category=food", label: "Food & Treats" },
   ];
 
   const getInitials = (name) => {
@@ -52,22 +72,85 @@ const Navbar = ({ onAuthClick }) => {
             <span className="font-bold text-[#2D4A3E] text-xl font-['Fraunces']">Wildly Ones</span>
           </Link>
 
-          {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center gap-8">
-            {navLinks.map((link) => (
-              <Link
-                key={link.path}
-                to={link.path}
-                className={`text-sm font-medium transition-colors ${
-                  location.pathname === link.path.split("?")[0]
-                    ? 'text-[#2D4A3E]' 
-                    : 'text-[#5C6D5E] hover:text-[#2D4A3E]'
-                }`}
-                data-testid={`nav-link-${link.label.toLowerCase()}`}
-              >
-                {link.label}
-              </Link>
-            ))}
+          {/* Desktop Navigation - Larger font, dark green, hover dropdowns */}
+          <div className="hidden md:flex items-center gap-6">
+            {/* Shop All with hover dropdown */}
+            <HoverCard openDelay={0} closeDelay={100}>
+              <HoverCardTrigger asChild>
+                <Link
+                  to="/products"
+                  className="flex items-center gap-1 text-base font-semibold text-[#2D4A3E] hover:text-[#1F342B] transition-colors"
+                  data-testid="nav-link-shop"
+                >
+                  Shop All
+                  <ChevronDown className="w-4 h-4" />
+                </Link>
+              </HoverCardTrigger>
+              <HoverCardContent className="w-64 p-2" align="start">
+                <div className="space-y-1">
+                  <p className="text-xs font-semibold text-[#5C6D5E] px-2 py-1">By Category</p>
+                  {productCategories.map((cat) => (
+                    <Link
+                      key={cat.path}
+                      to={cat.path}
+                      className="flex items-center px-3 py-2 text-sm text-[#2D4A3E] hover:bg-[#E8DFD5] rounded-lg transition-colors"
+                    >
+                      {cat.label}
+                    </Link>
+                  ))}
+                </div>
+              </HoverCardContent>
+            </HoverCard>
+
+            {/* Pets dropdown */}
+            <HoverCard openDelay={0} closeDelay={100}>
+              <HoverCardTrigger asChild>
+                <span className="flex items-center gap-1 text-base font-semibold text-[#2D4A3E] hover:text-[#1F342B] transition-colors cursor-pointer">
+                  By Pet
+                  <ChevronDown className="w-4 h-4" />
+                </span>
+              </HoverCardTrigger>
+              <HoverCardContent className="w-56 p-2" align="start">
+                <div className="space-y-1">
+                  {petCategories.map((pet) => {
+                    const Icon = pet.icon;
+                    return (
+                      <Link
+                        key={pet.path}
+                        to={pet.path}
+                        className="flex items-center gap-3 px-3 py-2 text-sm text-[#2D4A3E] hover:bg-[#E8DFD5] rounded-lg transition-colors"
+                      >
+                        <Icon className="w-4 h-4 text-[#6B8F71]" />
+                        {pet.label}
+                      </Link>
+                    );
+                  })}
+                </div>
+              </HoverCardContent>
+            </HoverCard>
+
+            {/* Direct links - larger font, dark green */}
+            <Link
+              to="/products?pet_type=dog"
+              className="text-base font-semibold text-[#2D4A3E] hover:text-[#1F342B] transition-colors"
+              data-testid="nav-link-dogs"
+            >
+              Dogs
+            </Link>
+            <Link
+              to="/products?pet_type=cat"
+              className="text-base font-semibold text-[#2D4A3E] hover:text-[#1F342B] transition-colors"
+              data-testid="nav-link-cats"
+            >
+              Cats
+            </Link>
+            <Link
+              to="/referral"
+              className="text-base font-semibold text-[#D4A574] hover:text-[#B8956A] transition-colors"
+              data-testid="nav-link-referral"
+            >
+              Refer & Earn
+            </Link>
           </div>
 
           {/* Right Section */}
@@ -173,24 +256,41 @@ const Navbar = ({ onAuthClick }) => {
         </div>
       </div>
 
-      {/* Mobile Menu */}
+      {/* Mobile Menu - Tighter spacing */}
       {mobileMenuOpen && (
         <div className="md:hidden bg-white border-t border-[#E8DFD5] animate-fade-in">
-          <div className="px-4 py-4 space-y-2">
-            {navLinks.map((link) => (
-              <Link
-                key={link.path}
-                to={link.path}
-                onClick={() => setMobileMenuOpen(false)}
-                className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${
-                  location.pathname === link.path.split("?")[0]
-                    ? 'bg-[#2D4A3E]/10 text-[#2D4A3E]' 
-                    : 'text-[#5C6D5E] hover:bg-[#E8DFD5]'
-                }`}
-              >
-                {link.label}
-              </Link>
-            ))}
+          <div className="px-3 py-2 space-y-1">
+            <Link
+              to="/products"
+              onClick={() => setMobileMenuOpen(false)}
+              className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-[#2D4A3E] font-semibold hover:bg-[#E8DFD5]"
+            >
+              Shop All
+            </Link>
+            <div className="border-t border-[#E8DFD5] my-1"></div>
+            <p className="text-xs font-semibold text-[#5C6D5E] px-3 py-1">Shop by Pet</p>
+            {petCategories.map((pet) => {
+              const Icon = pet.icon;
+              return (
+                <Link
+                  key={pet.path}
+                  to={pet.path}
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="flex items-center gap-3 px-3 py-2 rounded-lg text-[#2D4A3E] hover:bg-[#E8DFD5]"
+                >
+                  <Icon className="w-4 h-4 text-[#6B8F71]" />
+                  {pet.label}
+                </Link>
+              );
+            })}
+            <div className="border-t border-[#E8DFD5] my-1"></div>
+            <Link
+              to="/referral"
+              onClick={() => setMobileMenuOpen(false)}
+              className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-[#D4A574] font-semibold hover:bg-[#E8DFD5]"
+            >
+              Refer & Earn $10
+            </Link>
           </div>
         </div>
       )}

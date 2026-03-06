@@ -185,25 +185,25 @@ const AdminAnalyticsPage = () => {
   const revenueTrend = previousRevenue > 0 ? ((recentRevenue - previousRevenue) / previousRevenue) * 100 : 0;
 
   return (
-    <div className="min-h-screen pt-24 pb-12 bg-[#FDF8F3]">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen pt-16 sm:pt-24 pb-8 sm:pb-12 bg-[#FDF8F3]">
+      <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
         {/* Header */}
-        <div className="flex items-center justify-between mb-8">
-          <div className="flex items-center gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 sm:mb-8">
+          <div className="flex items-center gap-3 sm:gap-4">
             <Link to="/admin">
-              <Button variant="ghost" size="icon" className="rounded-full">
-                <ChevronLeft className="w-5 h-5" />
+              <Button variant="ghost" size="icon" className="rounded-full h-8 w-8 sm:h-10 sm:w-10">
+                <ChevronLeft className="w-4 h-4 sm:w-5 sm:h-5" />
               </Button>
             </Link>
             <div>
-              <h1 className="text-3xl font-bold text-[#2D4A3E] font-['Fraunces']" data-testid="page-title">
-                Analytics Dashboard
+              <h1 className="text-xl sm:text-3xl font-bold text-[#2D4A3E] font-['Fraunces']" data-testid="page-title">
+                Analytics
               </h1>
-              <p className="text-[#5C6D5E]">Track your store's performance</p>
+              <p className="text-xs sm:text-base text-[#5C6D5E]">Track performance</p>
             </div>
           </div>
           <Select value={timeRange} onValueChange={setTimeRange}>
-            <SelectTrigger className="w-[150px] rounded-full border-[#E8DFD5]">
+            <SelectTrigger className="w-[130px] sm:w-[150px] rounded-full border-[#E8DFD5] text-sm">
               <Calendar className="w-4 h-4 mr-2" />
               <SelectValue />
             </SelectTrigger>
@@ -216,63 +216,63 @@ const AdminAnalyticsPage = () => {
         </div>
 
         {/* Summary Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <div className="bg-white rounded-2xl p-6 shadow-sm" data-testid="revenue-card">
-            <div className="flex items-center justify-between mb-4">
-              <div className="w-12 h-12 bg-[#6B8F71] rounded-xl flex items-center justify-center">
-                <DollarSign className="w-6 h-6 text-white" />
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6 mb-6 sm:mb-8">
+          <div className="bg-white rounded-xl sm:rounded-2xl p-4 sm:p-6 shadow-sm" data-testid="revenue-card">
+            <div className="flex items-center justify-between mb-2 sm:mb-4">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-[#6B8F71] rounded-lg sm:rounded-xl flex items-center justify-center">
+                <DollarSign className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
               </div>
               {revenueTrend !== 0 && (
-                <Badge className={revenueTrend > 0 ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}>
-                  {revenueTrend > 0 ? <ArrowUp className="w-3 h-3 mr-1" /> : <ArrowDown className="w-3 h-3 mr-1" />}
-                  {Math.abs(revenueTrend).toFixed(1)}%
+                <Badge className={`text-xs ${revenueTrend > 0 ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}>
+                  {revenueTrend > 0 ? <ArrowUp className="w-3 h-3 mr-0.5" /> : <ArrowDown className="w-3 h-3 mr-0.5" />}
+                  {Math.abs(revenueTrend).toFixed(0)}%
                 </Badge>
               )}
             </div>
-            <p className="text-3xl font-bold text-[#2D4A3E]">{formatCurrency(summary?.total_revenue || 0)}</p>
-            <p className="text-sm text-[#5C6D5E]">Total Revenue</p>
+            <p className="text-xl sm:text-3xl font-bold text-[#2D4A3E]">{formatCurrency(summary?.total_revenue || 0)}</p>
+            <p className="text-xs sm:text-sm text-[#5C6D5E]">Revenue</p>
           </div>
 
-          <div className="bg-white rounded-2xl p-6 shadow-sm" data-testid="orders-card">
-            <div className="flex items-center justify-between mb-4">
-              <div className="w-12 h-12 bg-[#2D4A3E] rounded-xl flex items-center justify-center">
-                <ShoppingBag className="w-6 h-6 text-white" />
+          <div className="bg-white rounded-xl sm:rounded-2xl p-4 sm:p-6 shadow-sm" data-testid="orders-card">
+            <div className="flex items-center justify-between mb-2 sm:mb-4">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-[#2D4A3E] rounded-lg sm:rounded-xl flex items-center justify-center">
+                <ShoppingBag className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
               </div>
             </div>
-            <p className="text-3xl font-bold text-[#2D4A3E]">{summary?.total_orders || 0}</p>
-            <p className="text-sm text-[#5C6D5E]">Total Orders</p>
+            <p className="text-xl sm:text-3xl font-bold text-[#2D4A3E]">{summary?.total_orders || 0}</p>
+            <p className="text-xs sm:text-sm text-[#5C6D5E]">Orders</p>
           </div>
 
-          <div className="bg-white rounded-2xl p-6 shadow-sm" data-testid="customers-card">
-            <div className="flex items-center justify-between mb-4">
-              <div className="w-12 h-12 bg-[#7CA5B8] rounded-xl flex items-center justify-center">
-                <Users className="w-6 h-6 text-white" />
+          <div className="bg-white rounded-xl sm:rounded-2xl p-4 sm:p-6 shadow-sm" data-testid="customers-card">
+            <div className="flex items-center justify-between mb-2 sm:mb-4">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-[#7CA5B8] rounded-lg sm:rounded-xl flex items-center justify-center">
+                <Users className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
               </div>
             </div>
-            <p className="text-3xl font-bold text-[#2D4A3E]">{summary?.total_customers || 0}</p>
-            <p className="text-sm text-[#5C6D5E]">Customers</p>
+            <p className="text-xl sm:text-3xl font-bold text-[#2D4A3E]">{summary?.total_customers || 0}</p>
+            <p className="text-xs sm:text-sm text-[#5C6D5E]">Customers</p>
           </div>
 
-          <div className="bg-white rounded-2xl p-6 shadow-sm" data-testid="aov-card">
-            <div className="flex items-center justify-between mb-4">
-              <div className="w-12 h-12 bg-[#D4A574] rounded-xl flex items-center justify-center">
-                <TrendingUp className="w-6 h-6 text-white" />
+          <div className="bg-white rounded-xl sm:rounded-2xl p-4 sm:p-6 shadow-sm" data-testid="aov-card">
+            <div className="flex items-center justify-between mb-2 sm:mb-4">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-[#D4A574] rounded-lg sm:rounded-xl flex items-center justify-center">
+                <TrendingUp className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
               </div>
             </div>
-            <p className="text-3xl font-bold text-[#2D4A3E]">{formatCurrency(summary?.avg_order_value || 0)}</p>
-            <p className="text-sm text-[#5C6D5E]">Avg Order Value</p>
+            <p className="text-xl sm:text-3xl font-bold text-[#2D4A3E]">{formatCurrency(summary?.avg_order_value || 0)}</p>
+            <p className="text-xs sm:text-sm text-[#5C6D5E]">Avg Order</p>
           </div>
         </div>
 
         {/* Sales Trend Chart */}
-        <div className="bg-white rounded-2xl p-6 shadow-sm mb-8">
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center gap-3">
-              <BarChart3 className="w-5 h-5 text-[#2D4A3E]" />
-              <h2 className="text-xl font-semibold text-[#2D4A3E] font-['Fraunces']">Sales Trend</h2>
+        <div className="bg-white rounded-xl sm:rounded-2xl p-4 sm:p-6 shadow-sm mb-6 sm:mb-8">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4 sm:mb-6">
+            <div className="flex items-center gap-2 sm:gap-3">
+              <BarChart3 className="w-4 h-4 sm:w-5 sm:h-5 text-[#2D4A3E]" />
+              <h2 className="text-base sm:text-xl font-semibold text-[#2D4A3E] font-['Fraunces']">Sales Trend</h2>
             </div>
-            <p className="text-sm text-[#5C6D5E]">
-              Last {timeRange} days: {formatCurrency(sales_trend?.slice(-parseInt(timeRange)).reduce((s, d) => s + d.revenue, 0) || 0)}
+            <p className="text-xs sm:text-sm text-[#5C6D5E]">
+              {timeRange}d: {formatCurrency(sales_trend?.slice(-parseInt(timeRange)).reduce((s, d) => s + d.revenue, 0) || 0)}
             </p>
           </div>
           {sales_trend && <SalesChart data={sales_trend} />}

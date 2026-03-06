@@ -111,30 +111,30 @@ const HomePage = () => {
 
       {/* Hero Section */}
       <section className="relative bg-gradient-to-b from-[#E8DFD5] to-[#FDF8F3] overflow-hidden">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-20">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-16 sm:pt-24 pb-12 sm:pb-20">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-center">
             {/* Left Content */}
             <div className="animate-fade-in-up">
-              <div className="inline-flex items-center gap-2 bg-[#6B8F71]/20 text-[#6B8F71] px-4 py-2 rounded-full text-sm font-medium mb-6">
-                <Sparkles className="w-4 h-4" />
+              <div className="inline-flex items-center gap-2 bg-[#6B8F71]/20 text-[#6B8F71] px-3 py-1.5 sm:px-4 sm:py-2 rounded-full text-xs sm:text-sm font-medium mb-4 sm:mb-6">
+                <Sparkles className="w-3 h-3 sm:w-4 sm:h-4" />
                 <span>Premium Pet Wellness</span>
               </div>
               
-              <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight leading-tight text-[#2D4A3E] mb-6 font-['Fraunces']">
+              <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight leading-tight text-[#2D4A3E] mb-4 sm:mb-6 font-['Fraunces']">
                 Calm begins
                 <br />
                 <span className="text-[#D4A574]">with care</span>
               </h1>
               
-              <p className="text-lg md:text-xl leading-relaxed text-[#5C6D5E] mb-8 max-w-lg">
+              <p className="text-base sm:text-lg md:text-xl leading-relaxed text-[#5C6D5E] mb-6 sm:mb-8 max-w-lg">
                 Science-backed wellness products designed to help your furry family members 
-                feel safe, relaxed, and loved. Because they deserve the world.
+                feel safe, relaxed, and loved.
               </p>
               
-              <div className="flex flex-col sm:flex-row gap-4">
+              <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
                 <Link to="/products">
                   <Button 
-                    className="bg-[#2D4A3E] hover:bg-[#1F342B] text-white px-8 py-6 rounded-full font-semibold text-lg inline-flex items-center gap-2"
+                    className="bg-[#2D4A3E] hover:bg-[#1F342B] text-white px-6 sm:px-8 py-5 sm:py-6 rounded-full font-semibold text-base sm:text-lg inline-flex items-center gap-2 w-full sm:w-auto justify-center"
                     data-testid="hero-shop-btn"
                   >
                     Shop Now
@@ -144,7 +144,7 @@ const HomePage = () => {
                 <Link to="/products?pet_type=cat">
                   <Button 
                     variant="outline"
-                    className="border-2 border-[#2D4A3E] text-[#2D4A3E] px-8 py-6 rounded-full font-semibold text-lg hover:bg-[#2D4A3E] hover:text-white"
+                    className="border-2 border-[#2D4A3E] text-[#2D4A3E] px-6 sm:px-8 py-5 sm:py-6 rounded-full font-semibold text-base sm:text-lg hover:bg-[#2D4A3E] hover:text-white w-full sm:w-auto justify-center"
                     data-testid="hero-cats-btn"
                   >
                     <Cat className="w-5 h-5 mr-2" />
@@ -155,12 +155,12 @@ const HomePage = () => {
             </div>
             
             {/* Right Image */}
-            <div className="relative animate-fade-in stagger-2">
+            <div className="relative animate-fade-in stagger-2 hidden lg:block">
               <div className="relative rounded-3xl overflow-hidden shadow-2xl">
                 <img
                   src="https://images.unsplash.com/photo-1587300003388-59208cc962cb?w=800"
                   alt="Happy relaxed dog"
-                  className="w-full h-[500px] object-cover"
+                  className="w-full h-[400px] lg:h-[500px] object-cover"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-[#2D4A3E]/20 to-transparent"></div>
               </div>
@@ -185,17 +185,17 @@ const HomePage = () => {
       </section>
 
       {/* Trust Badges */}
-      <section className="bg-[#2D4A3E] py-8">
+      <section className="bg-[#2D4A3E] py-4 sm:py-8">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div className="grid grid-cols-3 gap-4 sm:gap-8">
             {features.map((feature, index) => (
-              <div key={index} className="flex items-center gap-4 text-white">
-                <div className="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center">
+              <div key={index} className="flex flex-col sm:flex-row items-center gap-2 sm:gap-4 text-white text-center sm:text-left">
+                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white/10 flex items-center justify-center flex-shrink-0">
                   {feature.icon}
                 </div>
                 <div>
-                  <h3 className="font-semibold">{feature.title}</h3>
-                  <p className="text-white/70 text-sm">{feature.description}</p>
+                  <h3 className="font-semibold text-xs sm:text-base">{feature.title}</h3>
+                  <p className="text-white/70 text-xs hidden sm:block">{feature.description}</p>
                 </div>
               </div>
             ))}
