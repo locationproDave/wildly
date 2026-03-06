@@ -134,21 +134,11 @@ const HomePage = () => {
               <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
                 <Link to="/products">
                   <Button 
-                    className="bg-[#2D4A3E] hover:bg-[#1F342B] text-white px-6 sm:px-8 py-5 sm:py-6 rounded-full font-semibold text-base sm:text-lg inline-flex items-center gap-2 w-full sm:w-auto justify-center"
+                    className="bg-[#2D4A3E] hover:bg-[#1F342B] text-white px-8 sm:px-10 py-5 sm:py-6 rounded-full font-semibold text-base sm:text-lg inline-flex items-center gap-2 w-full sm:w-auto justify-center"
                     data-testid="hero-shop-btn"
                   >
                     Shop Now
                     <ArrowRight className="w-5 h-5" />
-                  </Button>
-                </Link>
-                <Link to="/products?pet_type=dog">
-                  <Button 
-                    variant="outline"
-                    className="border-2 border-[#2D4A3E] text-[#2D4A3E] px-6 sm:px-8 py-5 sm:py-6 rounded-full font-semibold text-base sm:text-lg hover:bg-[#2D4A3E] hover:text-white w-full sm:w-auto justify-center"
-                    data-testid="hero-dogs-btn"
-                  >
-                    <Dog className="w-5 h-5 mr-2" />
-                    For Dogs
                   </Button>
                 </Link>
               </div>
