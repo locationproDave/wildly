@@ -93,13 +93,13 @@ const Navbar = ({ onAuthClick }) => {
                       {pet.label}
                     </Link>
                   </HoverCardTrigger>
-                  <HoverCardContent className="w-48 p-2" align="center">
-                    <div className="space-y-1">
+                  <HoverCardContent className="w-36 p-1.5" align="center" sideOffset={8}>
+                    <div className="space-y-0.5">
                       {productCategories.map((cat) => (
                         <Link
                           key={cat.path}
                           to={`${pet.path}&category=${cat.path.split('=')[1]}`}
-                          className="flex items-center px-3 py-2 text-sm text-[#2D4A3E] hover:bg-[#E8DFD5] rounded-lg transition-colors"
+                          className="flex items-center justify-center px-2 py-1.5 text-sm text-[#2D4A3E] hover:bg-[#E8DFD5] rounded-md transition-colors"
                         >
                           {cat.label}
                         </Link>
