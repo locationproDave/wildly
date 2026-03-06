@@ -7,20 +7,8 @@ Build a pet wellness e-commerce store with:
 3. Full admin CRUD for products, orders, and promotions
 4. Email automation for abandoned cart recovery and post-purchase engagement
 5. Customer segmentation with AI-powered targeted campaigns
-
-## User Personas
-1. **Pet Parents (Customers)** - Shopping for premium pet wellness products
-2. **Store Owners (Admins)** - Managing orders, products, and using AI agents for business operations
-
-## Core Requirements (Static)
-- E-commerce storefront with product catalog
-- Shopping cart with Stripe + PayPal checkout
-- Customer accounts with order history
-- Admin dashboard with product/order/promotion management
-- 7 specialized AI agents for business operations
-- Pre-populated product catalog (45 products, 8 pet types)
-- Email automation system
-- Customer segmentation with targeted campaigns
+6. Real-time dashboard notifications
+7. Mobile-optimized responsive design
 
 ## What's Been Implemented (March 6, 2026)
 
@@ -30,38 +18,49 @@ Build a pet wellness e-commerce store with:
   - Sales Trend chart (last 7/14/30 days)
   - Top Products by revenue with images
   - Sales by Category and Pet Type breakdowns
-  - Recent Customers list
-- [x] **Admin Customer Segments** (/admin/segments) - NEW
+- [x] **Admin Customer Segments** (/admin/segments)
   - AI-powered segmentation: VIP, Loyal, At-Risk, New, Dormant
-  - Auto-classification based on purchase behavior
-  - Campaign templates per segment (VIP20, LOYAL15, COMEBACK25, WELCOME10, WINBACK30)
-  - View segment customers with revenue/order data
-  - Create and send targeted email campaigns
+  - Campaign templates per segment
+  - Targeted email campaigns
 - [x] **Admin Email Automation** (/admin/emails)
   - Abandoned Cart Recovery (Active) - COMEBACK10 discount
   - Post-Purchase Review Requests (Active) - 25 bonus points
-  - Low Stock Alerts (Coming Soon)
+  - Low Stock Alerts (Active) - Threshold: 10 units
 - [x] **Admin Order Management** (/admin/orders)
   - View all orders with status filters
-  - Update order status
-  - Add tracking information
-  - View detailed order info
+  - Update order status, add tracking
 - [x] **Admin Product Management** (/admin/products)
   - Full CRUD with search/filters
-  - Add/Edit/Delete products via dialogs
 - [x] **Admin Promotions** (/admin/promotions)
   - Create/manage promotion codes
 - [x] **AI Agents** (/admin/agents)
   - 7 specialized agents for business operations
 
+### Real-Time Features
+- [x] **WebSocket Notifications** - Live dashboard updates
+  - New order notifications
+  - Order status updates
+  - Low stock alerts
+  - New customer signups
+  - Revenue updates
+- [x] **Notification Bell** - Appears in navbar for admin users with live/offline indicator
+
+### Mobile Optimization
+- [x] Admin Dashboard - 2-column grid, icon-only scrollable nav
+- [x] Email Automation - Stacked cards
+- [x] Customer Segments - Responsive grid
+- [x] Analytics - Charts adapt to screen size
+- [x] Homepage - Fully responsive hero, products, sections
+
 ### E-Commerce Backend (FastAPI + MongoDB)
 - [x] Product catalog with 45 products across 8 pet types
-- [x] Shopping cart system with session-based storage
-- [x] Stripe + PayPal checkout integration
+- [x] Shopping cart system
+- [x] Stripe + PayPal checkout
 - [x] Order management with tracking
 - [x] User authentication (JWT)
 - [x] Email automation endpoints
-- [x] Customer segmentation with campaign system
+- [x] Customer segmentation
+- [x] WebSocket real-time notifications
 
 ### Customer Features
 - [x] Homepage with hero, best sellers, new arrivals
@@ -71,7 +70,7 @@ Build a pet wellness e-commerce store with:
 - [x] Order history and tracking
 - [x] Referral program ("Give $10, Get $10")
 - [x] Loyalty program (Bronze/Silver/Gold/Platinum tiers)
-- [x] Promo code support at checkout
+- [x] Promo code support
 
 ### AI Agents (7 Specialized)
 - [x] Product Sourcing Agent
@@ -88,21 +87,27 @@ Build a pet wellness e-commerce store with:
 
 ## Key API Endpoints
 
-### Customer Segmentation (NEW)
-- `GET /api/admin/customer-segments` - Get all segments with stats
-- `GET /api/admin/customer-segments/{segment}` - Get segment details
-- `POST /api/admin/customer-segments/{segment}/campaign` - Generate campaign template
-- `POST /api/admin/customer-segments/{segment}/send-campaign` - Send email campaign
+### WebSocket
+- `ws://*/ws/admin` - Real-time admin notifications
+
+### Low Stock
+- `GET /api/admin/low-stock-products` - Products with stock <= 10
+- `POST /api/admin/email-automation/send-low-stock` - Send low stock alerts
+
+### Customer Segmentation
+- `GET /api/admin/customer-segments` - Get all segments
+- `POST /api/admin/customer-segments/{segment}/campaign` - Generate campaign
+- `POST /api/admin/customer-segments/{segment}/send-campaign` - Send emails
 
 ### Email Automation
-- `GET /api/admin/email-automation` - Get automation stats
-- `POST /api/admin/email-automation/send-abandoned` - Trigger cart recovery emails
-- `POST /api/admin/email-automation/send-reviews` - Trigger review requests
+- `GET /api/admin/email-automation` - Automation stats
+- `POST /api/admin/email-automation/send-abandoned` - Cart recovery emails
+- `POST /api/admin/email-automation/send-reviews` - Review requests
 
 ### Admin CRUD
-- `GET/POST/PUT/DELETE /api/admin/products/*` - Product management
-- `GET/PATCH /api/admin/orders/*` - Order management
-- `GET/POST /api/admin/promotions` - Promotion management
+- `GET/POST/PUT/DELETE /api/admin/products/*`
+- `GET/PATCH /api/admin/orders/*`
+- `GET/POST /api/admin/promotions`
 
 ## Prioritized Backlog
 
@@ -110,17 +115,18 @@ Build a pet wellness e-commerce store with:
 - [x] Admin Product Management CRUD
 - [x] Admin Order Management
 - [x] Admin Analytics Dashboard
-- [x] Email Automation (Abandoned Cart, Review Requests)
+- [x] Email Automation (Abandoned Cart, Review Requests, Low Stock)
 - [x] Brand rename to "Wildly Ones"
 - [x] Customer Segmentation with Targeted Campaigns
+- [x] Real-Time Dashboard Notifications (WebSocket)
+- [x] Mobile Optimization
 
 ### P1 - Next Priority
-- [ ] Backend Refactoring - Split monolithic server.py into modules
+- [ ] Backend Refactoring - Split monolithic server.py
 - [ ] Blog section for SEO content
-- [ ] Low Stock Alerts automation
 
 ### P2 - Medium Priority
-- [ ] Real supplier API integration (CJdropshipping, Zendrop)
+- [ ] Real supplier API integration (CJdropshipping)
 - [ ] Inventory management with alerts
 - [ ] Customer support chat widget
 
@@ -132,14 +138,15 @@ Build a pet wellness e-commerce store with:
 
 ## Tech Stack
 - **Frontend**: React 19, Tailwind CSS, Shadcn UI, React Router
-- **Backend**: FastAPI, Motor (async MongoDB), JWT auth
+- **Backend**: FastAPI, Motor (async MongoDB), JWT auth, WebSocket
 - **Payments**: Stripe, PayPal (sandbox)
-- **Email**: Resend (MOCKED - requires API key)
-- **Tracking**: 17Track (MOCKED - requires API key)
+- **Email**: Resend (MOCKED)
+- **Tracking**: 17Track (MOCKED)
 - **AI**: Claude Opus 4.6 via emergentintegrations
 - **Database**: MongoDB
 
-## Known Limitations / Mocked Services
+## Known Limitations
+- WebSocket external routing requires Kubernetes ingress config
 - PayPal is in sandbox mode
 - Email notifications require RESEND_API_KEY
 - Order tracking requires TRACK17_API_KEY
