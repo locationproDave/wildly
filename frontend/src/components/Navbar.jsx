@@ -10,7 +10,6 @@ import {
   Package,
   Settings,
   Bot,
-  ChevronDown,
   Dog,
   Cat,
   Bird,
@@ -76,71 +75,41 @@ const Navbar = ({ onAuthClick }) => {
             </span>
           </Link>
 
-          {/* Desktop Navigation - Larger font, dark green, hover dropdowns */}
-          <div className="hidden md:flex items-center gap-6">
-            {/* Shop All with hover dropdown */}
-            <HoverCard openDelay={0} closeDelay={100}>
-              <HoverCardTrigger asChild>
-                <Link
-                  to="/products"
-                  className="flex items-center gap-1 text-base font-semibold text-[#2D4A3E] hover:text-[#1F342B] transition-colors"
-                  data-testid="nav-link-shop"
-                >
-                  Shop All
-                  <ChevronDown className="w-4 h-4" />
-                </Link>
-              </HoverCardTrigger>
-              <HoverCardContent className="w-64 p-2" align="start">
-                <div className="space-y-1">
-                  <p className="text-xs font-semibold text-[#5C6D5E] px-2 py-1">By Category</p>
-                  {productCategories.map((cat) => (
+          {/* Desktop Navigation - Pet types with hover dropdowns */}
+          <div className="hidden md:flex items-center gap-5">
+            {/* Each pet type as main nav item with hover dropdown for categories */}
+            {petCategories.map((pet) => {
+              const Icon = pet.icon;
+              return (
+                <HoverCard key={pet.path} openDelay={0} closeDelay={150}>
+                  <HoverCardTrigger asChild>
                     <Link
-                      key={cat.path}
-                      to={cat.path}
-                      className="flex items-center px-3 py-2 text-sm text-[#2D4A3E] hover:bg-[#E8DFD5] rounded-lg transition-colors"
+                      to={pet.path}
+                      className="flex items-center gap-1.5 text-base font-semibold text-[#2D4A3E] hover:text-[#1F342B] transition-colors"
+                      data-testid={`nav-link-${pet.label.toLowerCase()}`}
                     >
-                      {cat.label}
+                      <Icon className="w-4 h-4" />
+                      {pet.label}
                     </Link>
-                  ))}
-                </div>
-              </HoverCardContent>
-            </HoverCard>
+                  </HoverCardTrigger>
+                  <HoverCardContent className="w-48 p-2" align="center">
+                    <div className="space-y-1">
+                      {productCategories.map((cat) => (
+                        <Link
+                          key={cat.path}
+                          to={`${pet.path}&category=${cat.path.split('=')[1]}`}
+                          className="flex items-center px-3 py-2 text-sm text-[#2D4A3E] hover:bg-[#E8DFD5] rounded-lg transition-colors"
+                        >
+                          {cat.label}
+                        </Link>
+                      ))}
+                    </div>
+                  </HoverCardContent>
+                </HoverCard>
+              );
+            })}
 
-            {/* Pets dropdown */}
-            <HoverCard openDelay={0} closeDelay={100}>
-              <HoverCardTrigger asChild>
-                <span className="flex items-center gap-1 text-base font-semibold text-[#2D4A3E] hover:text-[#1F342B] transition-colors cursor-pointer">
-                  By Pet
-                  <ChevronDown className="w-4 h-4" />
-                </span>
-              </HoverCardTrigger>
-              <HoverCardContent className="w-56 p-2" align="start">
-                <div className="space-y-1">
-                  {petCategories.map((pet) => {
-                    const Icon = pet.icon;
-                    return (
-                      <Link
-                        key={pet.path}
-                        to={pet.path}
-                        className="flex items-center gap-3 px-3 py-2 text-sm text-[#2D4A3E] hover:bg-[#E8DFD5] rounded-lg transition-colors"
-                      >
-                        <Icon className="w-4 h-4 text-[#6B8F71]" />
-                        {pet.label}
-                      </Link>
-                    );
-                  })}
-                </div>
-              </HoverCardContent>
-            </HoverCard>
-
-            {/* Direct links - larger font, dark green */}
-            <Link
-              to="/products?pet_type=dog"
-              className="text-base font-semibold text-[#2D4A3E] hover:text-[#1F342B] transition-colors"
-              data-testid="nav-link-dogs"
-            >
-              Dogs
-            </Link>
+            {/* Refer & Earn */}
             <Link
               to="/referral"
               className="text-base font-semibold text-[#D4A574] hover:text-[#B8956A] transition-colors"
