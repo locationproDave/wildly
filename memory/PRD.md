@@ -73,11 +73,18 @@ Build a pet wellness e-commerce store with:
 - [x] **8 category icons** (Dogs, Cats, Birds, Fish, Rabbits, Small Pets, Beds, Supplements)
 - [x] **7 pet type filter buttons** with unique colors
 - [x] Product detail pages with add to cart
+- [x] **Customer Reviews section** on product pages
+  - Average rating with star visualization
+  - Rating breakdown bar chart (5-1 stars)
+  - Individual reviews with user info, verified purchase badge
+  - "Write a Review" button (awards 10-25 bonus points)
+  - "Helpful" voting on reviews
 - [x] Cart drawer and cart page
 - [x] **Promo code input at checkout** with Apply button and suggested codes hint
 - [x] **Dual payment methods**: Stripe (Card) and PayPal buttons
 - [x] Stripe checkout flow (fully functional)
 - [x] **PayPal checkout flow** (sandbox mode - MOCKED)
+- [x] **Order confirmation emails** (requires RESEND_API_KEY - MOCKED)
 - [x] Order confirmation page
 - [x] Account page with order history
 
