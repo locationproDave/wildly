@@ -185,7 +185,8 @@ const HomePage = () => {
               <div>
                 <h3 className="text-xl font-bold font-['Fraunces']">Subscribe & Save 10%</h3>
                 <p className="text-white/80 text-sm">
-                  Never run out of what keeps your pet well. Wellness essentials delivered to your door every month.
+                  Never run out of what keeps your pet healthy.<br />
+                  Wellness essentials delivered to your door every month.
                 </p>
               </div>
             </div>
