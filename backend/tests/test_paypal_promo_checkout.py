@@ -99,7 +99,7 @@ class TestCartAndCheckoutWithPromo:
             json={
                 "cart_session_id": session_id,
                 "email": "test@example.com",
-                "origin_url": "https://furry-commerce-2.preview.emergentagent.com",
+                "origin_url": "https://pet-wellness-shop-2.preview.emergentagent.com",
                 "promo_code": "WELCOME15"
             }
         )
@@ -120,7 +120,7 @@ class TestCartAndCheckoutWithPromo:
             json={
                 "cart_session_id": session_id,
                 "email": "test@example.com",
-                "origin_url": "https://furry-commerce-2.preview.emergentagent.com"
+                "origin_url": "https://pet-wellness-shop-2.preview.emergentagent.com"
             }
         )
         assert checkout_resp.status_code == 200

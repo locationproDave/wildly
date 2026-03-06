@@ -11,7 +11,7 @@ import {
   Sparkles,
   Dog,
   Cat,
-  Bed,
+  Egg,
   Pill,
   Wind,
   Leaf,
@@ -80,7 +80,7 @@ const HomePage = () => {
     { name: "Fish", slug: "fish", icon: Fish, pet: "fish", color: "#7CA5B8", isPetFilter: true },
     { name: "Rabbits", slug: "rabbit", icon: Rabbit, pet: "rabbit", color: "#9B8B7A", isPetFilter: true },
     { name: "Small Pets", slug: "small_pet", icon: Squirrel, pet: "small_pet", color: "#D66D5A", isPetFilter: true },
-    { name: "Calming Beds", slug: "Beds & Blankets", icon: Bed, pet: "both", color: "#57534E", isPetFilter: false },
+    { name: "Chickens", slug: "chicken", icon: Egg, pet: "chicken", color: "#E8B05C", isPetFilter: true },
     { name: "Supplements", slug: "Supplements", icon: Pill, pet: "both", color: "#768A75", isPetFilter: false }
   ];
 
