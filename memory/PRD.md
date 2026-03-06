@@ -105,12 +105,36 @@ Build a pet wellness e-commerce store with:
   - Product features/tags display
   - One-click import to store with custom name/price/description
   - Profit calculator modal for margin analysis
+- [x] **AI-Powered Recommendations**
+  - Analyzes top-selling products
+  - Suggests similar products from suppliers
+  - Trending and seasonal recommendations
+  - Gap analysis for underserved categories
+  - One-click to apply recommendation to search
 - [x] **Backend APIs**:
   - `POST /api/admin/sourcing/search` - Search supplier products
   - `GET /api/admin/sourcing/categories` - Get filter options
   - `POST /api/admin/sourcing/import` - Import product to store
   - `POST /api/admin/sourcing/bulk-import` - Bulk import products
+  - `GET /api/admin/sourcing/ai-recommendations` - AI product suggestions
 - **Note**: Supplier data is SIMULATED (no real API keys required)
+
+### Wishlist Feature (NEW - March 6, 2026)
+- [x] **Wishlist Page** (/wishlist)
+  - View saved products
+  - Move items to cart
+  - Remove items from wishlist
+  - Empty state with Browse Products CTA
+- [x] **Wishlist Integration**
+  - Heart icon in navbar with count badge
+  - Heart button on product detail pages
+  - Toast notifications for add/remove actions
+- [x] **Backend APIs**:
+  - `GET /api/wishlist` - Get user's wishlist with product details
+  - `POST /api/wishlist/add` - Add product to wishlist
+  - `DELETE /api/wishlist/{product_id}` - Remove from wishlist
+  - `GET /api/wishlist/check/{product_id}` - Check if product in wishlist
+  - `POST /api/wishlist/move-to-cart/{product_id}` - Move to cart
 
 ## Admin Credentials
 - Email: admin@calmtails.com
@@ -118,11 +142,19 @@ Build a pet wellness e-commerce store with:
 
 ## Key API Endpoints
 
+### Wishlist
+- `GET /api/wishlist` - Get user's wishlist
+- `POST /api/wishlist/add` - Add product to wishlist
+- `DELETE /api/wishlist/{product_id}` - Remove from wishlist
+- `GET /api/wishlist/check/{product_id}` - Check if in wishlist
+- `POST /api/wishlist/move-to-cart/{product_id}` - Move to cart
+
 ### Product Sourcing (NEW)
 - `POST /api/admin/sourcing/search` - Search products from suppliers
 - `GET /api/admin/sourcing/categories` - Get pet types, categories, suppliers
 - `POST /api/admin/sourcing/import` - Import product to store
 - `POST /api/admin/sourcing/bulk-import` - Bulk import products
+- `GET /api/admin/sourcing/ai-recommendations` - AI product suggestions
 
 ### WebSocket
 - `ws://*/ws/admin` - Real-time admin notifications
@@ -159,14 +191,15 @@ Build a pet wellness e-commerce store with:
 - [x] Mobile Optimization
 
 ### P1 - Next Priority
-- [ ] Backend Refactoring - Split monolithic server.py
+- [ ] Backend Refactoring - Split monolithic server.py into modular structure
 - [ ] Blog section for SEO content
+- [ ] Real supplier API integration (CJdropshipping, Zendrop, Spocket APIs)
 
 ### P2 - Medium Priority
-- [ ] Real supplier API integration (CJdropshipping, Zendrop, Spocket APIs)
 - [ ] Web scraping for live supplier data
 - [ ] Inventory management with alerts
 - [ ] Customer support chat widget
+- [ ] Wishlist sharing feature
 
 ### P3 - Future
 - [ ] Wishlist functionality
