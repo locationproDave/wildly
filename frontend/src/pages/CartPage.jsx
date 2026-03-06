@@ -15,7 +15,9 @@ import {
   Tag,
   X,
   CreditCard,
-  CheckCircle
+  CheckCircle,
+  RefreshCw,
+  Calendar
 } from "lucide-react";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
@@ -34,11 +36,14 @@ const CartPage = () => {
   const [promoLoading, setPromoLoading] = useState(false);
   const [appliedPromo, setAppliedPromo] = useState(null);
   const [paymentMethod, setPaymentMethod] = useState("stripe"); // stripe or paypal
+  const [isSubscription, setIsSubscription] = useState(false);
 
+  const SUBSCRIPTION_DISCOUNT = 10; // 10% off for subscribers
   const subtotal = cart.subtotal || 0;
+  const subscriptionDiscount = isSubscription ? subtotal * (SUBSCRIPTION_DISCOUNT / 100) : 0;
   const shipping = subtotal >= 50 ? 0 : 5.99;
   const promoDiscount = appliedPromo?.discount_amount || 0;
-  const discountedSubtotal = Math.max(0, subtotal - promoDiscount);
+  const discountedSubtotal = Math.max(0, subtotal - promoDiscount - subscriptionDiscount);
   const tax = discountedSubtotal * 0.08;
   const total = discountedSubtotal + shipping + tax;
 
@@ -79,8 +84,9 @@ const CartPage = () => {
 
     setLoading(true);
     try {
+      const endpoint = isSubscription ? `${BACKEND_URL}/api/checkout/subscription` : `${BACKEND_URL}/api/checkout`;
       const response = await axios.post(
-        `${BACKEND_URL}/api/checkout`,
+        endpoint,
         {
           cart_session_id: sessionId,
           email: email,
@@ -300,11 +306,56 @@ const CartPage = () => {
                 </p>
               </div>
 
+              {/* Monthly Subscription Option */}
+              <div className="mb-6">
+                <button
+                  onClick={() => setIsSubscription(!isSubscription)}
+                  className={`w-full p-4 rounded-xl border-2 transition-all text-left ${
+                    isSubscription 
+                      ? "border-[#6B8F71] bg-[#6B8F71]/10" 
+                      : "border-[#E8DFD5] hover:border-[#D4A574]"
+                  }`}
+                  data-testid="subscription-toggle"
+                >
+                  <div className="flex items-start gap-3">
+                    <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center mt-0.5 ${
+                      isSubscription ? "border-[#6B8F71] bg-[#6B8F71]" : "border-[#5C6D5E]"
+                    }`}>
+                      {isSubscription && <CheckCircle className="w-3 h-3 text-white" />}
+                    </div>
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2">
+                        <RefreshCw className="w-4 h-4 text-[#6B8F71]" />
+                        <span className="font-semibold text-[#2D4A3E]">Subscribe & Save 10%</span>
+                      </div>
+                      <p className="text-xs text-[#5C6D5E] mt-1">
+                        Get this order delivered monthly and save on every shipment. Cancel anytime.
+                      </p>
+                      {isSubscription && (
+                        <div className="flex items-center gap-2 mt-2 text-xs text-[#6B8F71]">
+                          <Calendar className="w-3 h-3" />
+                          <span>Next delivery in 30 days</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </button>
+              </div>
+
               <div className="space-y-3 mb-6">
                 <div className="flex justify-between text-[#5C6D5E]">
                   <span>Subtotal</span>
                   <span>${subtotal.toFixed(2)}</span>
                 </div>
+                {isSubscription && (
+                  <div className="flex justify-between text-[#6B8F71]">
+                    <span className="flex items-center gap-1">
+                      <RefreshCw className="w-3 h-3" />
+                      Subscription Savings
+                    </span>
+                    <span>-${subscriptionDiscount.toFixed(2)}</span>
+                  </div>
+                )}
                 {appliedPromo && (
                   <div className="flex justify-between text-[#6B8F71]">
                     <span>Promo Discount</span>

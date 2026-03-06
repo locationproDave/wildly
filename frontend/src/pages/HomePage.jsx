@@ -23,7 +23,8 @@ import {
   Award,
   TrendingUp,
   Percent,
-  X
+  X,
+  RefreshCw
 } from "lucide-react";
 import { Button } from "../components/ui/button";
 
@@ -188,6 +189,34 @@ const HomePage = () => {
                 </div>
               </div>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Subscribe & Save Banner */}
+      <section className="py-12 bg-gradient-to-r from-[#6B8F71] to-[#4A6B4F]">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+            <div className="flex items-center gap-4 text-white">
+              <div className="w-16 h-16 rounded-full bg-white/20 flex items-center justify-center">
+                <RefreshCw className="w-8 h-8" />
+              </div>
+              <div>
+                <h3 className="text-2xl font-bold font-['Fraunces']">Subscribe & Save 10%</h3>
+                <p className="text-white/80 mt-1">
+                  Never run out of supplements & wellness essentials. Get automatic monthly deliveries.
+                </p>
+              </div>
+            </div>
+            <Link to="/products?category=Supplements">
+              <Button 
+                className="bg-white text-[#2D4A3E] hover:bg-[#E8DFD5] rounded-full px-8 py-6 font-semibold"
+                data-testid="subscribe-cta"
+              >
+                Shop Subscription Items
+                <ArrowRight className="w-4 h-4 ml-2" />
+              </Button>
+            </Link>
           </div>
         </div>
       </section>

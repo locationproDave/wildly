@@ -256,6 +256,24 @@ class OrderTracking(BaseModel):
     events: List[dict] = []  # List of tracking events
     last_updated: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
 
+class Subscription(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    user_id: str
+    email: str
+    items: List[dict] = []  # Products in subscription
+    frequency: str = "monthly"  # monthly, bi-monthly, quarterly
+    discount_percent: int = 10  # 10% off for subscribers
+    status: str = "active"  # active, paused, cancelled
+    next_delivery_date: str = Field(default_factory=lambda: (datetime.now(timezone.utc) + timedelta(days=30)).isoformat())
+    created_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
+    last_order_id: Optional[str] = None
+
+class SubscriptionCreate(BaseModel):
+    email: str
+    items: List[dict]  # [{product_id, quantity}]
+    frequency: str = "monthly"
+
 # ==================== AUTH HELPERS ====================
 
 def hash_password(password: str) -> str:
@@ -2332,6 +2350,217 @@ async def send_shipping_notification_email(order: dict, tracking: dict):
         logging.info(f"Shipping notification email sent to {order.get('email')}")
     except Exception as e:
         logging.error(f"Failed to send shipping email: {str(e)}")
+
+# ==================== SUBSCRIPTION SYSTEM ====================
+
+SUBSCRIPTION_DISCOUNT = 10  # 10% discount for subscription orders
+
+@api_router.post("/subscriptions", response_model=dict)
+async def create_subscription(sub_data: SubscriptionCreate, user: dict = Depends(require_user)):
+    """Create a new monthly subscription for products"""
+    # Validate products exist
+    product_ids = [item.get("product_id") for item in sub_data.items]
+    products = await db.products.find({"id": {"$in": product_ids}}, {"_id": 0}).to_list(None)
+    
+    if len(products) != len(product_ids):
+        raise HTTPException(status_code=400, detail="One or more products not found")
+    
+    # Calculate next delivery date based on frequency
+    freq_days = {"monthly": 30, "bi-monthly": 60, "quarterly": 90}
+    next_delivery = datetime.now(timezone.utc) + timedelta(days=freq_days.get(sub_data.frequency, 30))
+    
+    # Build subscription items with product details
+    subscription_items = []
+    for item in sub_data.items:
+        product = next((p for p in products if p["id"] == item.get("product_id")), None)
+        if product:
+            subscription_items.append({
+                "product_id": product["id"],
+                "product_name": product["name"],
+                "product_image": product.get("images", ["/placeholder.jpg"])[0],
+                "quantity": item.get("quantity", 1),
+                "price": product["price"],
+                "discounted_price": round(product["price"] * (1 - SUBSCRIPTION_DISCOUNT / 100), 2)
+            })
+    
+    subscription = {
+        "id": str(uuid.uuid4()),
+        "user_id": user["id"],
+        "email": sub_data.email or user.get("email"),
+        "items": subscription_items,
+        "frequency": sub_data.frequency,
+        "discount_percent": SUBSCRIPTION_DISCOUNT,
+        "status": "active",
+        "next_delivery_date": next_delivery.isoformat(),
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "last_order_id": None
+    }
+    
+    await db.subscriptions.insert_one(subscription)
+    subscription.pop("_id", None)
+    
+    return {
+        "message": f"Subscription created! You'll save {SUBSCRIPTION_DISCOUNT}% on every delivery.",
+        "subscription": subscription
+    }
+
+@api_router.get("/subscriptions", response_model=List[dict])
+async def get_user_subscriptions(user: dict = Depends(require_user)):
+    """Get all subscriptions for the current user"""
+    subscriptions = await db.subscriptions.find(
+        {"user_id": user["id"]},
+        {"_id": 0}
+    ).to_list(None)
+    return subscriptions
+
+@api_router.get("/subscriptions/{subscription_id}", response_model=dict)
+async def get_subscription(subscription_id: str, user: dict = Depends(require_user)):
+    """Get a specific subscription"""
+    subscription = await db.subscriptions.find_one(
+        {"id": subscription_id, "user_id": user["id"]},
+        {"_id": 0}
+    )
+    if not subscription:
+        raise HTTPException(status_code=404, detail="Subscription not found")
+    return subscription
+
+@api_router.put("/subscriptions/{subscription_id}/pause", response_model=dict)
+async def pause_subscription(subscription_id: str, user: dict = Depends(require_user)):
+    """Pause a subscription"""
+    result = await db.subscriptions.update_one(
+        {"id": subscription_id, "user_id": user["id"]},
+        {"$set": {"status": "paused", "updated_at": datetime.now(timezone.utc).isoformat()}}
+    )
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Subscription not found")
+    return {"message": "Subscription paused"}
+
+@api_router.put("/subscriptions/{subscription_id}/resume", response_model=dict)
+async def resume_subscription(subscription_id: str, user: dict = Depends(require_user)):
+    """Resume a paused subscription"""
+    freq_days = {"monthly": 30, "bi-monthly": 60, "quarterly": 90}
+    subscription = await db.subscriptions.find_one({"id": subscription_id, "user_id": user["id"]})
+    if not subscription:
+        raise HTTPException(status_code=404, detail="Subscription not found")
+    
+    next_delivery = datetime.now(timezone.utc) + timedelta(days=freq_days.get(subscription.get("frequency", "monthly"), 30))
+    
+    await db.subscriptions.update_one(
+        {"id": subscription_id},
+        {"$set": {
+            "status": "active",
+            "next_delivery_date": next_delivery.isoformat(),
+            "updated_at": datetime.now(timezone.utc).isoformat()
+        }}
+    )
+    return {"message": "Subscription resumed", "next_delivery_date": next_delivery.isoformat()}
+
+@api_router.delete("/subscriptions/{subscription_id}", response_model=dict)
+async def cancel_subscription(subscription_id: str, user: dict = Depends(require_user)):
+    """Cancel a subscription"""
+    result = await db.subscriptions.update_one(
+        {"id": subscription_id, "user_id": user["id"]},
+        {"$set": {"status": "cancelled", "updated_at": datetime.now(timezone.utc).isoformat()}}
+    )
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Subscription not found")
+    return {"message": "Subscription cancelled"}
+
+@api_router.post("/checkout/subscription", response_model=dict)
+async def create_subscription_checkout(checkout_data: CheckoutRequest, request: Request, user: Optional[dict] = Depends(get_current_user)):
+    """Create checkout with subscription discount applied"""
+    cart = await db.carts.find_one({"session_id": checkout_data.cart_session_id})
+    if not cart or not cart.get("items"):
+        raise HTTPException(status_code=400, detail="Cart is empty")
+    
+    # Calculate totals with subscription discount
+    items = cart.get("items", [])
+    original_subtotal = sum(item.get("price", 0) * item.get("quantity", 1) for item in items)
+    subscription_discount = original_subtotal * (SUBSCRIPTION_DISCOUNT / 100)
+    discounted_subtotal = original_subtotal - subscription_discount
+    
+    # Create order with subscription flag
+    order_id = str(uuid.uuid4())
+    order_number = f"SUB-{str(uuid.uuid4())[:8].upper()}"
+    
+    order_doc = {
+        "id": order_id,
+        "order_number": order_number,
+        "user_id": user["id"] if user else None,
+        "email": checkout_data.email,
+        "items": items,
+        "original_subtotal": original_subtotal,
+        "subscription_discount": subscription_discount,
+        "subtotal": discounted_subtotal,
+        "shipping_address": checkout_data.shipping_address.model_dump() if checkout_data.shipping_address else None,
+        "status": "pending",
+        "payment_status": "pending",
+        "is_subscription": True,
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.orders.insert_one(order_doc)
+    
+    # Create Stripe checkout session
+    host_url = checkout_data.origin_url
+    webhook_url = f"{host_url}/api/stripe/webhook"
+    stripe_checkout = StripeCheckout(api_key=STRIPE_API_KEY, webhook_url=webhook_url)
+    
+    success_url = f"{host_url}/order-confirmation?session_id={{CHECKOUT_SESSION_ID}}"
+    cancel_url = f"{host_url}/cart"
+    
+    checkout_request = CheckoutSessionRequest(
+        success_url=success_url,
+        cancel_url=cancel_url,
+        line_items=[{"name": f"Subscription Order (Save {SUBSCRIPTION_DISCOUNT}%)", "quantity": 1, "unit_amount": int(discounted_subtotal * 100)}],
+        metadata={
+            "order_id": order_id,
+            "order_number": order_number,
+            "email": checkout_data.email,
+            "is_subscription": "true"
+        }
+    )
+    
+    session = await stripe_checkout.create_checkout_session(checkout_request)
+    
+    await db.orders.update_one(
+        {"id": order_id},
+        {"$set": {"stripe_session_id": session.session_id}}
+    )
+    
+    # Create subscription record if user is logged in
+    if user:
+        subscription_items = [{
+            "product_id": item.get("product_id"),
+            "product_name": item.get("name"),
+            "product_image": item.get("image"),
+            "quantity": item.get("quantity", 1),
+            "price": item.get("price"),
+            "discounted_price": round(item.get("price", 0) * (1 - SUBSCRIPTION_DISCOUNT / 100), 2)
+        } for item in items]
+        
+        subscription = {
+            "id": str(uuid.uuid4()),
+            "user_id": user["id"],
+            "email": checkout_data.email,
+            "items": subscription_items,
+            "frequency": "monthly",
+            "discount_percent": SUBSCRIPTION_DISCOUNT,
+            "status": "pending",  # Will be activated after payment
+            "next_delivery_date": (datetime.now(timezone.utc) + timedelta(days=30)).isoformat(),
+            "created_at": datetime.now(timezone.utc).isoformat(),
+            "last_order_id": order_id
+        }
+        await db.subscriptions.insert_one(subscription)
+    
+    return {
+        "checkout_url": session.url,
+        "order_id": order_id,
+        "order_number": order_number,
+        "original_subtotal": original_subtotal,
+        "subscription_discount": subscription_discount,
+        "discounted_subtotal": discounted_subtotal
+    }
 
 # ==================== EMAIL AUTOMATION ====================
 
