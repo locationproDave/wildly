@@ -74,7 +74,10 @@ Build a pet wellness e-commerce store with:
 - [x] **7 pet type filter buttons** with unique colors
 - [x] Product detail pages with add to cart
 - [x] Cart drawer and cart page
-- [x] Stripe checkout flow
+- [x] **Promo code input at checkout** with Apply button and suggested codes hint
+- [x] **Dual payment methods**: Stripe (Card) and PayPal buttons
+- [x] Stripe checkout flow (fully functional)
+- [x] **PayPal checkout flow** (sandbox mode - MOCKED)
 - [x] Order confirmation page
 - [x] Account page with order history
 
@@ -96,6 +99,11 @@ Build a pet wellness e-commerce store with:
 - [x] Stats overview (revenue, orders, customers)
 - [x] Order pipeline (pending → processing → shipped)
 - [x] Order status management
+- [x] **Promotions Management Page** (/admin/promotions)
+  - View all promotions with stats (Total, Active, Total Uses)
+  - Create new promotions via dialog form
+  - Track uses per promotion
+  - First-order-only and loyalty reward badges
 - [x] Access to AI Agents
 
 ### AI Agents (7 Specialized)
