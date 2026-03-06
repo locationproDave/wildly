@@ -100,134 +100,137 @@ const ProductsPage = () => {
   return (
     <div className="min-h-screen pt-24 pb-12">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold text-[#2D4A3E] mb-2 font-['Fraunces']">
-            Our Products
-          </h1>
-          <p className="text-[#5C6D5E]">
-            Premium pet wellness products designed with love
-          </p>
-        </div>
-
-        {/* Filters */}
-        <div className="flex flex-col md:flex-row gap-4 mb-8">
-          {/* Search */}
-          <form onSubmit={handleSearch} className="flex-1 relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[#5C6D5E]" />
+        {/* Header with Search on right */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+          <div>
+            <h1 className="text-4xl font-bold text-[#2D4A3E] mb-1 font-['Fraunces']">
+              Our Products
+            </h1>
+            <p className="text-[#5C6D5E] text-sm">
+              Premium pet wellness products designed with love
+            </p>
+          </div>
+          {/* Search moved to right */}
+          <form onSubmit={handleSearch} className="relative w-full sm:w-64">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#5C6D5E]" />
             <Input
               placeholder="Search products..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 rounded-full border-[#E8DFD5]"
+              className="pl-9 rounded-full border-[#E8DFD5] h-9 text-sm"
               data-testid="search-input"
             />
           </form>
+        </div>
 
-          {/* Category Filter */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" className="rounded-full" data-testid="category-filter">
-                <Filter className="w-4 h-4 mr-2" />
-                {currentCategory || "All Categories"}
-                <ChevronDown className="w-4 h-4 ml-2" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent>
-              <DropdownMenuItem onClick={() => setFilter("category", "")}>
-                All Categories
-              </DropdownMenuItem>
-              {categories.map((cat) => (
-                <DropdownMenuItem key={cat} onClick={() => setFilter("category", cat)}>
-                  {cat}
+        {/* Filters */}
+        <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
+          <div className="flex flex-wrap items-center gap-3">
+            {/* Category Filter */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" className="rounded-full h-8 text-sm px-3" data-testid="category-filter">
+                  <Filter className="w-3.5 h-3.5 mr-1.5" />
+                  {currentCategory || "All Categories"}
+                  <ChevronDown className="w-3.5 h-3.5 ml-1.5" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent>
+                <DropdownMenuItem onClick={() => setFilter("category", "")}>
+                  All Categories
                 </DropdownMenuItem>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
+                {categories.map((cat) => (
+                  <DropdownMenuItem key={cat} onClick={() => setFilter("category", cat)}>
+                    {cat}
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
 
-          {/* Pet Type Filter */}
-          <div className="flex gap-2 flex-wrap">
-            <Button
-              variant={currentPetType === "dog" ? "default" : "outline"}
-              className={`rounded-full ${currentPetType === "dog" ? "bg-[#2D4A3E]" : ""}`}
-              onClick={() => setFilter("pet_type", currentPetType === "dog" ? "" : "dog")}
-              data-testid="filter-dog"
-            >
-              <Dog className="w-4 h-4 mr-2" />
-              Dogs
-            </Button>
-            <Button
-              variant={currentPetType === "cat" ? "default" : "outline"}
-              className={`rounded-full ${currentPetType === "cat" ? "bg-[#6B8F71]" : ""}`}
-              onClick={() => setFilter("pet_type", currentPetType === "cat" ? "" : "cat")}
-              data-testid="filter-cat"
-            >
-              <Cat className="w-4 h-4 mr-2" />
-              Cats
-            </Button>
-            <Button
-              variant={currentPetType === "bird" ? "default" : "outline"}
-              className={`rounded-full ${currentPetType === "bird" ? "bg-[#D4A574]" : ""}`}
-              onClick={() => setFilter("pet_type", currentPetType === "bird" ? "" : "bird")}
-              data-testid="filter-bird"
-            >
-              <Bird className="w-4 h-4 mr-2" />
-              Birds
-            </Button>
-            <Button
-              variant={currentPetType === "fish" ? "default" : "outline"}
-              className={`rounded-full ${currentPetType === "fish" ? "bg-[#7CA5B8]" : ""}`}
-              onClick={() => setFilter("pet_type", currentPetType === "fish" ? "" : "fish")}
-              data-testid="filter-fish"
-            >
-              <Fish className="w-4 h-4 mr-2" />
-              Fish
-            </Button>
-            <Button
-              variant={currentPetType === "rabbit" ? "default" : "outline"}
-              className={`rounded-full ${currentPetType === "rabbit" ? "bg-[#9B8B7A]" : ""}`}
-              onClick={() => setFilter("pet_type", currentPetType === "rabbit" ? "" : "rabbit")}
-              data-testid="filter-rabbit"
-            >
-              <Rabbit className="w-4 h-4 mr-2" />
-              Rabbits
-            </Button>
-            <Button
-              variant={currentPetType === "small_pet" ? "default" : "outline"}
-              className={`rounded-full ${currentPetType === "small_pet" ? "bg-[#D66D5A]" : ""}`}
-              onClick={() => setFilter("pet_type", currentPetType === "small_pet" ? "" : "small_pet")}
-              data-testid="filter-small-pet"
-            >
-              <Squirrel className="w-4 h-4 mr-2" />
-              Small Pets
-            </Button>
-            <Button
-              variant={currentPetType === "reptile" ? "default" : "outline"}
-              className={`rounded-full ${currentPetType === "reptile" ? "bg-[#768A75]" : ""}`}
-              onClick={() => setFilter("pet_type", currentPetType === "reptile" ? "" : "reptile")}
-              data-testid="filter-reptile"
-            >
-              Reptiles
-            </Button>
-            <Button
-              variant={currentPetType === "chicken" ? "default" : "outline"}
-              className={`rounded-full ${currentPetType === "chicken" ? "bg-[#E8B05C]" : ""}`}
-              onClick={() => setFilter("pet_type", currentPetType === "chicken" ? "" : "chicken")}
-              data-testid="filter-chicken"
-            >
-              <Egg className="w-4 h-4 mr-2" />
-              Chickens
-            </Button>
+            {/* Pet Type Filter */}
+            <div className="flex gap-3 flex-wrap">
+              <Button
+                variant={currentPetType === "dog" ? "default" : "outline"}
+                className={`rounded-full h-8 text-sm px-3 ${currentPetType === "dog" ? "bg-[#2D4A3E]" : ""}`}
+                onClick={() => setFilter("pet_type", currentPetType === "dog" ? "" : "dog")}
+                data-testid="filter-dog"
+              >
+                <Dog className="w-3.5 h-3.5 mr-1" />
+                Dogs
+              </Button>
+              <Button
+                variant={currentPetType === "cat" ? "default" : "outline"}
+                className={`rounded-full h-8 text-sm px-3 ${currentPetType === "cat" ? "bg-[#6B8F71]" : ""}`}
+                onClick={() => setFilter("pet_type", currentPetType === "cat" ? "" : "cat")}
+                data-testid="filter-cat"
+              >
+                <Cat className="w-3.5 h-3.5 mr-1" />
+                Cats
+              </Button>
+              <Button
+                variant={currentPetType === "bird" ? "default" : "outline"}
+                className={`rounded-full h-8 text-sm px-3 ${currentPetType === "bird" ? "bg-[#D4A574]" : ""}`}
+                onClick={() => setFilter("pet_type", currentPetType === "bird" ? "" : "bird")}
+                data-testid="filter-bird"
+              >
+                <Bird className="w-3.5 h-3.5 mr-1" />
+                Birds
+              </Button>
+              <Button
+                variant={currentPetType === "fish" ? "default" : "outline"}
+                className={`rounded-full h-8 text-sm px-3 ${currentPetType === "fish" ? "bg-[#7CA5B8]" : ""}`}
+                onClick={() => setFilter("pet_type", currentPetType === "fish" ? "" : "fish")}
+                data-testid="filter-fish"
+              >
+                <Fish className="w-3.5 h-3.5 mr-1" />
+                Fish
+              </Button>
+              <Button
+                variant={currentPetType === "rabbit" ? "default" : "outline"}
+                className={`rounded-full h-8 text-sm px-3 ${currentPetType === "rabbit" ? "bg-[#9B8B7A]" : ""}`}
+                onClick={() => setFilter("pet_type", currentPetType === "rabbit" ? "" : "rabbit")}
+                data-testid="filter-rabbit"
+              >
+                <Rabbit className="w-3.5 h-3.5 mr-1" />
+                Rabbits
+              </Button>
+              <Button
+                variant={currentPetType === "small_pet" ? "default" : "outline"}
+                className={`rounded-full h-8 text-sm px-3 ${currentPetType === "small_pet" ? "bg-[#D66D5A]" : ""}`}
+                onClick={() => setFilter("pet_type", currentPetType === "small_pet" ? "" : "small_pet")}
+                data-testid="filter-small-pet"
+              >
+                <Squirrel className="w-3.5 h-3.5 mr-1" />
+                Small Pets
+              </Button>
+              <Button
+                variant={currentPetType === "reptile" ? "default" : "outline"}
+                className={`rounded-full h-8 text-sm px-3 ${currentPetType === "reptile" ? "bg-[#768A75]" : ""}`}
+                onClick={() => setFilter("pet_type", currentPetType === "reptile" ? "" : "reptile")}
+                data-testid="filter-reptile"
+              >
+                Reptiles
+              </Button>
+              <Button
+                variant={currentPetType === "chicken" ? "default" : "outline"}
+                className={`rounded-full h-8 text-sm px-3 ${currentPetType === "chicken" ? "bg-[#E8B05C]" : ""}`}
+                onClick={() => setFilter("pet_type", currentPetType === "chicken" ? "" : "chicken")}
+                data-testid="filter-chicken"
+              >
+                <Egg className="w-3.5 h-3.5 mr-1" />
+                Chickens
+              </Button>
+            </div>
           </div>
 
           {hasFilters && (
             <Button
               variant="ghost"
-              className="rounded-full text-[#C45C4A]"
+              className="rounded-full text-[#C45C4A] h-8 text-sm"
               onClick={clearFilters}
               data-testid="clear-filters"
             >
-              <X className="w-4 h-4 mr-2" />
+              <X className="w-3.5 h-3.5 mr-1" />
               Clear
             </Button>
           )}
