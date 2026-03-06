@@ -66,11 +66,11 @@ const Navbar = ({ onAuthClick }) => {
     <nav className="fixed top-0 left-0 right-0 z-50 bg-[#D4A574] border-b border-[#C49968]/50 shadow-sm">
       <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
-          {/* Logo - 15% larger */}
+          {/* Logo */}
           <Link to="/" className="flex items-center flex-shrink-0" data-testid="nav-logo">
             <span 
-              className="text-[#2D4A3E] text-4xl sm:text-5xl font-['Dancing_Script'] font-bold tracking-wide"
-              style={{ WebkitTextStroke: '1.4px #2D4A3E' }}
+              className="text-[#2D4A3E] text-[2.1rem] sm:text-[2.85rem] font-['Dancing_Script'] font-bold tracking-wide"
+              style={{ WebkitTextStroke: '1.3px #2D4A3E' }}
             >
               Wildly Ones
             </span>
