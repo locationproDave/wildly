@@ -15,7 +15,7 @@ import {
   Bird,
   Fish,
   Squirrel,
-  Sparkles,
+  Rat,
   Egg
 } from "lucide-react";
 import { Button } from "./ui/button";
@@ -46,7 +46,7 @@ const Navbar = ({ onAuthClick }) => {
     { path: "/products?pet_type=bird", label: "Birds", icon: Bird },
     { path: "/products?pet_type=fish", label: "Fish", icon: Fish },
     { path: "/products?pet_type=rabbit", label: "Rabbits", icon: Squirrel },
-    { path: "/products?pet_type=small_pet", label: "Small Pets", icon: Sparkles },
+    { path: "/products?pet_type=small_pet", label: "Small Pets", icon: Rat },
     { path: "/products?pet_type=chicken", label: "Chickens", icon: Egg },
   ];
 
