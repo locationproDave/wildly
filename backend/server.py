@@ -36,6 +36,13 @@ STRIPE_API_KEY = os.environ.get('STRIPE_API_KEY')
 PAYPAL_CLIENT_ID = os.environ.get('PAYPAL_CLIENT_ID', 'sb')
 PAYPAL_CLIENT_SECRET = os.environ.get('PAYPAL_CLIENT_SECRET', '')
 PAYPAL_MODE = os.environ.get('PAYPAL_MODE', 'sandbox')  # sandbox or live
+RESEND_API_KEY = os.environ.get('RESEND_API_KEY', '')
+SENDER_EMAIL = os.environ.get('SENDER_EMAIL', 'onboarding@resend.dev')
+
+# Configure Resend
+import resend
+if RESEND_API_KEY:
+    resend.api_key = RESEND_API_KEY
 
 # Create the main app
 app = FastAPI(title="CalmTails Pet Wellness Store")
@@ -197,6 +204,27 @@ class PointsTransaction(BaseModel):
     description: str
     order_id: Optional[str] = None
     created_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
+
+class Review(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    product_id: str
+    user_id: str
+    user_name: str
+    rating: int  # 1-5
+    title: str
+    content: str
+    verified_purchase: bool = False
+    helpful_count: int = 0
+    images: List[str] = []
+    created_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
+
+class ReviewCreate(BaseModel):
+    product_id: str
+    rating: int
+    title: str
+    content: str
+    images: List[str] = []
 
 # ==================== AUTH HELPERS ====================
 
@@ -743,6 +771,15 @@ async def stripe_webhook(request: Request):
                         "updated_at": datetime.now(timezone.utc).isoformat()
                     }}
                 )
+                
+                # Send order confirmation email
+                order = await db.orders.find_one({"id": order_id}, {"_id": 0})
+                if order:
+                    asyncio.create_task(send_order_confirmation_email(order))
+                    
+                    # Award loyalty points
+                    if order.get("user_id"):
+                        await award_loyalty_points(order["user_id"], order["total"], order_id)
         
         return {"received": True}
     except Exception as e:
@@ -932,6 +969,11 @@ async def capture_paypal_order(paypal_order_id: str, user: Optional[dict] = Depe
         # Clear the cart
         if order.get("user_id"):
             await db.carts.delete_many({"user_id": order["user_id"]})
+        
+        # Send order confirmation email
+        updated_order = await db.orders.find_one({"id": order["id"]}, {"_id": 0})
+        if updated_order:
+            asyncio.create_task(send_order_confirmation_email(updated_order))
         
         return {
             "success": True,
@@ -1325,6 +1367,295 @@ async def get_all_promotions(user: dict = Depends(require_admin)):
     """Get all promotions (admin only)"""
     promotions = await db.promotions.find({}, {"_id": 0}).sort("created_at", -1).to_list(100)
     return promotions
+
+# ==================== EMAIL ROUTES ====================
+
+async def send_order_confirmation_email(order: dict):
+    """Send order confirmation email to customer"""
+    if not RESEND_API_KEY:
+        logging.warning("RESEND_API_KEY not configured - skipping email")
+        return None
+    
+    # Generate order items HTML
+    items_html = ""
+    for item in order.get("items", []):
+        items_html += f"""
+        <tr>
+            <td style="padding: 12px; border-bottom: 1px solid #E8DFD5;">
+                <img src="{item.get('image', '')}" alt="{item.get('product_name', '')}" style="width: 60px; height: 60px; object-fit: cover; border-radius: 8px;">
+            </td>
+            <td style="padding: 12px; border-bottom: 1px solid #E8DFD5;">
+                <strong>{item.get('product_name', '')}</strong><br>
+                <span style="color: #5C6D5E;">Qty: {item.get('quantity', 1)}</span>
+            </td>
+            <td style="padding: 12px; border-bottom: 1px solid #E8DFD5; text-align: right;">
+                ${item.get('price', 0) * item.get('quantity', 1):.2f}
+            </td>
+        </tr>
+        """
+    
+    promo_html = ""
+    if order.get("promo_discount", 0) > 0:
+        promo_html = f"""
+        <tr>
+            <td colspan="2" style="padding: 8px 0; text-align: right; color: #6B8F71;">Promo Discount ({order.get('promo_code', '')})</td>
+            <td style="padding: 8px 0; text-align: right; color: #6B8F71;">-${order.get('promo_discount', 0):.2f}</td>
+        </tr>
+        """
+    
+    html_content = f"""
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    </head>
+    <body style="margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #FDF8F3;">
+        <table width="100%" cellpadding="0" cellspacing="0" style="max-width: 600px; margin: 0 auto; background-color: #FFFFFF;">
+            <!-- Header -->
+            <tr>
+                <td style="background-color: #2D4A3E; padding: 24px; text-align: center;">
+                    <h1 style="color: #FFFFFF; margin: 0; font-size: 28px;">🐾 CalmTails</h1>
+                </td>
+            </tr>
+            
+            <!-- Order Confirmation -->
+            <tr>
+                <td style="padding: 32px 24px;">
+                    <h2 style="color: #2D4A3E; margin: 0 0 8px 0;">Thank you for your order!</h2>
+                    <p style="color: #5C6D5E; margin: 0 0 24px 0;">
+                        Your order <strong style="color: #2D4A3E;">{order.get('order_number', '')}</strong> has been confirmed.
+                    </p>
+                    
+                    <!-- Order Items -->
+                    <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom: 24px;">
+                        <tr>
+                            <td colspan="3" style="padding-bottom: 12px; border-bottom: 2px solid #2D4A3E;">
+                                <strong style="color: #2D4A3E;">Order Summary</strong>
+                            </td>
+                        </tr>
+                        {items_html}
+                    </table>
+                    
+                    <!-- Totals -->
+                    <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom: 24px;">
+                        <tr>
+                            <td colspan="2" style="padding: 8px 0; text-align: right;">Subtotal</td>
+                            <td style="padding: 8px 0; text-align: right;">${order.get('subtotal', 0):.2f}</td>
+                        </tr>
+                        {promo_html}
+                        <tr>
+                            <td colspan="2" style="padding: 8px 0; text-align: right;">Shipping</td>
+                            <td style="padding: 8px 0; text-align: right;">{f"${order.get('shipping_cost', 0):.2f}" if order.get('shipping_cost', 0) > 0 else "Free"}</td>
+                        </tr>
+                        <tr>
+                            <td colspan="2" style="padding: 8px 0; text-align: right;">Tax</td>
+                            <td style="padding: 8px 0; text-align: right;">${order.get('tax', 0):.2f}</td>
+                        </tr>
+                        <tr>
+                            <td colspan="2" style="padding: 12px 0; text-align: right; border-top: 2px solid #2D4A3E;">
+                                <strong style="color: #2D4A3E; font-size: 18px;">Total</strong>
+                            </td>
+                            <td style="padding: 12px 0; text-align: right; border-top: 2px solid #2D4A3E;">
+                                <strong style="color: #2D4A3E; font-size: 18px;">${order.get('total', 0):.2f}</strong>
+                            </td>
+                        </tr>
+                    </table>
+                    
+                    <!-- CTA -->
+                    <table width="100%" cellpadding="0" cellspacing="0">
+                        <tr>
+                            <td style="text-align: center; padding: 24px 0;">
+                                <a href="https://calmtails.com/account" style="display: inline-block; background-color: #D4A574; color: #2D4A3E; padding: 14px 32px; text-decoration: none; border-radius: 25px; font-weight: bold;">
+                                    View Order Details
+                                </a>
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+            
+            <!-- Loyalty Points -->
+            <tr>
+                <td style="background-color: #E8DFD5; padding: 24px; text-align: center;">
+                    <p style="color: #2D4A3E; margin: 0;">
+                        🎉 You earned <strong>{int(order.get('total', 0))} loyalty points</strong> with this order!
+                    </p>
+                </td>
+            </tr>
+            
+            <!-- Footer -->
+            <tr>
+                <td style="background-color: #2D4A3E; padding: 24px; text-align: center;">
+                    <p style="color: #FFFFFF; margin: 0 0 8px 0; font-size: 14px;">
+                        Questions? Contact us at support@calmtails.com
+                    </p>
+                    <p style="color: #D4A574; margin: 0; font-size: 12px;">
+                        © 2026 CalmTails Pet Wellness. All rights reserved.
+                    </p>
+                </td>
+            </tr>
+        </table>
+    </body>
+    </html>
+    """
+    
+    try:
+        params = {
+            "from": SENDER_EMAIL,
+            "to": [order.get("email")],
+            "subject": f"Order Confirmed - {order.get('order_number', '')} 🐾",
+            "html": html_content
+        }
+        email_result = await asyncio.to_thread(resend.Emails.send, params)
+        logging.info(f"Order confirmation email sent to {order.get('email')}")
+        return email_result
+    except Exception as e:
+        logging.error(f"Failed to send order confirmation email: {str(e)}")
+        return None
+
+# ==================== REVIEW ROUTES ====================
+
+@api_router.get("/products/{product_slug}/reviews", response_model=List[dict])
+async def get_product_reviews(product_slug: str, limit: int = 20, skip: int = 0):
+    """Get reviews for a product"""
+    product = await db.products.find_one({"slug": product_slug}, {"_id": 0})
+    if not product:
+        raise HTTPException(status_code=404, detail="Product not found")
+    
+    reviews = await db.reviews.find(
+        {"product_id": product["id"]},
+        {"_id": 0}
+    ).sort("created_at", -1).skip(skip).limit(limit).to_list(limit)
+    
+    return reviews
+
+@api_router.get("/products/{product_slug}/reviews/summary", response_model=dict)
+async def get_product_reviews_summary(product_slug: str):
+    """Get review summary stats for a product"""
+    product = await db.products.find_one({"slug": product_slug}, {"_id": 0})
+    if not product:
+        raise HTTPException(status_code=404, detail="Product not found")
+    
+    reviews = await db.reviews.find(
+        {"product_id": product["id"]},
+        {"_id": 0, "rating": 1}
+    ).to_list(1000)
+    
+    total_reviews = len(reviews)
+    if total_reviews == 0:
+        return {
+            "average_rating": 0,
+            "total_reviews": 0,
+            "rating_breakdown": {5: 0, 4: 0, 3: 0, 2: 0, 1: 0}
+        }
+    
+    ratings = [r["rating"] for r in reviews]
+    average = sum(ratings) / total_reviews
+    
+    breakdown = {5: 0, 4: 0, 3: 0, 2: 0, 1: 0}
+    for rating in ratings:
+        breakdown[rating] = breakdown.get(rating, 0) + 1
+    
+    return {
+        "average_rating": round(average, 1),
+        "total_reviews": total_reviews,
+        "rating_breakdown": breakdown
+    }
+
+@api_router.post("/products/{product_slug}/reviews", response_model=dict)
+async def create_review(product_slug: str, review_data: ReviewCreate, user: dict = Depends(require_user)):
+    """Create a review for a product"""
+    product = await db.products.find_one({"slug": product_slug}, {"_id": 0})
+    if not product:
+        raise HTTPException(status_code=404, detail="Product not found")
+    
+    # Check if user already reviewed this product
+    existing = await db.reviews.find_one({
+        "product_id": product["id"],
+        "user_id": user["id"]
+    })
+    if existing:
+        raise HTTPException(status_code=400, detail="You have already reviewed this product")
+    
+    # Validate rating
+    if review_data.rating < 1 or review_data.rating > 5:
+        raise HTTPException(status_code=400, detail="Rating must be between 1 and 5")
+    
+    # Check if user has purchased this product (verified purchase)
+    orders = await db.orders.find({
+        "user_id": user["id"],
+        "payment_status": "paid"
+    }).to_list(100)
+    
+    verified_purchase = False
+    for order in orders:
+        for item in order.get("items", []):
+            if item.get("product_id") == product["id"]:
+                verified_purchase = True
+                break
+        if verified_purchase:
+            break
+    
+    review = {
+        "id": str(uuid.uuid4()),
+        "product_id": product["id"],
+        "user_id": user["id"],
+        "user_name": user.get("name", user.get("email", "").split("@")[0]),
+        "rating": review_data.rating,
+        "title": review_data.title,
+        "content": review_data.content,
+        "verified_purchase": verified_purchase,
+        "helpful_count": 0,
+        "images": review_data.images,
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.reviews.insert_one(review)
+    
+    # Update product rating
+    all_reviews = await db.reviews.find({"product_id": product["id"]}, {"rating": 1}).to_list(1000)
+    new_avg = sum(r["rating"] for r in all_reviews) / len(all_reviews)
+    await db.products.update_one(
+        {"id": product["id"]},
+        {"$set": {"rating": round(new_avg, 1), "review_count": len(all_reviews)}}
+    )
+    
+    # Award bonus points for review
+    if user.get("id"):
+        bonus_points = 25 if verified_purchase else 10
+        loyalty = await db.loyalty_points.find_one({"user_id": user["id"]})
+        if loyalty:
+            await db.loyalty_points.update_one(
+                {"user_id": user["id"]},
+                {"$inc": {"points": bonus_points, "lifetime_points": bonus_points}}
+            )
+            transaction = {
+                "id": str(uuid.uuid4()),
+                "user_id": user["id"],
+                "points": bonus_points,
+                "transaction_type": "bonus",
+                "description": f"Bonus for writing a {'verified ' if verified_purchase else ''}review",
+                "created_at": datetime.now(timezone.utc).isoformat()
+            }
+            await db.points_transactions.insert_one(transaction)
+    
+    review.pop("_id", None)
+    return {"message": "Review submitted successfully", "review": review, "bonus_points": bonus_points if user.get("id") else 0}
+
+@api_router.post("/reviews/{review_id}/helpful", response_model=dict)
+async def mark_review_helpful(review_id: str, user: Optional[dict] = Depends(get_current_user)):
+    """Mark a review as helpful"""
+    review = await db.reviews.find_one({"id": review_id})
+    if not review:
+        raise HTTPException(status_code=404, detail="Review not found")
+    
+    await db.reviews.update_one(
+        {"id": review_id},
+        {"$inc": {"helpful_count": 1}}
+    )
+    
+    return {"message": "Marked as helpful", "helpful_count": review.get("helpful_count", 0) + 1}
 
 # ==================== AGENT ROUTES ====================
 

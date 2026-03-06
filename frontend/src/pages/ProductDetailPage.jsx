@@ -13,9 +13,13 @@ import {
   Plus,
   ChevronLeft,
   Check,
-  Egg
+  Bird,
+  Fish,
+  Rabbit,
+  Squirrel
 } from "lucide-react";
 import { Button } from "../components/ui/button";
+import ProductReviews from "../components/ProductReviews";
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 
@@ -254,6 +258,9 @@ const ProductDetailPage = () => {
             </div>
           </div>
         </div>
+
+        {/* Reviews Section */}
+        <ProductReviews productSlug={slug} />
       </div>
     </div>
   );
