@@ -82,19 +82,19 @@ const ProductDetailPage = () => {
   }
 
   return (
-    <div className="min-h-screen pt-24 pb-12">
+    <div className="min-h-screen pt-20 pb-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Breadcrumb */}
         <Link 
           to="/products" 
-          className="inline-flex items-center text-[#5C6D5E] hover:text-[#2D4A3E] mb-8"
+          className="inline-flex items-center text-[#5C6D5E] hover:text-[#2D4A3E] mb-4 text-sm"
           data-testid="back-to-products"
         >
           <ChevronLeft className="w-4 h-4 mr-1" />
           Back to Products
         </Link>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Product Image */}
           <div className="relative">
             <div className="bg-white rounded-3xl overflow-hidden shadow-lg">

@@ -98,12 +98,12 @@ const ProductsPage = () => {
   const hasFilters = currentCategory || currentPetType || searchQuery;
 
   return (
-    <div className="min-h-screen pt-24 pb-12">
+    <div className="min-h-screen pt-20 pb-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header with Search on right */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-5">
           <div>
-            <h1 className="text-4xl font-bold text-[#2D4A3E] mb-1 font-['Fraunces']">
+            <h1 className="text-3xl font-bold text-[#2D4A3E] mb-0.5 font-['Fraunces']">
               Our Products
             </h1>
             <p className="text-[#5C6D5E] text-sm">
@@ -124,7 +124,7 @@ const ProductsPage = () => {
         </div>
 
         {/* Filters */}
-        <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
+        <div className="flex flex-wrap items-center justify-between gap-2 mb-5">
           <div className="flex flex-wrap items-center gap-3">
             {/* Category Filter */}
             <DropdownMenu>

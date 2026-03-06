@@ -175,21 +175,21 @@ const CartPage = () => {
   }
 
   return (
-    <div className="min-h-screen pt-24 pb-12">
+    <div className="min-h-screen pt-20 pb-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <Link 
           to="/products" 
-          className="inline-flex items-center text-[#5C6D5E] hover:text-[#2D4A3E] mb-8"
+          className="inline-flex items-center text-[#5C6D5E] hover:text-[#2D4A3E] mb-4 text-sm"
         >
           <ChevronLeft className="w-4 h-4 mr-1" />
           Continue Shopping
         </Link>
 
-        <h1 className="text-3xl font-bold text-[#2D4A3E] mb-8 font-['Fraunces']">
+        <h1 className="text-2xl font-bold text-[#2D4A3E] mb-5 font-['Fraunces']">
           Shopping Cart
         </h1>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Cart Items */}
           <div className="lg:col-span-2 space-y-4">
             {cart.items.map((item) => (

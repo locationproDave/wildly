@@ -75,14 +75,14 @@ const AccountPage = () => {
   };
 
   return (
-    <div className="min-h-screen pt-24 pb-12">
+    <div className="min-h-screen pt-20 pb-8">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-        <h1 className="text-3xl font-bold text-[#2D4A3E] mb-8 font-['Fraunces']">
+        <h1 className="text-2xl font-bold text-[#2D4A3E] mb-5 font-['Fraunces']">
           My Account
         </h1>
 
         {/* User Info Card */}
-        <div className="bg-white rounded-2xl p-6 mb-6 shadow-sm">
+        <div className="bg-white rounded-2xl p-5 mb-5 shadow-sm">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
               <div className="w-16 h-16 bg-[#2D4A3E] rounded-full flex items-center justify-center">
@@ -105,7 +105,7 @@ const AccountPage = () => {
         </div>
 
         {/* Loyalty & Referral Cards */}
-        <div className="grid md:grid-cols-2 gap-6 mb-6">
+        <div className="grid md:grid-cols-2 gap-5 mb-5">
           {/* Loyalty Status */}
           <div className="bg-white rounded-2xl p-6 shadow-sm">
             <div className="flex items-center justify-between mb-4">

@@ -174,8 +174,36 @@ const HomePage = () => {
         </div>
       </section>
 
+      {/* Subscribe & Save Banner */}
+      <section className="py-6 bg-gradient-to-r from-[#6B8F71] to-[#4A6B4F]">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+            <div className="flex items-center gap-3 text-white">
+              <div className="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0">
+                <RefreshCw className="w-6 h-6" />
+              </div>
+              <div>
+                <h3 className="text-xl font-bold font-['Fraunces']">Subscribe & Save 10%</h3>
+                <p className="text-white/80 text-sm">
+                  Never run out of supplements & wellness essentials. Monthly deliveries.
+                </p>
+              </div>
+            </div>
+            <Link to="/products?category=Supplements">
+              <Button 
+                className="bg-white text-[#2D4A3E] hover:bg-[#E8DFD5] rounded-full px-6 py-2 font-semibold text-sm"
+                data-testid="subscribe-cta"
+              >
+                Shop Now
+                <ArrowRight className="w-4 h-4 ml-2" />
+              </Button>
+            </Link>
+          </div>
+        </div>
+      </section>
+
       {/* Trust Badges */}
-      <section className="bg-[#2D4A3E] py-4 sm:py-8">
+      <section className="bg-[#2D4A3E] py-4 sm:py-6">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center">
             {features.map((feature, index) => (
@@ -193,38 +221,10 @@ const HomePage = () => {
         </div>
       </section>
 
-      {/* Subscribe & Save Banner */}
-      <section className="py-12 bg-gradient-to-r from-[#6B8F71] to-[#4A6B4F]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-6">
-            <div className="flex items-center gap-4 text-white">
-              <div className="w-16 h-16 rounded-full bg-white/20 flex items-center justify-center">
-                <RefreshCw className="w-8 h-8" />
-              </div>
-              <div>
-                <h3 className="text-2xl font-bold font-['Fraunces']">Subscribe & Save 10%</h3>
-                <p className="text-white/80 mt-1">
-                  Never run out of supplements & wellness essentials. Get automatic monthly deliveries.
-                </p>
-              </div>
-            </div>
-            <Link to="/products?category=Supplements">
-              <Button 
-                className="bg-white text-[#2D4A3E] hover:bg-[#E8DFD5] rounded-full px-8 py-6 font-semibold"
-                data-testid="subscribe-cta"
-              >
-                Shop Subscription Items
-                <ArrowRight className="w-4 h-4 ml-2" />
-              </Button>
-            </Link>
-          </div>
-        </div>
-      </section>
-
       {/* Categories */}
-      <section className="py-20">
+      <section className="py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
+          <div className="text-center mb-8">
             <h2 className="text-4xl font-bold text-[#2D4A3E] mb-4 font-['Fraunces']">
               Shop by Category
             </h2>
@@ -261,18 +261,18 @@ const HomePage = () => {
       </section>
 
       {/* Best Sellers Section */}
-      <section className="py-20 bg-[#FDF8F3]">
+      <section className="py-12 bg-[#FDF8F3]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between mb-12">
+          <div className="flex items-center justify-between mb-8">
             <div>
-              <div className="inline-flex items-center gap-2 bg-[#C45C4A]/10 text-[#C45C4A] px-4 py-2 rounded-full text-sm font-medium mb-4">
+              <div className="inline-flex items-center gap-2 bg-[#C45C4A]/10 text-[#C45C4A] px-3 py-1.5 rounded-full text-sm font-medium mb-3">
                 <TrendingUp className="w-4 h-4" />
                 <span>Top Rated</span>
               </div>
-              <h2 className="text-4xl font-bold text-[#2D4A3E] mb-2 font-['Fraunces']">
+              <h2 className="text-3xl font-bold text-[#2D4A3E] mb-1 font-['Fraunces']">
                 Best Sellers
               </h2>
-              <p className="text-[#5C6D5E]">
+              <p className="text-[#5C6D5E] text-sm">
                 Most loved products by our pet parent community
               </p>
             </div>
@@ -370,37 +370,37 @@ const HomePage = () => {
       </section>
 
       {/* Loyalty Program Banner */}
-      <section className="py-12 bg-gradient-to-r from-[#2D4A3E] to-[#3D5A4E]">
+      <section className="py-8 bg-gradient-to-r from-[#2D4A3E] to-[#3D5A4E]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-8">
-            <div className="flex items-center gap-6 text-white">
-              <div className="w-16 h-16 rounded-full bg-[#D4A574] flex items-center justify-center">
-                <Award className="w-8 h-8 text-[#2D4A3E]" />
+          <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+            <div className="flex items-center gap-4 text-white">
+              <div className="w-12 h-12 rounded-full bg-[#D4A574] flex items-center justify-center flex-shrink-0">
+                <Award className="w-6 h-6 text-[#2D4A3E]" />
               </div>
               <div>
-                <h3 className="text-2xl font-bold font-['Fraunces']">Wildly Ones Rewards</h3>
-                <p className="text-white/80">Earn points on every purchase, unlock exclusive perks</p>
+                <h3 className="text-xl font-bold font-['Fraunces']">Wildly Ones Rewards</h3>
+                <p className="text-white/80 text-sm">Earn points on every purchase, unlock exclusive perks</p>
               </div>
             </div>
-            <div className="flex flex-wrap gap-4 md:gap-8 text-white text-center">
+            <div className="flex flex-wrap gap-4 md:gap-6 text-white text-center">
               <div className="flex flex-col items-center">
-                <span className="text-2xl font-bold">1pt/$1</span>
-                <span className="text-sm text-white/70">Points Earned</span>
+                <span className="text-xl font-bold">1pt/$1</span>
+                <span className="text-xs text-white/70">Points Earned</span>
               </div>
-              <div className="hidden md:block w-px h-12 bg-white/30"></div>
+              <div className="hidden md:block w-px h-10 bg-white/30"></div>
               <div className="flex flex-col items-center">
-                <span className="text-2xl font-bold">100pts</span>
-                <span className="text-sm text-white/70">= $5 Off</span>
+                <span className="text-xl font-bold">100pts</span>
+                <span className="text-xs text-white/70">= $5 Off</span>
               </div>
-              <div className="hidden md:block w-px h-12 bg-white/30"></div>
+              <div className="hidden md:block w-px h-10 bg-white/30"></div>
               <div className="flex flex-col items-center">
-                <span className="text-2xl font-bold">4 Tiers</span>
-                <span className="text-sm text-white/70">Bronze → Platinum</span>
+                <span className="text-xl font-bold">4 Tiers</span>
+                <span className="text-xs text-white/70">Bronze → Platinum</span>
               </div>
             </div>
             <Link to="/referral">
               <Button 
-                className="bg-[#D4A574] hover:bg-[#C49564] text-[#2D4A3E] rounded-full font-semibold px-6"
+                className="bg-[#D4A574] hover:bg-[#C49564] text-[#2D4A3E] rounded-full font-semibold px-5"
                 data-testid="join-rewards-btn"
               >
                 Join Free
@@ -412,18 +412,18 @@ const HomePage = () => {
       </section>
 
       {/* Featured Products / New Arrivals */}
-      <section className="py-20 bg-[#E8DFD5]/30">
+      <section className="py-12 bg-[#E8DFD5]/30">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between mb-12">
+          <div className="flex items-center justify-between mb-8">
             <div>
-              <div className="inline-flex items-center gap-2 bg-[#6B8F71]/10 text-[#6B8F71] px-4 py-2 rounded-full text-sm font-medium mb-4">
+              <div className="inline-flex items-center gap-2 bg-[#6B8F71]/10 text-[#6B8F71] px-3 py-1.5 rounded-full text-sm font-medium mb-3">
                 <Sparkles className="w-4 h-4" />
                 <span>Just Added</span>
               </div>
-              <h2 className="text-4xl font-bold text-[#2D4A3E] mb-2 font-['Fraunces']">
+              <h2 className="text-3xl font-bold text-[#2D4A3E] mb-1 font-['Fraunces']">
                 New Arrivals
               </h2>
-              <p className="text-[#5C6D5E]">
+              <p className="text-[#5C6D5E] text-sm">
                 Fresh additions to our wellness collection
               </p>
             </div>
