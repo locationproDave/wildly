@@ -17,7 +17,8 @@ import {
   ClipboardList,
   BarChart3,
   Mail,
-  UserCircle
+  UserCircle,
+  Search
 } from "lucide-react";
 import { Button } from "../components/ui/button";
 import { Badge } from "../components/ui/badge";
@@ -152,6 +153,13 @@ const AdminDashboard = () => {
               <Button size="sm" className="bg-[#2D4A3E] hover:bg-[#1F342B] rounded-full whitespace-nowrap" data-testid="agents-btn">
                 <Bot className="w-4 h-4 sm:mr-2" />
                 <span className="hidden sm:inline">AI Agents</span>
+              </Button>
+            </Link>
+            <Link to="/admin/sourcing">
+              <Button size="sm" className="bg-[#6B8F71] hover:bg-[#5a7a60] rounded-full whitespace-nowrap relative" data-testid="sourcing-btn">
+                <Search className="w-4 h-4 sm:mr-2" />
+                <span className="hidden sm:inline">Source Products</span>
+                <span className="absolute -top-1 -right-1 bg-[#D66D5A] text-white text-[10px] px-1.5 py-0.5 rounded-full">NEW</span>
               </Button>
             </Link>
           </div>

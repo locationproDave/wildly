@@ -5,6 +5,7 @@ from starlette.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
 import os
 import logging
+import random
 from pathlib import Path
 from pydantic import BaseModel, Field, ConfigDict, EmailStr
 from typing import List, Optional, Dict, Any, Literal
@@ -4066,6 +4067,209 @@ async def seed_products():
     return {"message": f"Seeded {len(products)} products and admin user"}
 
 # ==================== HEALTH CHECK ====================
+
+# ==================== PRODUCT SOURCING ROUTES ====================
+
+from services.product_sourcing import product_sourcing_service
+
+class ProductSearchQuery(BaseModel):
+    query: str = ""
+    pet_type: str = "all"
+    product_type: str = "all"
+    min_price: float = 0
+    max_price: float = 1000
+    supplier: str = "all"
+    page: int = 1
+    limit: int = 20
+
+class ImportProductRequest(BaseModel):
+    sourced_product: Dict[str, Any]
+    custom_name: Optional[str] = None
+    custom_price: Optional[float] = None
+    custom_description: Optional[str] = None
+
+@api_router.post("/admin/sourcing/search", response_model=dict)
+async def search_sourced_products(query: ProductSearchQuery, user: dict = Depends(require_admin)):
+    """Search for products from supplier catalogs"""
+    try:
+        results = await product_sourcing_service.search_products(
+            query=query.query,
+            pet_type=query.pet_type,
+            product_type=query.product_type,
+            min_price=query.min_price,
+            max_price=query.max_price,
+            supplier=query.supplier,
+            page=query.page,
+            limit=query.limit
+        )
+        return results
+    except Exception as e:
+        logger.error(f"Product sourcing search error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.get("/admin/sourcing/categories", response_model=dict)
+async def get_sourcing_categories(user: dict = Depends(require_admin)):
+    """Get available pet types and product categories for filtering"""
+    return {
+        "pet_types": [
+            {"value": "all", "label": "All Pets"},
+            {"value": "dog", "label": "Dogs"},
+            {"value": "cat", "label": "Cats"},
+            {"value": "fish", "label": "Fish"},
+            {"value": "bird", "label": "Birds"},
+            {"value": "rabbit", "label": "Rabbits"},
+            {"value": "small_pet", "label": "Small Pets"}
+        ],
+        "product_types": [
+            {"value": "all", "label": "All Categories"},
+            {"value": "supplements", "label": "Supplements"},
+            {"value": "food", "label": "Food & Treats"},
+            {"value": "grooming", "label": "Grooming"},
+            {"value": "toys", "label": "Toys"},
+            {"value": "beds", "label": "Beds"},
+            {"value": "accessories", "label": "Accessories"},
+            {"value": "health", "label": "Health"}
+        ],
+        "suppliers": [
+            {"value": "all", "label": "All Suppliers"},
+            {"value": "cjdropshipping", "label": "CJdropshipping"},
+            {"value": "zendrop", "label": "Zendrop"},
+            {"value": "spocket", "label": "Spocket"}
+        ]
+    }
+
+@api_router.post("/admin/sourcing/import", response_model=dict)
+async def import_sourced_product(request: ImportProductRequest, user: dict = Depends(require_admin)):
+    """Import a sourced product to the store catalog"""
+    sourced = request.sourced_product
+    
+    # Generate slug from name
+    name = request.custom_name or sourced.get("name", "")
+    slug = name.lower().replace(" ", "-").replace("--", "-")
+    slug = ''.join(c for c in slug if c.isalnum() or c == '-')
+    
+    # Check if slug exists
+    existing = await db.products.find_one({"slug": slug})
+    if existing:
+        slug = f"{slug}-{str(uuid.uuid4())[:6]}"
+    
+    # Calculate retail price if not provided
+    landed_cost = sourced.get("landed_cost", 0)
+    suggested_retail = request.custom_price or sourced.get("suggested_retail", landed_cost * 2.5)
+    
+    # Create product document
+    product = {
+        "id": str(uuid.uuid4()),
+        "name": name,
+        "slug": slug,
+        "description": request.custom_description or f"Premium {sourced.get('pet_type', 'pet')} product with {', '.join(sourced.get('features', [])[:3])}. Sourced from verified supplier with excellent ratings.",
+        "short_description": f"High-quality {sourced.get('category', 'pet')} product for {sourced.get('pet_type', 'pets')}",
+        "price": round(suggested_retail, 2),
+        "compare_at_price": round(suggested_retail * 1.3, 2) if random.random() > 0.5 else None,
+        "cost": round(landed_cost, 2),
+        "category": sourced.get("category", "").title() if sourced.get("category") else "Accessories",
+        "subcategory": None,
+        "images": [sourced.get("image", "")] if sourced.get("image") else [],
+        "tags": [sourced.get("pet_type", ""), sourced.get("category", ""), "imported"],
+        "pet_type": sourced.get("pet_type", "dog"),
+        "in_stock": True,
+        "stock_quantity": 100,
+        "supplier": sourced.get("supplier", ""),
+        "supplier_sku": sourced.get("id", ""),
+        "features": sourced.get("features", []),
+        "ingredients": None,
+        "dimensions": None,
+        "weight": None,
+        "rating": sourced.get("rating", 4.5),
+        "review_count": 0,
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "sourced_from": {
+            "supplier": sourced.get("supplier"),
+            "supplier_cost": sourced.get("supplier_cost"),
+            "shipping_cost": sourced.get("shipping_cost"),
+            "landed_cost": landed_cost,
+            "margin_percent": sourced.get("margin_percent"),
+            "imported_at": datetime.now(timezone.utc).isoformat()
+        }
+    }
+    
+    await db.products.insert_one(product)
+    
+    # Remove _id before returning
+    product.pop("_id", None)
+    
+    return {
+        "success": True,
+        "message": f"Product '{name}' imported successfully",
+        "product": product
+    }
+
+@api_router.post("/admin/sourcing/bulk-import", response_model=dict)
+async def bulk_import_products(products: List[Dict[str, Any]], user: dict = Depends(require_admin)):
+    """Bulk import multiple sourced products"""
+    imported = []
+    errors = []
+    
+    for i, sourced in enumerate(products):
+        try:
+            name = sourced.get("name", f"Product {i+1}")
+            slug = name.lower().replace(" ", "-").replace("--", "-")
+            slug = ''.join(c for c in slug if c.isalnum() or c == '-')
+            
+            existing = await db.products.find_one({"slug": slug})
+            if existing:
+                slug = f"{slug}-{str(uuid.uuid4())[:6]}"
+            
+            landed_cost = sourced.get("landed_cost", 0)
+            suggested_retail = sourced.get("suggested_retail", landed_cost * 2.5)
+            
+            product = {
+                "id": str(uuid.uuid4()),
+                "name": name,
+                "slug": slug,
+                "description": f"Premium {sourced.get('pet_type', 'pet')} product. {', '.join(sourced.get('features', [])[:2])}.",
+                "short_description": f"Quality {sourced.get('category', 'pet')} product",
+                "price": round(suggested_retail, 2),
+                "compare_at_price": None,
+                "cost": round(landed_cost, 2),
+                "category": sourced.get("category", "").title() if sourced.get("category") else "Accessories",
+                "images": [sourced.get("image", "")] if sourced.get("image") else [],
+                "tags": [sourced.get("pet_type", ""), sourced.get("category", "")],
+                "pet_type": sourced.get("pet_type", "dog"),
+                "in_stock": True,
+                "stock_quantity": 100,
+                "supplier": sourced.get("supplier", ""),
+                "supplier_sku": sourced.get("id", ""),
+                "features": sourced.get("features", []),
+                "rating": sourced.get("rating", 4.5),
+                "review_count": 0,
+                "created_at": datetime.now(timezone.utc).isoformat()
+            }
+            
+            await db.products.insert_one(product)
+            product.pop("_id", None)
+            imported.append(product)
+        except Exception as e:
+            errors.append({"product": name, "error": str(e)})
+    
+    return {
+        "success": True,
+        "imported_count": len(imported),
+        "error_count": len(errors),
+        "imported": imported,
+        "errors": errors if errors else None
+    }
+
+@api_router.get("/admin/sourcing/profit-analysis/{product_id}", response_model=dict)
+async def get_profit_analysis(product_id: str, retail_price: float = None, user: dict = Depends(require_admin)):
+    """Get detailed profit analysis for a sourced product"""
+    # This would typically look up the product, but for sourced products we calculate on the fly
+    return {
+        "product_id": product_id,
+        "analysis": {
+            "note": "Use the frontend calculator for real-time profit analysis"
+        }
+    }
 
 @api_router.get("/")
 async def root():

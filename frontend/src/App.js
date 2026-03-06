@@ -89,6 +89,7 @@ import AdminCustomerSegmentsPage from "./pages/AdminCustomerSegmentsPage";
 import AgentsPage from "./pages/AgentsPage";
 import ReferralPage from "./pages/ReferralPage";
 import SupportPage from "./pages/SupportPage";
+import AdminSourcingPage from "./pages/AdminSourcingPage";
 
 // Components
 import Navbar from "./components/Navbar";
@@ -395,6 +396,11 @@ function App() {
             <Route path="/admin/agents" element={
               <AppLayout>
                 <ProtectedRoute adminOnly><AgentsPage /></ProtectedRoute>
+              </AppLayout>
+            } />
+            <Route path="/admin/sourcing" element={
+              <AppLayout>
+                <ProtectedRoute adminOnly><AdminSourcingPage /></ProtectedRoute>
               </AppLayout>
             } />
             <Route path="*" element={<Navigate to="/" replace />} />
