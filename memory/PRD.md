@@ -1,10 +1,11 @@
-# CalmTails - Pet Wellness E-Commerce Platform
+# Wildly Ones - Pet Wellness E-Commerce Platform
 
 ## Original Problem Statement
 Build a pet wellness e-commerce store with:
 1. Customer-facing storefront - Product browsing, shopping cart, Stripe/PayPal checkout
 2. Admin dashboard with 7 AI agents built-in to help business owners manage operations
 3. Full admin CRUD for products, orders, and promotions
+4. Email automation for abandoned cart recovery and post-purchase engagement
 
 ## User Personas
 1. **Pet Parents (Customers)** - Shopping for premium pet wellness products
@@ -16,7 +17,8 @@ Build a pet wellness e-commerce store with:
 - Customer accounts with order history
 - Admin dashboard with product/order/promotion management
 - 7 specialized AI agents for business operations
-- Pre-populated product catalog (39 products, 8 pet types)
+- Pre-populated product catalog (45 products, 8 pet types)
+- Email automation system
 
 ## What's Been Implemented (March 6, 2026)
 
@@ -33,7 +35,7 @@ Build a pet wellness e-commerce store with:
   - Update order status via dropdown
   - Add tracking information (carrier + tracking number)
   - View detailed order info (items, totals, shipping address)
-- [x] **Admin Analytics Dashboard** (/admin/analytics) - NEW
+- [x] **Admin Analytics Dashboard** (/admin/analytics)
   - Summary cards: Total Revenue, Orders, Customers, Avg Order Value
   - Sales Trend chart (last 7/14/30 days)
   - Top Products by revenue with images
@@ -41,21 +43,27 @@ Build a pet wellness e-commerce store with:
   - Sales by Pet Type breakdown
   - Recent Customers list
   - Customer acquisition trend
+- [x] **Admin Email Automation** (/admin/emails) - NEW
+  - Abandoned Cart Recovery (Active) - COMEBACK10 discount code
+  - Post-Purchase Review Requests (Active) - 25 bonus points incentive
+  - Low Stock Alerts (Coming Soon)
+  - Email Templates preview section
 - [x] **Admin Promotions Management** (/admin/promotions)
   - Create/view/manage promotion codes
   - Track usage statistics
 - [x] **Admin Dashboard** (/admin)
   - Stats overview (revenue, orders, products, customers)
-  - Quick navigation to Analytics, Orders, Products, Promotions, AI Agents
+  - Quick navigation to Analytics, Emails, Orders, Products, Promotions, AI Agents
 
 ### E-Commerce Backend (FastAPI + MongoDB)
-- [x] Product catalog with 39 products across 8 pet types
+- [x] Product catalog with 45 products across 8 pet types
 - [x] Shopping cart system with session-based storage
 - [x] Stripe checkout integration
 - [x] PayPal checkout integration (sandbox mode)
 - [x] Order management with tracking
 - [x] User authentication (JWT)
 - [x] Admin routes with proper auth guards
+- [x] Email automation endpoints
 
 ### Customer Features
 - [x] Homepage with hero, best sellers, new arrivals
@@ -85,6 +93,9 @@ Build a pet wellness e-commerce store with:
 ### Admin Endpoints (require admin auth)
 - `GET /api/admin/stats` - Dashboard statistics
 - `GET /api/admin/analytics` - Comprehensive analytics (sales trends, top products, categories)
+- `GET /api/admin/email-automation` - Email automation stats
+- `POST /api/admin/email-automation/send-abandoned` - Trigger abandoned cart emails
+- `POST /api/admin/email-automation/send-reviews` - Trigger review request emails
 - `GET /api/admin/products` - List all products (with filters)
 - `POST /api/admin/products` - Create product
 - `PUT /api/admin/products/{id}` - Update product
@@ -108,14 +119,18 @@ Build a pet wellness e-commerce store with:
 ### P0 - Completed
 - [x] Admin Product Management CRUD
 - [x] Admin Order Management
+- [x] Admin Analytics Dashboard
+- [x] Email Automation (Abandoned Cart, Review Requests)
+- [x] Brand rename to "Wildly Ones"
 
 ### P1 - Next Priority
 - [ ] Backend Refactoring - Split monolithic server.py into modules
 - [ ] Blog section for SEO content
+- [ ] Low Stock Alerts automation
 
 ### P2 - Medium Priority
 - [ ] Real supplier API integration (CJdropshipping, Zendrop)
-- [ ] Inventory management with low stock alerts
+- [ ] Inventory management with alerts
 - [ ] Customer support chat widget
 
 ### P3 - Future
