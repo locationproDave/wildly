@@ -198,7 +198,7 @@ const Navbar = ({ onAuthClick }) => {
                 className="bg-[#2D4A3E] hover:bg-[#1F342B] text-white rounded-full px-6"
                 data-testid="nav-signin-btn"
               >
-                Sign In
+                Sign Up / Sign In
               </Button>
             )}
 

@@ -73,15 +73,9 @@ const AuthModal = ({ isOpen, onClose }) => {
           <DialogDescription className="text-center text-sm text-[#5C6D5E]">
             {isLogin 
               ? "Sign in to view your orders and saved items."
-              : "Create an account and get 15% off your first order."
+              : "Create your account to get started."
             }
           </DialogDescription>
-          {!isLogin && (
-            <p className="text-center text-sm text-[#6B8F71] mt-2">
-              <Gift className="inline w-4 h-4 mr-1" />
-              15% off your first order when you sign up!
-            </p>
-          )}
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4 mt-4">
