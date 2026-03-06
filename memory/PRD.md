@@ -6,6 +6,7 @@ Build a pet wellness e-commerce store with:
 2. Admin dashboard with 7 AI agents built-in to help business owners manage operations
 3. Full admin CRUD for products, orders, and promotions
 4. Email automation for abandoned cart recovery and post-purchase engagement
+5. Customer segmentation with AI-powered targeted campaigns
 
 ## User Personas
 1. **Pet Parents (Customers)** - Shopping for premium pet wellness products
@@ -19,51 +20,48 @@ Build a pet wellness e-commerce store with:
 - 7 specialized AI agents for business operations
 - Pre-populated product catalog (45 products, 8 pet types)
 - Email automation system
+- Customer segmentation with targeted campaigns
 
 ## What's Been Implemented (March 6, 2026)
 
-### Admin Dashboard & Management
-- [x] **Admin Product Management** (/admin/products) - Full CRUD
-  - View all products in table with images, prices, categories
-  - Search products by name/description
-  - Filter by pet type and category
-  - Add new products via dialog form
-  - Edit existing products
-  - Delete products with confirmation
-- [x] **Admin Order Management** (/admin/orders) - Full management
-  - View all orders with status filters (All/Pending/Processing/Shipped)
-  - Update order status via dropdown
-  - Add tracking information (carrier + tracking number)
-  - View detailed order info (items, totals, shipping address)
-- [x] **Admin Analytics Dashboard** (/admin/analytics)
+### Admin Dashboard & Management (7 Modules)
+- [x] **Admin Analytics** (/admin/analytics)
   - Summary cards: Total Revenue, Orders, Customers, Avg Order Value
   - Sales Trend chart (last 7/14/30 days)
   - Top Products by revenue with images
-  - Sales by Category with progress bars
-  - Sales by Pet Type breakdown
+  - Sales by Category and Pet Type breakdowns
   - Recent Customers list
-  - Customer acquisition trend
-- [x] **Admin Email Automation** (/admin/emails) - NEW
-  - Abandoned Cart Recovery (Active) - COMEBACK10 discount code
-  - Post-Purchase Review Requests (Active) - 25 bonus points incentive
+- [x] **Admin Customer Segments** (/admin/segments) - NEW
+  - AI-powered segmentation: VIP, Loyal, At-Risk, New, Dormant
+  - Auto-classification based on purchase behavior
+  - Campaign templates per segment (VIP20, LOYAL15, COMEBACK25, WELCOME10, WINBACK30)
+  - View segment customers with revenue/order data
+  - Create and send targeted email campaigns
+- [x] **Admin Email Automation** (/admin/emails)
+  - Abandoned Cart Recovery (Active) - COMEBACK10 discount
+  - Post-Purchase Review Requests (Active) - 25 bonus points
   - Low Stock Alerts (Coming Soon)
-  - Email Templates preview section
-- [x] **Admin Promotions Management** (/admin/promotions)
-  - Create/view/manage promotion codes
-  - Track usage statistics
-- [x] **Admin Dashboard** (/admin)
-  - Stats overview (revenue, orders, products, customers)
-  - Quick navigation to Analytics, Emails, Orders, Products, Promotions, AI Agents
+- [x] **Admin Order Management** (/admin/orders)
+  - View all orders with status filters
+  - Update order status
+  - Add tracking information
+  - View detailed order info
+- [x] **Admin Product Management** (/admin/products)
+  - Full CRUD with search/filters
+  - Add/Edit/Delete products via dialogs
+- [x] **Admin Promotions** (/admin/promotions)
+  - Create/manage promotion codes
+- [x] **AI Agents** (/admin/agents)
+  - 7 specialized agents for business operations
 
 ### E-Commerce Backend (FastAPI + MongoDB)
 - [x] Product catalog with 45 products across 8 pet types
 - [x] Shopping cart system with session-based storage
-- [x] Stripe checkout integration
-- [x] PayPal checkout integration (sandbox mode)
+- [x] Stripe + PayPal checkout integration
 - [x] Order management with tracking
 - [x] User authentication (JWT)
-- [x] Admin routes with proper auth guards
 - [x] Email automation endpoints
+- [x] Customer segmentation with campaign system
 
 ### Customer Features
 - [x] Homepage with hero, best sellers, new arrivals
@@ -90,29 +88,21 @@ Build a pet wellness e-commerce store with:
 
 ## Key API Endpoints
 
-### Admin Endpoints (require admin auth)
-- `GET /api/admin/stats` - Dashboard statistics
-- `GET /api/admin/analytics` - Comprehensive analytics (sales trends, top products, categories)
-- `GET /api/admin/email-automation` - Email automation stats
-- `POST /api/admin/email-automation/send-abandoned` - Trigger abandoned cart emails
-- `POST /api/admin/email-automation/send-reviews` - Trigger review request emails
-- `GET /api/admin/products` - List all products (with filters)
-- `POST /api/admin/products` - Create product
-- `PUT /api/admin/products/{id}` - Update product
-- `DELETE /api/admin/products/{id}` - Delete product
-- `GET /api/admin/orders` - List orders (with status filter)
-- `PATCH /api/admin/orders/{id}?status=` - Update order status
-- `POST /api/admin/orders/{id}/tracking` - Add tracking info
-- `GET/POST /api/admin/promotions` - Manage promotions
+### Customer Segmentation (NEW)
+- `GET /api/admin/customer-segments` - Get all segments with stats
+- `GET /api/admin/customer-segments/{segment}` - Get segment details
+- `POST /api/admin/customer-segments/{segment}/campaign` - Generate campaign template
+- `POST /api/admin/customer-segments/{segment}/send-campaign` - Send email campaign
 
-### Customer Endpoints
-- `POST /api/auth/register`, `/api/auth/login`, `GET /api/auth/me`
-- `GET /api/products`, `/api/products/featured`, `/api/products/bestsellers`
-- `GET/POST /api/cart/{session_id}/*`
-- `POST /api/checkout`, `GET /api/checkout/status/{session_id}`
-- `GET/POST /api/products/{slug}/reviews`
-- `GET /api/referral/code`, `/api/referral/stats`
-- `GET /api/loyalty/status`, `POST /api/loyalty/redeem`
+### Email Automation
+- `GET /api/admin/email-automation` - Get automation stats
+- `POST /api/admin/email-automation/send-abandoned` - Trigger cart recovery emails
+- `POST /api/admin/email-automation/send-reviews` - Trigger review requests
+
+### Admin CRUD
+- `GET/POST/PUT/DELETE /api/admin/products/*` - Product management
+- `GET/PATCH /api/admin/orders/*` - Order management
+- `GET/POST /api/admin/promotions` - Promotion management
 
 ## Prioritized Backlog
 
@@ -122,6 +112,7 @@ Build a pet wellness e-commerce store with:
 - [x] Admin Analytics Dashboard
 - [x] Email Automation (Abandoned Cart, Review Requests)
 - [x] Brand rename to "Wildly Ones"
+- [x] Customer Segmentation with Targeted Campaigns
 
 ### P1 - Next Priority
 - [ ] Backend Refactoring - Split monolithic server.py into modules
