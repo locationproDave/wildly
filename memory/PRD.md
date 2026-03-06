@@ -65,6 +65,10 @@ Build a pet wellness e-commerce store with:
 
 ### Customer Storefront (React + Tailwind)
 - [x] Homepage with hero, categories, featured products
+- [x] **Best Sellers section** with "#1 Best Seller" badge and "Top Rated" tag
+- [x] **CalmTails Rewards loyalty banner** showing points info
+- [x] **New Arrivals section** with "Just Added" tag
+- [x] **Promotional banner** with WELCOME15 code display
 - [x] Products page with search and filters
 - [x] **8 category icons** (Dogs, Cats, Birds, Fish, Rabbits, Small Pets, Beds, Supplements)
 - [x] **7 pet type filter buttons** with unique colors
@@ -73,6 +77,20 @@ Build a pet wellness e-commerce store with:
 - [x] Stripe checkout flow
 - [x] Order confirmation page
 - [x] Account page with order history
+
+### Promotions & Loyalty System (NEW - March 5, 2026)
+- [x] **4 Active Promotion Codes:**
+  - WELCOME15: 15% off first order (new customers only)
+  - FREESHIP50: Free shipping on orders $50+
+  - PAWS10: $10 off orders $75+
+  - SPRING25: 25% off orders $100+ (limited time)
+- [x] **Loyalty Program with 4 Tiers:**
+  - Bronze: Base tier (1pt per $1)
+  - Silver: 500+ lifetime points (1.25x multiplier, 5% discount)
+  - Gold: 1500+ lifetime points (1.5x multiplier, 10% discount)
+  - Platinum: 3000+ lifetime points (2x multiplier, 15% discount)
+- [x] Points redemption: 100 points = $5 off
+- [x] API endpoints: /api/promotions, /api/promotions/validate/{code}, /api/loyalty/status, /api/loyalty/redeem
 
 ### Admin Dashboard
 - [x] Stats overview (revenue, orders, customers)
