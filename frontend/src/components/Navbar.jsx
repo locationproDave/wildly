@@ -69,8 +69,8 @@ const Navbar = ({ onAuthClick }) => {
           {/* Logo - 15% larger */}
           <Link to="/" className="flex items-center flex-shrink-0" data-testid="nav-logo">
             <span 
-              className="text-white text-4xl sm:text-5xl font-['Dancing_Script'] font-bold tracking-wide"
-              style={{ WebkitTextStroke: '1.4px white' }}
+              className="text-[#2D4A3E] text-4xl sm:text-5xl font-['Dancing_Script'] font-bold tracking-wide"
+              style={{ WebkitTextStroke: '1.4px #2D4A3E' }}
             >
               Wildly Ones
             </span>
@@ -86,7 +86,7 @@ const Navbar = ({ onAuthClick }) => {
                   <HoverCardTrigger asChild>
                     <Link
                       to={pet.path}
-                      className="flex items-center gap-2 text-base font-semibold text-white hover:text-[#2D4A3E] transition-colors whitespace-nowrap"
+                      className="flex items-center gap-2 text-base font-semibold text-[#2D4A3E] hover:text-white transition-colors whitespace-nowrap"
                       data-testid={`nav-link-${pet.label.toLowerCase()}`}
                     >
                       <Icon className="w-[18px] h-[18px]" />
@@ -116,7 +116,7 @@ const Navbar = ({ onAuthClick }) => {
             {/* Refer & Earn - Now next to cart */}
             <Link
               to="/referral"
-              className="hidden md:block text-sm font-semibold text-white hover:text-[#2D4A3E] transition-colors whitespace-nowrap"
+              className="hidden md:block text-sm font-semibold text-[#2D4A3E] hover:text-white transition-colors whitespace-nowrap"
               data-testid="nav-link-referral"
             >
               Refer & Earn
@@ -131,7 +131,7 @@ const Navbar = ({ onAuthClick }) => {
               className="relative p-2 hover:bg-white/20 rounded-full transition-colors"
               data-testid="cart-btn"
             >
-              <ShoppingBag className="w-5 h-5 text-white" />
+              <ShoppingBag className="w-5 h-5 text-[#2D4A3E]" />
               {cart.item_count > 0 && (
                 <span className="absolute -top-1 -right-1 w-5 h-5 bg-[#2D4A3E] text-white text-xs rounded-full flex items-center justify-center">
                   {cart.item_count}
@@ -204,7 +204,7 @@ const Navbar = ({ onAuthClick }) => {
             ) : (
               <Button
                 onClick={onAuthClick}
-                className="bg-white hover:bg-[#2D4A3E] text-[#D4A574] hover:text-white rounded-full px-6"
+                className="bg-[#2D4A3E] hover:bg-[#1F342B] text-white rounded-full px-6"
                 data-testid="nav-signin-btn"
               >
                 Sign In
@@ -214,7 +214,7 @@ const Navbar = ({ onAuthClick }) => {
             {/* Mobile Menu Button */}
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="lg:hidden p-2 text-white"
+              className="lg:hidden p-2 text-[#2D4A3E]"
               data-testid="mobile-menu-btn"
             >
               {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
