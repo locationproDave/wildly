@@ -33,12 +33,20 @@ Build a pet wellness e-commerce store with:
   - Update order status via dropdown
   - Add tracking information (carrier + tracking number)
   - View detailed order info (items, totals, shipping address)
+- [x] **Admin Analytics Dashboard** (/admin/analytics) - NEW
+  - Summary cards: Total Revenue, Orders, Customers, Avg Order Value
+  - Sales Trend chart (last 7/14/30 days)
+  - Top Products by revenue with images
+  - Sales by Category with progress bars
+  - Sales by Pet Type breakdown
+  - Recent Customers list
+  - Customer acquisition trend
 - [x] **Admin Promotions Management** (/admin/promotions)
   - Create/view/manage promotion codes
   - Track usage statistics
 - [x] **Admin Dashboard** (/admin)
   - Stats overview (revenue, orders, products, customers)
-  - Quick navigation to Orders, Products, Promotions, AI Agents
+  - Quick navigation to Analytics, Orders, Products, Promotions, AI Agents
 
 ### E-Commerce Backend (FastAPI + MongoDB)
 - [x] Product catalog with 39 products across 8 pet types
@@ -76,6 +84,7 @@ Build a pet wellness e-commerce store with:
 
 ### Admin Endpoints (require admin auth)
 - `GET /api/admin/stats` - Dashboard statistics
+- `GET /api/admin/analytics` - Comprehensive analytics (sales trends, top products, categories)
 - `GET /api/admin/products` - List all products (with filters)
 - `POST /api/admin/products` - Create product
 - `PUT /api/admin/products/{id}` - Update product
