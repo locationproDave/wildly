@@ -94,11 +94,35 @@ Build a pet wellness e-commerce store with:
 - [x] Email Marketing
 - [x] Customer Service
 
+### Product Sourcing Dashboard (NEW - March 6, 2026)
+- [x] **Admin Sourcing Page** (/admin/sourcing)
+  - Search products across 3 suppliers (CJdropshipping, Zendrop, Spocket)
+  - Filter by pet type (Dogs, Cats, Fish, Birds, Rabbits, Small Pets)
+  - Filter by product category (Supplements, Food, Grooming, Toys, Beds, Accessories, Health)
+  - Filter by supplier and price range
+  - Product cards showing: cost, shipping, landed cost, retail price, margin %
+  - US warehouse badge indicator
+  - Product features/tags display
+  - One-click import to store with custom name/price/description
+  - Profit calculator modal for margin analysis
+- [x] **Backend APIs**:
+  - `POST /api/admin/sourcing/search` - Search supplier products
+  - `GET /api/admin/sourcing/categories` - Get filter options
+  - `POST /api/admin/sourcing/import` - Import product to store
+  - `POST /api/admin/sourcing/bulk-import` - Bulk import products
+- **Note**: Supplier data is SIMULATED (no real API keys required)
+
 ## Admin Credentials
 - Email: admin@calmtails.com
 - Password: admin123
 
 ## Key API Endpoints
+
+### Product Sourcing (NEW)
+- `POST /api/admin/sourcing/search` - Search products from suppliers
+- `GET /api/admin/sourcing/categories` - Get pet types, categories, suppliers
+- `POST /api/admin/sourcing/import` - Import product to store
+- `POST /api/admin/sourcing/bulk-import` - Bulk import products
 
 ### WebSocket
 - `ws://*/ws/admin` - Real-time admin notifications
@@ -139,7 +163,8 @@ Build a pet wellness e-commerce store with:
 - [ ] Blog section for SEO content
 
 ### P2 - Medium Priority
-- [ ] Real supplier API integration (CJdropshipping)
+- [ ] Real supplier API integration (CJdropshipping, Zendrop, Spocket APIs)
+- [ ] Web scraping for live supplier data
 - [ ] Inventory management with alerts
 - [ ] Customer support chat widget
 
@@ -164,3 +189,4 @@ Build a pet wellness e-commerce store with:
 - Email notifications require RESEND_API_KEY
 - Order tracking requires TRACK17_API_KEY
 - AI agents require EMERGENT LLM key balance
+- **Product Sourcing data is SIMULATED** - Uses mock catalog data from supplier patterns (no real API integration yet)
