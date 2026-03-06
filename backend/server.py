@@ -2583,6 +2583,357 @@ async def trigger_review_request_emails(user: dict = Depends(require_admin)):
     
     return {"message": f"Sent {sent_count} review request emails"}
 
+# ==================== CUSTOMER SEGMENTATION ====================
+
+class CustomerSegment(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    segment: str  # vip, loyal, at_risk, new, dormant
+    label: str
+    description: str
+    criteria: Dict[str, Any]
+    customer_count: int = 0
+
+SEGMENT_DEFINITIONS = {
+    "vip": {
+        "label": "VIP Customers",
+        "description": "High-value customers with 5+ orders or $500+ total spend",
+        "color": "#FFD700"
+    },
+    "loyal": {
+        "label": "Loyal Customers",
+        "description": "Regular customers with 3-4 orders in the last 6 months",
+        "color": "#6B8F71"
+    },
+    "at_risk": {
+        "label": "At-Risk Customers",
+        "description": "Previously active customers with no orders in 60+ days",
+        "color": "#E74C3C"
+    },
+    "new": {
+        "label": "New Customers",
+        "description": "Customers who signed up in the last 30 days",
+        "color": "#3498DB"
+    },
+    "dormant": {
+        "label": "Dormant Customers",
+        "description": "Customers with no orders in 90+ days",
+        "color": "#95A5A6"
+    }
+}
+
+async def calculate_customer_segments():
+    """Calculate customer segments based on purchase behavior"""
+    now = datetime.now(timezone.utc)
+    thirty_days_ago = (now - timedelta(days=30)).isoformat()
+    sixty_days_ago = (now - timedelta(days=60)).isoformat()
+    ninety_days_ago = (now - timedelta(days=90)).isoformat()
+    six_months_ago = (now - timedelta(days=180)).isoformat()
+    
+    segments = {}
+    
+    # Get all non-admin users
+    users = await db.users.find({"is_admin": {"$ne": True}}, {"_id": 0}).to_list(1000)
+    
+    for user in users:
+        user_id = user.get("id")
+        
+        # Get user's orders
+        orders = await db.orders.find(
+            {"user_id": user_id, "payment_status": "paid"},
+            {"_id": 0, "total": 1, "created_at": 1}
+        ).to_list(100)
+        
+        total_orders = len(orders)
+        total_spend = sum(o.get("total", 0) for o in orders)
+        
+        # Get most recent order date
+        recent_order = None
+        if orders:
+            recent_order = max(o.get("created_at", "") for o in orders)
+        
+        # Determine segment
+        segment = "new"  # Default
+        
+        if total_orders >= 5 or total_spend >= 500:
+            segment = "vip"
+        elif total_orders >= 3 and recent_order and recent_order >= six_months_ago:
+            segment = "loyal"
+        elif total_orders > 0 and recent_order and recent_order < sixty_days_ago:
+            if recent_order < ninety_days_ago:
+                segment = "dormant"
+            else:
+                segment = "at_risk"
+        elif user.get("created_at", "") >= thirty_days_ago:
+            segment = "new"
+        elif total_orders == 0 and user.get("created_at", "") < thirty_days_ago:
+            segment = "dormant"
+        
+        # Store segment
+        if segment not in segments:
+            segments[segment] = []
+        segments[segment].append({
+            "id": user_id,
+            "email": user.get("email"),
+            "name": user.get("name", ""),
+            "total_orders": total_orders,
+            "total_spend": round(total_spend, 2),
+            "last_order": recent_order,
+            "created_at": user.get("created_at")
+        })
+        
+        # Update user's segment in database
+        await db.users.update_one(
+            {"id": user_id},
+            {"$set": {"segment": segment, "segment_updated_at": now.isoformat()}}
+        )
+    
+    return segments
+
+@api_router.get("/admin/customer-segments", response_model=dict)
+async def get_customer_segments(user: dict = Depends(require_admin)):
+    """Get customer segments with counts and details"""
+    segments = await calculate_customer_segments()
+    
+    result = []
+    for segment_key, customers in segments.items():
+        segment_def = SEGMENT_DEFINITIONS.get(segment_key, {})
+        result.append({
+            "segment": segment_key,
+            "label": segment_def.get("label", segment_key.title()),
+            "description": segment_def.get("description", ""),
+            "color": segment_def.get("color", "#888888"),
+            "customer_count": len(customers),
+            "total_revenue": round(sum(c.get("total_spend", 0) for c in customers), 2),
+            "customers": customers[:20]  # Limit to 20 for preview
+        })
+    
+    # Sort by priority: VIP > Loyal > At-Risk > New > Dormant
+    priority_order = ["vip", "loyal", "at_risk", "new", "dormant"]
+    result.sort(key=lambda x: priority_order.index(x["segment"]) if x["segment"] in priority_order else 99)
+    
+    # Calculate overall stats
+    total_customers = sum(s["customer_count"] for s in result)
+    total_revenue = sum(s["total_revenue"] for s in result)
+    
+    return {
+        "segments": result,
+        "summary": {
+            "total_customers": total_customers,
+            "total_revenue": round(total_revenue, 2),
+            "segment_count": len(result)
+        }
+    }
+
+@api_router.get("/admin/customer-segments/{segment}", response_model=dict)
+async def get_segment_customers(segment: str, user: dict = Depends(require_admin)):
+    """Get all customers in a specific segment"""
+    if segment not in SEGMENT_DEFINITIONS:
+        raise HTTPException(status_code=400, detail="Invalid segment")
+    
+    customers = await db.users.find(
+        {"segment": segment, "is_admin": {"$ne": True}},
+        {"_id": 0, "password_hash": 0}
+    ).to_list(500)
+    
+    # Enrich with order data
+    enriched = []
+    for customer in customers:
+        orders = await db.orders.find(
+            {"user_id": customer.get("id"), "payment_status": "paid"},
+            {"_id": 0, "total": 1, "created_at": 1}
+        ).to_list(100)
+        
+        enriched.append({
+            **customer,
+            "total_orders": len(orders),
+            "total_spend": round(sum(o.get("total", 0) for o in orders), 2),
+            "last_order": max((o.get("created_at") for o in orders), default=None) if orders else None
+        })
+    
+    segment_def = SEGMENT_DEFINITIONS.get(segment, {})
+    return {
+        "segment": segment,
+        "label": segment_def.get("label", segment.title()),
+        "description": segment_def.get("description", ""),
+        "color": segment_def.get("color", "#888888"),
+        "customers": enriched,
+        "customer_count": len(enriched)
+    }
+
+@api_router.post("/admin/customer-segments/{segment}/campaign", response_model=dict)
+async def create_segment_campaign(
+    segment: str,
+    campaign_type: str = "promotional",  # promotional, win_back, loyalty, welcome
+    user: dict = Depends(require_admin)
+):
+    """Generate AI-powered email campaign for a customer segment"""
+    if segment not in SEGMENT_DEFINITIONS:
+        raise HTTPException(status_code=400, detail="Invalid segment")
+    
+    segment_def = SEGMENT_DEFINITIONS.get(segment, {})
+    
+    # Get customer count for context
+    customer_count = await db.users.count_documents({"segment": segment, "is_admin": {"$ne": True}})
+    
+    # Campaign templates based on segment
+    campaign_templates = {
+        "vip": {
+            "subject": "Exclusive VIP Offer Just for You! 🌟",
+            "discount": "20% off + Free Shipping",
+            "code": "VIP20",
+            "message": "As one of our most valued customers, enjoy this exclusive offer as a thank you for your loyalty."
+        },
+        "loyal": {
+            "subject": "A Special Thank You from Wildly Ones 💚",
+            "discount": "15% off your next order",
+            "code": "LOYAL15",
+            "message": "We appreciate your continued support! Here's a special discount just for you."
+        },
+        "at_risk": {
+            "subject": "We Miss You! Come Back for 25% Off 🐾",
+            "discount": "25% off + Free Gift",
+            "code": "COMEBACK25",
+            "message": "It's been a while since your last visit. We'd love to see you again!"
+        },
+        "new": {
+            "subject": "Welcome to the Wildly Ones Family! 🎉",
+            "discount": "10% off your first purchase",
+            "code": "WELCOME10",
+            "message": "Thanks for joining us! Here's a special welcome gift to get you started."
+        },
+        "dormant": {
+            "subject": "We've Missed You! Here's 30% Off 💝",
+            "discount": "30% off + Free Shipping",
+            "code": "WINBACK30",
+            "message": "It's been too long! Come back and discover what's new for your furry friend."
+        }
+    }
+    
+    template = campaign_templates.get(segment, campaign_templates["new"])
+    
+    return {
+        "segment": segment,
+        "label": segment_def.get("label"),
+        "customer_count": customer_count,
+        "campaign": {
+            "type": campaign_type,
+            "subject": template["subject"],
+            "discount": template["discount"],
+            "promo_code": template["code"],
+            "message": template["message"],
+            "preview_html": f"""
+                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+                    <div style="background: #2D4A3E; color: white; padding: 20px; text-align: center;">
+                        <h1>🐾 Wildly Ones</h1>
+                    </div>
+                    <div style="padding: 30px; background: #FDF8F3;">
+                        <h2 style="color: #2D4A3E;">{template['subject']}</h2>
+                        <p style="color: #5C6D5E;">{template['message']}</p>
+                        <div style="background: #E8DFD5; padding: 20px; border-radius: 12px; text-align: center; margin: 20px 0;">
+                            <p style="font-size: 24px; color: #2D4A3E; margin: 0;"><strong>{template['discount']}</strong></p>
+                            <p style="color: #6B8F71; margin-top: 8px;">Use code: <strong>{template['code']}</strong></p>
+                        </div>
+                        <a href="https://wildlyones.com" style="display: inline-block; background: #D4A574; color: #2D4A3E; padding: 14px 32px; text-decoration: none; border-radius: 25px; font-weight: bold;">Shop Now</a>
+                    </div>
+                </div>
+            """
+        },
+        "ready_to_send": True
+    }
+
+@api_router.post("/admin/customer-segments/{segment}/send-campaign", response_model=dict)
+async def send_segment_campaign(
+    segment: str,
+    subject: str,
+    message: str,
+    promo_code: str,
+    discount: str,
+    user: dict = Depends(require_admin)
+):
+    """Send email campaign to all customers in a segment"""
+    if segment not in SEGMENT_DEFINITIONS:
+        raise HTTPException(status_code=400, detail="Invalid segment")
+    
+    if not RESEND_API_KEY:
+        return {"message": "Email API not configured", "sent_count": 0}
+    
+    customers = await db.users.find(
+        {"segment": segment, "is_admin": {"$ne": True}},
+        {"_id": 0, "email": 1, "name": 1}
+    ).to_list(500)
+    
+    sent_count = 0
+    for customer in customers:
+        if not customer.get("email"):
+            continue
+            
+        html_content = f"""
+        <!DOCTYPE html>
+        <html>
+        <head><meta charset="UTF-8"></head>
+        <body style="margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #FDF8F3;">
+            <table width="100%" cellpadding="0" cellspacing="0" style="max-width: 600px; margin: 0 auto; background-color: #FFFFFF;">
+                <tr>
+                    <td style="background-color: #2D4A3E; padding: 24px; text-align: center;">
+                        <h1 style="color: #FFFFFF; margin: 0; font-size: 28px;">🐾 Wildly Ones</h1>
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding: 32px 24px;">
+                        <h2 style="color: #2D4A3E; margin: 0 0 16px 0;">{subject}</h2>
+                        <p style="color: #5C6D5E; margin: 0 0 24px 0;">{message}</p>
+                        
+                        <div style="background-color: #E8DFD5; padding: 20px; border-radius: 12px; text-align: center; margin-bottom: 24px;">
+                            <p style="font-size: 20px; color: #2D4A3E; margin: 0;"><strong>{discount}</strong></p>
+                            <p style="color: #6B8F71; margin-top: 8px;">Use code: <strong>{promo_code}</strong></p>
+                        </div>
+                        
+                        <table width="100%" cellpadding="0" cellspacing="0">
+                            <tr>
+                                <td style="text-align: center;">
+                                    <a href="https://wildlyones.com" style="display: inline-block; background-color: #D4A574; color: #2D4A3E; padding: 14px 32px; text-decoration: none; border-radius: 25px; font-weight: bold;">
+                                        Shop Now
+                                    </a>
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+                <tr>
+                    <td style="background-color: #2D4A3E; padding: 24px; text-align: center;">
+                        <p style="color: #D4A574; margin: 0; font-size: 12px;">© 2026 Wildly Ones Pet Wellness</p>
+                    </td>
+                </tr>
+            </table>
+        </body>
+        </html>
+        """
+        
+        try:
+            params = {
+                "from": SENDER_EMAIL,
+                "to": [customer.get("email")],
+                "subject": subject,
+                "html": html_content
+            }
+            await asyncio.to_thread(resend.Emails.send, params)
+            sent_count += 1
+        except Exception as e:
+            logging.error(f"Failed to send campaign email to {customer.get('email')}: {str(e)}")
+    
+    # Log the campaign
+    await db.campaigns.insert_one({
+        "id": str(uuid.uuid4()),
+        "segment": segment,
+        "subject": subject,
+        "promo_code": promo_code,
+        "sent_count": sent_count,
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "created_by": user.get("id")
+    })
+    
+    return {"message": f"Campaign sent to {sent_count} customers", "sent_count": sent_count}
+
 # ==================== AGENT ROUTES ====================
 
 @api_router.get("/agents", response_model=dict)
