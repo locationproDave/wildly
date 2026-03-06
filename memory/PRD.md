@@ -26,17 +26,42 @@ Build a pet wellness e-commerce store with:
 - [x] Order management system
 - [x] User authentication (JWT) with discount codes
 - [x] Admin routes for order management
-- [x] **23 pre-seeded pet wellness products** (expanded from 12)
+- [x] **39 pre-seeded pet wellness products** (expanded from 23)
 
-### Expanded Pet Categories (NEW - March 5, 2026)
-- [x] **Dogs** - 4 products (calming beds, chews, orthopedic beds, collars)
-- [x] **Cats** - 2 products (diffuser, anxiety chews)
-- [x] **Both Dogs & Cats** - 2 products (weighted blanket, CBD oil)
-- [x] **Reptiles** - 3 products (calcium supplement, multivitamin, stress drops)
-- [x] **Birds** - 3 products (calming drops, vitamin blend, probiotic)
-- [x] **Rabbits** - 3 products (calming hay, joint supplement, papaya tablets)
-- [x] **Fish** - 3 products (stress coat, immune food, betta drops)
-- [x] **Small Pets** - 3 products (guinea pig vitamin C, hamster coat supplement, calming herbs)
+### Expanded Pet Categories (March 5, 2026)
+**Total: 39 Products across 8 pet types**
+
+- [x] **Dogs** - 9 products
+  - Calming beds, soft chews, orthopedic beds, calming collars
+  - NEW: Probiotic powder, glucosamine joint chews, omega-3 fish oil, allergy support
+  - Weighted blanket (dog-only for safety)
+  
+- [x] **Cats** - 4 products
+  - Calming diffuser, anxiety chews
+  - NEW: Probiotic paste, omega-3 skin & coat oil
+  
+- [x] **Both Dogs & Cats** - 1 product
+  - Premium CBD oil
+  
+- [x] **Birds** - 5 products
+  - Calming drops, vitamin blend, probiotic
+  - NEW: Foraging toy bundle, seed & pellet blend
+  
+- [x] **Fish** - 5 products
+  - Stress coat, immune food, betta drops
+  - NEW: Color-enhancing tropical flakes, beneficial bacteria starter
+  
+- [x] **Rabbits** - 5 products
+  - Calming hay, joint supplement, papaya tablets
+  - NEW: Orchard grass hay, pea flake treats
+  
+- [x] **Small Pets** - 5 products (guinea pigs, hamsters, gerbils)
+  - Calming herbs, vitamin C drops, coat supplement
+  - NEW: Silent spinner wheel, paper bedding
+  
+- [x] **Reptiles** - 5 products
+  - Calcium D3, multivitamin, stress drops
+  - NEW: Excavator clay substrate, gut-load formula
 
 ### Customer Storefront (React + Tailwind)
 - [x] Homepage with hero, categories, featured products
