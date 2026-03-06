@@ -46,7 +46,7 @@ if RESEND_API_KEY:
     resend.api_key = RESEND_API_KEY
 
 # Create the main app
-app = FastAPI(title="CalmTails Pet Wellness Store")
+app = FastAPI(title="Wildly Ones Pet Wellness Store")
 
 # Create a router with the /api prefix
 api_router = APIRouter(prefix="/api")
@@ -398,7 +398,7 @@ async def register(user_data: UserCreate):
             "is_admin": False,
             "discount_code": discount_code
         },
-        "message": f"Welcome to CalmTails! Your exclusive discount code is: {discount_code} (15% off your first order)"
+        "message": f"Welcome to Wildly Ones! Your exclusive discount code is: {discount_code} (15% off your first order)"
     }
 
 @api_router.post("/auth/login", response_model=dict)
@@ -931,7 +931,7 @@ async def create_paypal_order(order_data: PayPalOrderRequest, user: Optional[dic
                     "tax": f"{tax:.2f}"
                 }
             },
-            "description": f"CalmTails Order {order_number}",
+            "description": f"Wildly Ones Order {order_number}",
             "custom": order_id,
             "item_list": {
                 "items": [
@@ -946,8 +946,8 @@ async def create_paypal_order(order_data: PayPalOrderRequest, user: Optional[dic
             }
         }],
         "redirect_urls": {
-            "return_url": "https://calmtails.com/paypal/success",
-            "cancel_url": "https://calmtails.com/cart"
+            "return_url": "https://wildlyones.com/paypal/success",
+            "cancel_url": "https://wildlyones.com/cart"
         }
     })
     
@@ -1632,7 +1632,7 @@ async def send_order_confirmation_email(order: dict):
             <!-- Header -->
             <tr>
                 <td style="background-color: #2D4A3E; padding: 24px; text-align: center;">
-                    <h1 style="color: #FFFFFF; margin: 0; font-size: 28px;">🐾 CalmTails</h1>
+                    <h1 style="color: #FFFFFF; margin: 0; font-size: 28px;">🐾 Wildly Ones</h1>
                 </td>
             </tr>
             
@@ -1683,7 +1683,7 @@ async def send_order_confirmation_email(order: dict):
                     <table width="100%" cellpadding="0" cellspacing="0">
                         <tr>
                             <td style="text-align: center; padding: 24px 0;">
-                                <a href="https://calmtails.com/account" style="display: inline-block; background-color: #D4A574; color: #2D4A3E; padding: 14px 32px; text-decoration: none; border-radius: 25px; font-weight: bold;">
+                                <a href="https://wildlyones.com/account" style="display: inline-block; background-color: #D4A574; color: #2D4A3E; padding: 14px 32px; text-decoration: none; border-radius: 25px; font-weight: bold;">
                                     View Order Details
                                 </a>
                             </td>
@@ -1705,10 +1705,10 @@ async def send_order_confirmation_email(order: dict):
             <tr>
                 <td style="background-color: #2D4A3E; padding: 24px; text-align: center;">
                     <p style="color: #FFFFFF; margin: 0 0 8px 0; font-size: 14px;">
-                        Questions? Contact us at support@calmtails.com
+                        Questions? Contact us at support@wildlyones.com
                     </p>
                     <p style="color: #D4A574; margin: 0; font-size: 12px;">
-                        © 2026 CalmTails Pet Wellness. All rights reserved.
+                        © 2026 Wildly Ones Pet Wellness. All rights reserved.
                     </p>
                 </td>
             </tr>
@@ -1916,7 +1916,7 @@ async def get_referral_code(user: dict = Depends(require_user)):
     
     return {
         "referral_code": referral_code,
-        "share_url": f"https://calmtails.com/ref/{referral_code}",
+        "share_url": f"https://wildlyones.com/ref/{referral_code}",
         "reward_amount": 10.0,
         "completed_referrals": completed_referrals,
         "total_earned": total_earned
@@ -2267,7 +2267,7 @@ async def send_shipping_notification_email(order: dict, tracking: dict):
         <table width="100%" cellpadding="0" cellspacing="0" style="max-width: 600px; margin: 0 auto; background-color: #FFFFFF;">
             <tr>
                 <td style="background-color: #2D4A3E; padding: 24px; text-align: center;">
-                    <h1 style="color: #FFFFFF; margin: 0; font-size: 28px;">🐾 CalmTails</h1>
+                    <h1 style="color: #FFFFFF; margin: 0; font-size: 28px;">🐾 Wildly Ones</h1>
                 </td>
             </tr>
             <tr>
@@ -2296,7 +2296,7 @@ async def send_shipping_notification_email(order: dict, tracking: dict):
             </tr>
             <tr>
                 <td style="background-color: #2D4A3E; padding: 24px; text-align: center;">
-                    <p style="color: #D4A574; margin: 0; font-size: 12px;">© 2026 CalmTails Pet Wellness</p>
+                    <p style="color: #D4A574; margin: 0; font-size: 12px;">© 2026 Wildly Ones Pet Wellness</p>
                 </td>
             </tr>
         </table>
@@ -2308,13 +2308,280 @@ async def send_shipping_notification_email(order: dict, tracking: dict):
         params = {
             "from": SENDER_EMAIL,
             "to": [order.get("email")],
-            "subject": f"Your CalmTails order is on its way! 📦",
+            "subject": f"Your Wildly Ones order is on its way! 📦",
             "html": html_content
         }
         await asyncio.to_thread(resend.Emails.send, params)
         logging.info(f"Shipping notification email sent to {order.get('email')}")
     except Exception as e:
         logging.error(f"Failed to send shipping email: {str(e)}")
+
+# ==================== EMAIL AUTOMATION ====================
+
+class EmailAutomationConfig(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    automation_type: str  # abandoned_cart, review_request, low_stock_alert, welcome_series
+    is_active: bool = True
+    delay_hours: int = 24  # Hours to wait before sending
+    created_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
+
+class AbandonedCart(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    session_id: str
+    email: Optional[str] = None
+    items: List[Dict[str, Any]] = []
+    subtotal: float = 0.0
+    reminder_sent: bool = False
+    recovered: bool = False
+    created_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
+    last_activity: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
+
+async def send_abandoned_cart_email(cart_data: dict):
+    """Send abandoned cart recovery email"""
+    if not RESEND_API_KEY or not cart_data.get("email"):
+        logging.warning("Abandoned cart email skipped - no API key or email")
+        return
+    
+    items_html = ""
+    for item in cart_data.get("items", [])[:5]:
+        items_html += f"""
+        <tr>
+            <td style="padding: 12px 0; border-bottom: 1px solid #E8DFD5;">
+                <table width="100%">
+                    <tr>
+                        <td width="80">
+                            <img src="{item.get('image', '')}" alt="" style="width: 60px; height: 60px; object-fit: cover; border-radius: 8px;">
+                        </td>
+                        <td>
+                            <p style="margin: 0; color: #2D4A3E; font-weight: bold;">{item.get('name', '')}</p>
+                            <p style="margin: 4px 0 0 0; color: #5C6D5E;">Qty: {item.get('quantity', 1)}</p>
+                        </td>
+                        <td style="text-align: right;">
+                            <p style="margin: 0; color: #2D4A3E; font-weight: bold;">${item.get('price', 0):.2f}</p>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+        """
+    
+    html_content = f"""
+    <!DOCTYPE html>
+    <html>
+    <head><meta charset="UTF-8"></head>
+    <body style="margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #FDF8F3;">
+        <table width="100%" cellpadding="0" cellspacing="0" style="max-width: 600px; margin: 0 auto; background-color: #FFFFFF;">
+            <tr>
+                <td style="background-color: #2D4A3E; padding: 24px; text-align: center;">
+                    <h1 style="color: #FFFFFF; margin: 0; font-size: 28px;">🐾 Wildly Ones</h1>
+                </td>
+            </tr>
+            <tr>
+                <td style="padding: 32px 24px;">
+                    <h2 style="color: #2D4A3E; margin: 0 0 8px 0;">Forget something? 🛒</h2>
+                    <p style="color: #5C6D5E; margin: 0 0 24px 0;">
+                        You left some amazing items in your cart. Don't let them slip away!
+                    </p>
+                    
+                    <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom: 24px;">
+                        {items_html}
+                    </table>
+                    
+                    <div style="background-color: #E8DFD5; padding: 16px; border-radius: 12px; text-align: center; margin-bottom: 24px;">
+                        <p style="margin: 0; color: #2D4A3E; font-size: 18px;">
+                            <strong>Cart Total: ${cart_data.get('subtotal', 0):.2f}</strong>
+                        </p>
+                        <p style="margin: 8px 0 0 0; color: #6B8F71; font-size: 14px;">
+                            ✨ Use code <strong>COMEBACK10</strong> for 10% off!
+                        </p>
+                    </div>
+                    
+                    <table width="100%" cellpadding="0" cellspacing="0">
+                        <tr>
+                            <td style="text-align: center;">
+                                <a href="https://wildlyones.com/cart" style="display: inline-block; background-color: #D4A574; color: #2D4A3E; padding: 14px 32px; text-decoration: none; border-radius: 25px; font-weight: bold;">
+                                    Complete Your Order
+                                </a>
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+            <tr>
+                <td style="background-color: #2D4A3E; padding: 24px; text-align: center;">
+                    <p style="color: #D4A574; margin: 0; font-size: 12px;">© 2026 Wildly Ones Pet Wellness</p>
+                </td>
+            </tr>
+        </table>
+    </body>
+    </html>
+    """
+    
+    try:
+        params = {
+            "from": SENDER_EMAIL,
+            "to": [cart_data.get("email")],
+            "subject": "You left something behind! 🛒",
+            "html": html_content
+        }
+        await asyncio.to_thread(resend.Emails.send, params)
+        logging.info(f"Abandoned cart email sent to {cart_data.get('email')}")
+    except Exception as e:
+        logging.error(f"Failed to send abandoned cart email: {str(e)}")
+
+async def send_review_request_email(order: dict):
+    """Send post-purchase review request email"""
+    if not RESEND_API_KEY or not order.get("email"):
+        return
+    
+    # Get first item for review focus
+    first_item = order.get("items", [{}])[0] if order.get("items") else {}
+    
+    html_content = f"""
+    <!DOCTYPE html>
+    <html>
+    <head><meta charset="UTF-8"></head>
+    <body style="margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #FDF8F3;">
+        <table width="100%" cellpadding="0" cellspacing="0" style="max-width: 600px; margin: 0 auto; background-color: #FFFFFF;">
+            <tr>
+                <td style="background-color: #2D4A3E; padding: 24px; text-align: center;">
+                    <h1 style="color: #FFFFFF; margin: 0; font-size: 28px;">🐾 Wildly Ones</h1>
+                </td>
+            </tr>
+            <tr>
+                <td style="padding: 32px 24px; text-align: center;">
+                    <h2 style="color: #2D4A3E; margin: 0 0 8px 0;">How's your fur baby loving it? ⭐</h2>
+                    <p style="color: #5C6D5E; margin: 0 0 24px 0;">
+                        We hope your pet is enjoying their new {first_item.get('product_name', 'products')}!
+                    </p>
+                    
+                    <div style="background-color: #FDF8F3; padding: 24px; border-radius: 16px; margin-bottom: 24px;">
+                        <p style="color: #2D4A3E; margin: 0 0 16px 0; font-size: 18px;">
+                            <strong>Share your experience!</strong>
+                        </p>
+                        <p style="color: #5C6D5E; margin: 0 0 16px 0;">
+                            Your review helps other pet parents make great choices for their furry friends.
+                        </p>
+                        <p style="color: #6B8F71; margin: 0; font-size: 14px;">
+                            🎁 <strong>Earn 25 bonus points</strong> for leaving a review!
+                        </p>
+                    </div>
+                    
+                    <table width="100%" cellpadding="0" cellspacing="0">
+                        <tr>
+                            <td style="text-align: center;">
+                                <a href="https://wildlyones.com/account" style="display: inline-block; background-color: #D4A574; color: #2D4A3E; padding: 14px 32px; text-decoration: none; border-radius: 25px; font-weight: bold;">
+                                    Write a Review
+                                </a>
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+            <tr>
+                <td style="background-color: #2D4A3E; padding: 24px; text-align: center;">
+                    <p style="color: #D4A574; margin: 0; font-size: 12px;">© 2026 Wildly Ones Pet Wellness</p>
+                </td>
+            </tr>
+        </table>
+    </body>
+    </html>
+    """
+    
+    try:
+        params = {
+            "from": SENDER_EMAIL,
+            "to": [order.get("email")],
+            "subject": "How's your pet loving their new goodies? ⭐",
+            "html": html_content
+        }
+        await asyncio.to_thread(resend.Emails.send, params)
+        logging.info(f"Review request email sent to {order.get('email')}")
+    except Exception as e:
+        logging.error(f"Failed to send review request email: {str(e)}")
+
+@api_router.get("/admin/email-automation", response_model=dict)
+async def get_email_automation_stats(user: dict = Depends(require_admin)):
+    """Get email automation statistics"""
+    # Count abandoned carts
+    abandoned_carts = await db.abandoned_carts.count_documents({"reminder_sent": False})
+    recovered_carts = await db.abandoned_carts.count_documents({"recovered": True})
+    
+    # Count emails sent
+    total_abandoned_emails = await db.abandoned_carts.count_documents({"reminder_sent": True})
+    
+    # Orders eligible for review requests (delivered in last 7 days)
+    seven_days_ago = (datetime.now(timezone.utc) - timedelta(days=7)).isoformat()
+    review_eligible = await db.orders.count_documents({
+        "status": "delivered",
+        "updated_at": {"$gte": seven_days_ago}
+    })
+    
+    return {
+        "abandoned_carts": {
+            "pending": abandoned_carts,
+            "emails_sent": total_abandoned_emails,
+            "recovered": recovered_carts,
+            "recovery_rate": round((recovered_carts / total_abandoned_emails * 100) if total_abandoned_emails > 0 else 0, 1)
+        },
+        "review_requests": {
+            "eligible_orders": review_eligible
+        },
+        "automation_status": {
+            "abandoned_cart": True,
+            "review_request": True,
+            "low_stock_alert": False
+        }
+    }
+
+@api_router.post("/admin/email-automation/send-abandoned", response_model=dict)
+async def trigger_abandoned_cart_emails(user: dict = Depends(require_admin)):
+    """Manually trigger abandoned cart emails"""
+    # Find carts older than 1 hour that haven't received reminders
+    one_hour_ago = (datetime.now(timezone.utc) - timedelta(hours=1)).isoformat()
+    
+    abandoned = await db.abandoned_carts.find({
+        "reminder_sent": False,
+        "email": {"$ne": None},
+        "last_activity": {"$lt": one_hour_ago}
+    }).to_list(50)
+    
+    sent_count = 0
+    for cart in abandoned:
+        await send_abandoned_cart_email(cart)
+        await db.abandoned_carts.update_one(
+            {"id": cart["id"]},
+            {"$set": {"reminder_sent": True}}
+        )
+        sent_count += 1
+    
+    return {"message": f"Sent {sent_count} abandoned cart emails"}
+
+@api_router.post("/admin/email-automation/send-reviews", response_model=dict)
+async def trigger_review_request_emails(user: dict = Depends(require_admin)):
+    """Manually trigger review request emails for delivered orders"""
+    # Find delivered orders from 3-7 days ago that haven't received review requests
+    three_days_ago = (datetime.now(timezone.utc) - timedelta(days=3)).isoformat()
+    seven_days_ago = (datetime.now(timezone.utc) - timedelta(days=7)).isoformat()
+    
+    orders = await db.orders.find({
+        "status": "delivered",
+        "updated_at": {"$gte": seven_days_ago, "$lte": three_days_ago},
+        "review_request_sent": {"$ne": True}
+    }, {"_id": 0}).to_list(50)
+    
+    sent_count = 0
+    for order in orders:
+        await send_review_request_email(order)
+        await db.orders.update_one(
+            {"id": order["id"]},
+            {"$set": {"review_request_sent": True}}
+        )
+        sent_count += 1
+    
+    return {"message": f"Sent {sent_count} review request emails"}
 
 # ==================== AGENT ROUTES ====================
 
@@ -2917,7 +3184,7 @@ async def seed_products():
         admin_user = {
             "id": str(uuid.uuid4()),
             "email": "admin@calmtails.com",
-            "name": "CalmTails Admin",
+            "name": "Wildly Ones Admin",
             "password_hash": hash_password("admin123"),
             "is_admin": True,
             "created_at": datetime.now(timezone.utc).isoformat()
@@ -2930,11 +3197,11 @@ async def seed_products():
 
 @api_router.get("/")
 async def root():
-    return {"message": "CalmTails Pet Wellness Store API", "status": "healthy"}
+    return {"message": "Wildly Ones Pet Wellness Store API", "status": "healthy"}
 
 @api_router.get("/health")
 async def health_check():
-    return {"status": "healthy", "service": "CalmTails Pet Wellness"}
+    return {"status": "healthy", "service": "Wildly Ones Pet Wellness"}
 
 # Include the router
 app.include_router(api_router)

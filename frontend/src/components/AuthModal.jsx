@@ -68,7 +68,7 @@ const AuthModal = ({ isOpen, onClose }) => {
             <span className="text-4xl">🐾</span>
           </div>
           <DialogTitle className="text-center text-2xl font-bold text-[#2D4A3E] font-['Fraunces']">
-            {isLogin ? "Welcome Back" : "Join CalmTails"}
+            {isLogin ? "Welcome Back" : "Join Wildly Ones"}
           </DialogTitle>
           <DialogDescription className="text-center text-sm text-[#5C6D5E]">
             {isLogin 

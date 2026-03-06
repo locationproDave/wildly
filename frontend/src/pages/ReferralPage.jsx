@@ -65,7 +65,7 @@ const ReferralPage = () => {
   };
 
   const shareOnTwitter = () => {
-    const text = `Get $10 off your first order at CalmTails Pet Wellness! Use my link:`;
+    const text = `Get $10 off your first order at Wildly Ones Pet Wellness! Use my link:`;
     window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(referralData.share_url)}`, '_blank');
   };
 
@@ -74,8 +74,8 @@ const ReferralPage = () => {
   };
 
   const shareByEmail = () => {
-    const subject = "Get $10 off at CalmTails Pet Wellness!";
-    const body = `Hey! I thought you'd love CalmTails - they have amazing pet wellness products. Use my referral link to get $10 off your first order: ${referralData.share_url}`;
+    const subject = "Get $10 off at Wildly Ones Pet Wellness!";
+    const body = `Hey! I thought you'd love Wildly Ones - they have amazing pet wellness products. Use my referral link to get $10 off your first order: ${referralData.share_url}`;
     window.open(`mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`);
   };
 

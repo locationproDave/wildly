@@ -360,7 +360,7 @@ const HomePage = () => {
                 <Award className="w-8 h-8 text-[#2D4A3E]" />
               </div>
               <div>
-                <h3 className="text-2xl font-bold font-['Fraunces']">CalmTails Rewards</h3>
+                <h3 className="text-2xl font-bold font-['Fraunces']">Wildly Ones Rewards</h3>
                 <p className="text-white/80">Earn points on every purchase, unlock exclusive perks</p>
               </div>
             </div>
@@ -505,7 +505,7 @@ const HomePage = () => {
             </div>
             <div className="relative z-10">
               <h2 className="text-3xl md:text-4xl font-bold text-white mb-4 font-['Fraunces']">
-                Join the CalmTails Family
+                Join the Wildly Ones Family
               </h2>
               <p className="text-white/80 text-lg mb-8 max-w-xl mx-auto">
                 Sign up for 15% off your first order, plus exclusive tips on keeping your 

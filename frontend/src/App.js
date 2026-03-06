@@ -16,6 +16,7 @@ import AdminPromotionsPage from "./pages/AdminPromotionsPage";
 import AdminProductsPage from "./pages/AdminProductsPage";
 import AdminOrdersPage from "./pages/AdminOrdersPage";
 import AdminAnalyticsPage from "./pages/AdminAnalyticsPage";
+import AdminEmailAutomationPage from "./pages/AdminEmailAutomationPage";
 import AgentsPage from "./pages/AgentsPage";
 import ReferralPage from "./pages/ReferralPage";
 
@@ -304,6 +305,11 @@ function App() {
             <Route path="/admin/analytics" element={
               <AppLayout>
                 <ProtectedRoute adminOnly><AdminAnalyticsPage /></ProtectedRoute>
+              </AppLayout>
+            } />
+            <Route path="/admin/emails" element={
+              <AppLayout>
+                <ProtectedRoute adminOnly><AdminEmailAutomationPage /></ProtectedRoute>
               </AppLayout>
             } />
             <Route path="/admin/agents" element={

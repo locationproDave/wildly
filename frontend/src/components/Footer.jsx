@@ -16,7 +16,7 @@ const Footer = () => {
           <div className="md:col-span-1">
             <div className="flex items-center gap-2 mb-4">
               <span className="text-2xl">🐾</span>
-              <span className="font-bold text-xl font-['Fraunces']">CalmTails</span>
+              <span className="font-bold text-xl font-['Fraunces']">Wildly Ones</span>
             </div>
             <p className="text-white/70 text-sm leading-relaxed">
               Premium pet wellness products designed with science and love. 
@@ -93,7 +93,7 @@ const Footer = () => {
 
         <div className="border-t border-white/10 mt-12 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
           <p className="text-white/50 text-sm">
-            © 2026 CalmTails. All rights reserved.
+            © 2026 Wildly Ones. All rights reserved.
           </p>
           <div className="flex gap-6">
             <span className="text-white/50 text-sm">Privacy Policy</span>

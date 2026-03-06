@@ -48,7 +48,7 @@ const Navbar = ({ onAuthClick }) => {
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2" data-testid="nav-logo">
             <span className="text-2xl">🐾</span>
-            <span className="font-bold text-[#2D4A3E] text-xl font-['Fraunces']">CalmTails</span>
+            <span className="font-bold text-[#2D4A3E] text-xl font-['Fraunces']">Wildly Ones</span>
           </Link>
 
           {/* Desktop Navigation */}

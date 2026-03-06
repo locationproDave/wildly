@@ -15,7 +15,8 @@ import {
   Tag,
   PackagePlus,
   ClipboardList,
-  BarChart3
+  BarChart3,
+  Mail
 } from "lucide-react";
 import { Button } from "../components/ui/button";
 import { Badge } from "../components/ui/badge";
@@ -112,6 +113,12 @@ const AdminDashboard = () => {
               <Button variant="outline" className="rounded-full" data-testid="analytics-btn">
                 <BarChart3 className="w-4 h-4 mr-2" />
                 Analytics
+              </Button>
+            </Link>
+            <Link to="/admin/emails">
+              <Button variant="outline" className="rounded-full" data-testid="emails-btn">
+                <Mail className="w-4 h-4 mr-2" />
+                Emails
               </Button>
             </Link>
             <Link to="/admin/orders">
