@@ -151,6 +151,44 @@ class AgentQuery(BaseModel):
     agent_type: Literal["product_sourcing", "due_diligence", "copywriter", "seo_content", "performance_marketing", "email_marketing", "customer_service"]
     session_id: Optional[str] = None
 
+class Promotion(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    code: str
+    name: str
+    description: str
+    discount_type: str  # percentage, fixed_amount, free_shipping
+    discount_value: float  # percentage (0-100) or fixed amount
+    min_purchase: float = 0.0
+    max_uses: Optional[int] = None
+    uses_count: int = 0
+    is_active: bool = True
+    is_first_order_only: bool = False
+    is_loyalty_reward: bool = False
+    valid_from: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
+    valid_until: Optional[str] = None
+    created_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
+
+class LoyaltyPoints(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    user_id: str
+    points: int = 0
+    lifetime_points: int = 0
+    tier: str = "bronze"  # bronze, silver, gold, platinum
+    created_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
+    updated_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
+
+class PointsTransaction(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    user_id: str
+    points: int  # positive for earned, negative for redeemed
+    transaction_type: str  # earned, redeemed, bonus, expired
+    description: str
+    order_id: Optional[str] = None
+    created_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
+
 # ==================== AUTH HELPERS ====================
 
 def hash_password(password: str) -> str:
@@ -364,6 +402,15 @@ async def get_featured_products():
         {"in_stock": True},
         {"_id": 0}
     ).sort("rating", -1).limit(8).to_list(8)
+    return products
+
+@api_router.get("/products/bestsellers", response_model=List[dict])
+async def get_bestsellers():
+    """Get best-selling products sorted by review count and rating"""
+    products = await db.products.find(
+        {"in_stock": True},
+        {"_id": 0}
+    ).sort([("review_count", -1), ("rating", -1)]).limit(8).to_list(8)
     return products
 
 @api_router.get("/products/categories", response_model=List[str])
@@ -749,6 +796,296 @@ async def delete_product(product_id: str, user: dict = Depends(require_admin)):
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="Product not found")
     return {"message": "Product deleted"}
+
+# ==================== PROMOTIONS & LOYALTY ROUTES ====================
+
+LOYALTY_TIERS = {
+    "bronze": {"min_points": 0, "discount_percent": 0, "points_multiplier": 1.0},
+    "silver": {"min_points": 500, "discount_percent": 5, "points_multiplier": 1.25},
+    "gold": {"min_points": 1500, "discount_percent": 10, "points_multiplier": 1.5},
+    "platinum": {"min_points": 3000, "discount_percent": 15, "points_multiplier": 2.0}
+}
+
+def calculate_tier(lifetime_points: int) -> str:
+    """Calculate user's loyalty tier based on lifetime points"""
+    if lifetime_points >= 3000:
+        return "platinum"
+    elif lifetime_points >= 1500:
+        return "gold"
+    elif lifetime_points >= 500:
+        return "silver"
+    return "bronze"
+
+@api_router.get("/promotions", response_model=List[dict])
+async def get_active_promotions():
+    """Get all active promotions"""
+    now = datetime.now(timezone.utc).isoformat()
+    promotions = await db.promotions.find({
+        "is_active": True,
+        "valid_from": {"$lte": now},
+        "$or": [
+            {"valid_until": None},
+            {"valid_until": {"$gte": now}}
+        ],
+        "is_loyalty_reward": False
+    }, {"_id": 0}).to_list(100)
+    return promotions
+
+@api_router.get("/promotions/validate/{code}", response_model=dict)
+async def validate_promotion(code: str, subtotal: float = 0, user: Optional[dict] = Depends(get_current_user)):
+    """Validate a promotion code and return discount details"""
+    now = datetime.now(timezone.utc).isoformat()
+    promotion = await db.promotions.find_one({
+        "code": code.upper(),
+        "is_active": True,
+        "valid_from": {"$lte": now},
+        "$or": [
+            {"valid_until": None},
+            {"valid_until": {"$gte": now}}
+        ]
+    }, {"_id": 0})
+    
+    if not promotion:
+        raise HTTPException(status_code=404, detail="Invalid or expired promotion code")
+    
+    # Check max uses
+    if promotion.get("max_uses") and promotion["uses_count"] >= promotion["max_uses"]:
+        raise HTTPException(status_code=400, detail="Promotion code has reached maximum uses")
+    
+    # Check minimum purchase
+    if subtotal < promotion.get("min_purchase", 0):
+        raise HTTPException(
+            status_code=400, 
+            detail=f"Minimum purchase of ${promotion['min_purchase']:.2f} required"
+        )
+    
+    # Check first order only
+    if promotion.get("is_first_order_only"):
+        if user:
+            order_count = await db.orders.count_documents({"user_id": user["id"], "payment_status": "paid"})
+            if order_count > 0:
+                raise HTTPException(status_code=400, detail="This promotion is for first orders only")
+    
+    # Calculate discount
+    discount_amount = 0
+    if promotion["discount_type"] == "percentage":
+        discount_amount = subtotal * (promotion["discount_value"] / 100)
+    elif promotion["discount_type"] == "fixed_amount":
+        discount_amount = min(promotion["discount_value"], subtotal)
+    
+    return {
+        "valid": True,
+        "promotion": promotion,
+        "discount_amount": round(discount_amount, 2)
+    }
+
+@api_router.get("/loyalty/status", response_model=dict)
+async def get_loyalty_status(user: dict = Depends(require_user)):
+    """Get user's loyalty program status"""
+    loyalty = await db.loyalty_points.find_one({"user_id": user["id"]}, {"_id": 0})
+    
+    if not loyalty:
+        # Create new loyalty account
+        loyalty = {
+            "id": str(uuid.uuid4()),
+            "user_id": user["id"],
+            "points": 0,
+            "lifetime_points": 0,
+            "tier": "bronze",
+            "created_at": datetime.now(timezone.utc).isoformat(),
+            "updated_at": datetime.now(timezone.utc).isoformat()
+        }
+        await db.loyalty_points.insert_one(loyalty)
+        loyalty.pop("_id", None)
+    
+    tier_info = LOYALTY_TIERS[loyalty["tier"]]
+    next_tier = None
+    points_to_next = None
+    
+    if loyalty["tier"] == "bronze":
+        next_tier = "silver"
+        points_to_next = 500 - loyalty["lifetime_points"]
+    elif loyalty["tier"] == "silver":
+        next_tier = "gold"
+        points_to_next = 1500 - loyalty["lifetime_points"]
+    elif loyalty["tier"] == "gold":
+        next_tier = "platinum"
+        points_to_next = 3000 - loyalty["lifetime_points"]
+    
+    # Get recent transactions
+    transactions = await db.points_transactions.find(
+        {"user_id": user["id"]},
+        {"_id": 0}
+    ).sort("created_at", -1).limit(10).to_list(10)
+    
+    return {
+        "points": loyalty["points"],
+        "lifetime_points": loyalty["lifetime_points"],
+        "tier": loyalty["tier"],
+        "tier_benefits": tier_info,
+        "next_tier": next_tier,
+        "points_to_next_tier": max(0, points_to_next) if points_to_next else None,
+        "recent_transactions": transactions
+    }
+
+@api_router.post("/loyalty/redeem", response_model=dict)
+async def redeem_points(points_to_redeem: int, user: dict = Depends(require_user)):
+    """Redeem loyalty points for a discount code"""
+    if points_to_redeem < 100:
+        raise HTTPException(status_code=400, detail="Minimum 100 points required to redeem")
+    
+    loyalty = await db.loyalty_points.find_one({"user_id": user["id"]})
+    if not loyalty:
+        raise HTTPException(status_code=404, detail="Loyalty account not found")
+    
+    if loyalty["points"] < points_to_redeem:
+        raise HTTPException(status_code=400, detail="Insufficient points")
+    
+    # Calculate discount value (100 points = $5)
+    discount_value = (points_to_redeem // 100) * 5
+    actual_points = (points_to_redeem // 100) * 100
+    
+    # Create promotion code
+    promo_code = f"LOYAL{str(uuid.uuid4())[:6].upper()}"
+    promotion = {
+        "id": str(uuid.uuid4()),
+        "code": promo_code,
+        "name": f"Loyalty Reward - ${discount_value} Off",
+        "description": f"Redeemed {actual_points} loyalty points",
+        "discount_type": "fixed_amount",
+        "discount_value": discount_value,
+        "min_purchase": 0,
+        "max_uses": 1,
+        "uses_count": 0,
+        "is_active": True,
+        "is_first_order_only": False,
+        "is_loyalty_reward": True,
+        "valid_from": datetime.now(timezone.utc).isoformat(),
+        "valid_until": (datetime.now(timezone.utc) + timedelta(days=30)).isoformat(),
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    await db.promotions.insert_one(promotion)
+    
+    # Deduct points
+    new_points = loyalty["points"] - actual_points
+    await db.loyalty_points.update_one(
+        {"user_id": user["id"]},
+        {"$set": {"points": new_points, "updated_at": datetime.now(timezone.utc).isoformat()}}
+    )
+    
+    # Record transaction
+    transaction = {
+        "id": str(uuid.uuid4()),
+        "user_id": user["id"],
+        "points": -actual_points,
+        "transaction_type": "redeemed",
+        "description": f"Redeemed for ${discount_value} discount code",
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    await db.points_transactions.insert_one(transaction)
+    
+    return {
+        "message": f"Successfully redeemed {actual_points} points",
+        "discount_code": promo_code,
+        "discount_value": discount_value,
+        "remaining_points": new_points
+    }
+
+async def award_loyalty_points(user_id: str, order_total: float, order_id: str):
+    """Award loyalty points after a successful order"""
+    # Get or create loyalty account
+    loyalty = await db.loyalty_points.find_one({"user_id": user_id})
+    if not loyalty:
+        loyalty = {
+            "id": str(uuid.uuid4()),
+            "user_id": user_id,
+            "points": 0,
+            "lifetime_points": 0,
+            "tier": "bronze",
+            "created_at": datetime.now(timezone.utc).isoformat(),
+            "updated_at": datetime.now(timezone.utc).isoformat()
+        }
+        await db.loyalty_points.insert_one(loyalty)
+    
+    tier_info = LOYALTY_TIERS[loyalty.get("tier", "bronze")]
+    
+    # Calculate points (1 point per dollar spent, with tier multiplier)
+    base_points = int(order_total)
+    earned_points = int(base_points * tier_info["points_multiplier"])
+    
+    # Update points
+    new_points = loyalty["points"] + earned_points
+    new_lifetime = loyalty["lifetime_points"] + earned_points
+    new_tier = calculate_tier(new_lifetime)
+    
+    await db.loyalty_points.update_one(
+        {"user_id": user_id},
+        {"$set": {
+            "points": new_points,
+            "lifetime_points": new_lifetime,
+            "tier": new_tier,
+            "updated_at": datetime.now(timezone.utc).isoformat()
+        }}
+    )
+    
+    # Record transaction
+    transaction = {
+        "id": str(uuid.uuid4()),
+        "user_id": user_id,
+        "points": earned_points,
+        "transaction_type": "earned",
+        "description": f"Earned from order (${order_total:.2f})",
+        "order_id": order_id,
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    await db.points_transactions.insert_one(transaction)
+    
+    return earned_points, new_tier
+
+@api_router.post("/admin/promotions", response_model=dict)
+async def create_promotion(
+    code: str,
+    name: str,
+    description: str,
+    discount_type: str,
+    discount_value: float,
+    min_purchase: float = 0,
+    max_uses: Optional[int] = None,
+    is_first_order_only: bool = False,
+    valid_days: int = 30,
+    user: dict = Depends(require_admin)
+):
+    """Create a new promotion code"""
+    existing = await db.promotions.find_one({"code": code.upper()})
+    if existing:
+        raise HTTPException(status_code=400, detail="Promotion code already exists")
+    
+    promotion = {
+        "id": str(uuid.uuid4()),
+        "code": code.upper(),
+        "name": name,
+        "description": description,
+        "discount_type": discount_type,
+        "discount_value": discount_value,
+        "min_purchase": min_purchase,
+        "max_uses": max_uses,
+        "uses_count": 0,
+        "is_active": True,
+        "is_first_order_only": is_first_order_only,
+        "is_loyalty_reward": False,
+        "valid_from": datetime.now(timezone.utc).isoformat(),
+        "valid_until": (datetime.now(timezone.utc) + timedelta(days=valid_days)).isoformat(),
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    await db.promotions.insert_one(promotion)
+    
+    return {"message": "Promotion created", "promotion": {k: v for k, v in promotion.items() if k != "_id"}}
+
+@api_router.get("/admin/promotions", response_model=List[dict])
+async def get_all_promotions(user: dict = Depends(require_admin)):
+    """Get all promotions (admin only)"""
+    promotions = await db.promotions.find({}, {"_id": 0}).sort("created_at", -1).to_list(100)
+    return promotions
 
 # ==================== AGENT ROUTES ====================
 

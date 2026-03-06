@@ -18,7 +18,12 @@ import {
   Bird,
   Rabbit,
   Fish,
-  Squirrel
+  Squirrel,
+  Gift,
+  Award,
+  TrendingUp,
+  Percent,
+  X
 } from "lucide-react";
 import { Button } from "../components/ui/button";
 
@@ -26,17 +31,23 @@ const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 
 const HomePage = () => {
   const [featuredProducts, setFeaturedProducts] = useState([]);
+  const [bestsellers, setBestsellers] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [showPromoBanner, setShowPromoBanner] = useState(true);
   const { addToCart } = useCart();
 
   useEffect(() => {
-    fetchFeaturedProducts();
+    fetchProducts();
   }, []);
 
-  const fetchFeaturedProducts = async () => {
+  const fetchProducts = async () => {
     try {
-      const response = await axios.get(`${BACKEND_URL}/api/products/featured`);
-      setFeaturedProducts(response.data);
+      const [featuredRes, bestsellersRes] = await Promise.all([
+        axios.get(`${BACKEND_URL}/api/products/featured`),
+        axios.get(`${BACKEND_URL}/api/products/bestsellers`)
+      ]);
+      setFeaturedProducts(featuredRes.data);
+      setBestsellers(bestsellersRes.data);
     } catch (error) {
       console.error("Error fetching products:", error);
     } finally {
@@ -75,6 +86,29 @@ const HomePage = () => {
 
   return (
     <div className="min-h-screen">
+      {/* Promo Banner */}
+      {showPromoBanner && (
+        <div className="bg-gradient-to-r from-[#D4A574] to-[#C49564] text-[#2D4A3E] py-3 px-4 relative">
+          <div className="max-w-7xl mx-auto flex items-center justify-center gap-4 text-sm md:text-base">
+            <Gift className="w-5 h-5 animate-bounce" />
+            <span className="font-medium">
+              <strong>WELCOME15</strong> - Get 15% off your first order! 
+              <span className="hidden md:inline"> | Join our Loyalty Program & earn points on every purchase!</span>
+            </span>
+            <Link to="/products" className="underline font-semibold hover:no-underline">
+              Shop Now
+            </Link>
+            <button 
+              onClick={() => setShowPromoBanner(false)}
+              className="absolute right-4 top-1/2 -translate-y-1/2 hover:bg-white/20 rounded-full p-1"
+              aria-label="Close banner"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Hero Section */}
       <section className="relative bg-gradient-to-b from-[#E8DFD5] to-[#FDF8F3] overflow-hidden">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-20">
@@ -208,16 +242,171 @@ const HomePage = () => {
         </div>
       </section>
 
-      {/* Featured Products */}
+      {/* Best Sellers Section */}
+      <section className="py-20 bg-[#FDF8F3]">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between mb-12">
+            <div>
+              <div className="inline-flex items-center gap-2 bg-[#C45C4A]/10 text-[#C45C4A] px-4 py-2 rounded-full text-sm font-medium mb-4">
+                <TrendingUp className="w-4 h-4" />
+                <span>Top Rated</span>
+              </div>
+              <h2 className="text-4xl font-bold text-[#2D4A3E] mb-2 font-['Fraunces']">
+                Best Sellers
+              </h2>
+              <p className="text-[#5C6D5E]">
+                Most loved products by our pet parent community
+              </p>
+            </div>
+            <Link to="/products">
+              <Button variant="outline" className="rounded-full" data-testid="view-bestsellers">
+                View All
+                <ArrowRight className="w-4 h-4 ml-2" />
+              </Button>
+            </Link>
+          </div>
+          
+          {loading ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              {[...Array(4)].map((_, i) => (
+                <div key={i} className="bg-white rounded-2xl p-4 animate-pulse">
+                  <div className="bg-gray-200 h-64 rounded-xl mb-4"></div>
+                  <div className="bg-gray-200 h-4 rounded w-3/4 mb-2"></div>
+                  <div className="bg-gray-200 h-4 rounded w-1/2"></div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              {bestsellers.slice(0, 4).map((product, index) => (
+                <div
+                  key={product.id}
+                  className="product-card animate-fade-in-up relative"
+                  style={{ animationDelay: `${index * 0.1}s` }}
+                  data-testid={`bestseller-card-${product.slug}`}
+                >
+                  {index === 0 && (
+                    <div className="absolute -top-3 -left-3 z-10 bg-[#C45C4A] text-white px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1">
+                      <Award className="w-3 h-3" />
+                      #1 Best Seller
+                    </div>
+                  )}
+                  <Link to={`/products/${product.slug}`}>
+                    <div className="relative overflow-hidden">
+                      <img
+                        src={product.images?.[0] || "https://via.placeholder.com/400"}
+                        alt={product.name}
+                        className="product-image"
+                      />
+                      {product.compare_at_price && (
+                        <span className="absolute top-4 left-4 bg-[#C45C4A] text-white px-3 py-1 rounded-full text-xs font-semibold">
+                          Sale
+                        </span>
+                      )}
+                    </div>
+                  </Link>
+                  <div className="p-4">
+                    <div className="flex items-center gap-1 mb-2">
+                      {[...Array(5)].map((_, i) => (
+                        <Star
+                          key={i}
+                          className={`w-4 h-4 ${i < Math.floor(product.rating) ? 'fill-[#D4A574] text-[#D4A574]' : 'text-[#E8DFD5]'}`}
+                        />
+                      ))}
+                      <span className="text-xs text-[#5C6D5E] ml-1">({product.review_count})</span>
+                    </div>
+                    <Link to={`/products/${product.slug}`}>
+                      <h3 className="font-semibold text-[#2D4A3E] mb-2 line-clamp-2 hover:text-[#D4A574] transition-colors">
+                        {product.name}
+                      </h3>
+                    </Link>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <span className="text-lg font-bold text-[#2D4A3E]">
+                          ${product.price.toFixed(2)}
+                        </span>
+                        {product.compare_at_price && (
+                          <span className="text-sm text-[#5C6D5E] line-through">
+                            ${product.compare_at_price.toFixed(2)}
+                          </span>
+                        )}
+                      </div>
+                      <Button
+                        size="sm"
+                        className="bg-[#D4A574] hover:bg-[#C49564] text-[#2D4A3E] rounded-full"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          addToCart(product.id);
+                        }}
+                        data-testid={`bestseller-add-${product.slug}`}
+                      >
+                        Add
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </section>
+
+      {/* Loyalty Program Banner */}
+      <section className="py-12 bg-gradient-to-r from-[#2D4A3E] to-[#3D5A4E]">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-8">
+            <div className="flex items-center gap-6 text-white">
+              <div className="w-16 h-16 rounded-full bg-[#D4A574] flex items-center justify-center">
+                <Award className="w-8 h-8 text-[#2D4A3E]" />
+              </div>
+              <div>
+                <h3 className="text-2xl font-bold font-['Fraunces']">CalmTails Rewards</h3>
+                <p className="text-white/80">Earn points on every purchase, unlock exclusive perks</p>
+              </div>
+            </div>
+            <div className="flex flex-wrap gap-4 md:gap-8 text-white text-center">
+              <div className="flex flex-col items-center">
+                <span className="text-2xl font-bold">1pt/$1</span>
+                <span className="text-sm text-white/70">Points Earned</span>
+              </div>
+              <div className="hidden md:block w-px h-12 bg-white/30"></div>
+              <div className="flex flex-col items-center">
+                <span className="text-2xl font-bold">100pts</span>
+                <span className="text-sm text-white/70">= $5 Off</span>
+              </div>
+              <div className="hidden md:block w-px h-12 bg-white/30"></div>
+              <div className="flex flex-col items-center">
+                <span className="text-2xl font-bold">4 Tiers</span>
+                <span className="text-sm text-white/70">Bronze → Platinum</span>
+              </div>
+            </div>
+            <Link to="/account">
+              <Button 
+                className="bg-[#D4A574] hover:bg-[#C49564] text-[#2D4A3E] rounded-full font-semibold px-6"
+                data-testid="join-rewards-btn"
+              >
+                Join Free
+                <ArrowRight className="w-4 h-4 ml-2" />
+              </Button>
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* Featured Products / New Arrivals */}
       <section className="py-20 bg-[#E8DFD5]/30">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between mb-12">
             <div>
+              <div className="inline-flex items-center gap-2 bg-[#6B8F71]/10 text-[#6B8F71] px-4 py-2 rounded-full text-sm font-medium mb-4">
+                <Sparkles className="w-4 h-4" />
+                <span>Just Added</span>
+              </div>
               <h2 className="text-4xl font-bold text-[#2D4A3E] mb-2 font-['Fraunces']">
-                Bestsellers
+                New Arrivals
               </h2>
               <p className="text-[#5C6D5E]">
-                Loved by thousands of pet parents
+                Fresh additions to our wellness collection
               </p>
             </div>
             <Link to="/products">
