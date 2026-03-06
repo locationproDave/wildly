@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { useAuth, useCart } from "../App";
+import { useAuth, useCart, useWishlist } from "../App";
 import { 
   ShoppingBag, 
   Menu, 
@@ -16,7 +16,8 @@ import {
   Fish,
   Rabbit,
   Rat,
-  Egg
+  Egg,
+  Heart
 } from "lucide-react";
 import { Button } from "./ui/button";
 import {
@@ -37,6 +38,7 @@ import RealTimeNotifications from "./RealTimeNotifications";
 const Navbar = ({ onAuthClick }) => {
   const { user, logout } = useAuth();
   const { cart, setCartOpen } = useCart();
+  const { wishlist } = useWishlist();
   const location = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -161,6 +163,22 @@ const Navbar = ({ onAuthClick }) => {
           <div className="flex items-center gap-3 sm:gap-4">
             {/* Real-time Notifications (Admin only) */}
             {user?.is_admin && <RealTimeNotifications />}
+            
+            {/* Wishlist */}
+            {user && (
+              <Link
+                to="/wishlist"
+                className="relative p-2 hover:bg-white/20 rounded-full transition-colors"
+                data-testid="wishlist-nav-btn"
+              >
+                <Heart className="w-5 h-5 text-[#2D4A3E]" />
+                {wishlist.count > 0 && (
+                  <span className="absolute -top-1 -right-1 w-5 h-5 bg-[#D66D5A] text-white text-xs rounded-full flex items-center justify-center">
+                    {wishlist.count}
+                  </span>
+                )}
+              </Link>
+            )}
             
             {/* Cart */}
             <button

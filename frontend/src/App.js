@@ -90,6 +90,7 @@ import AgentsPage from "./pages/AgentsPage";
 import ReferralPage from "./pages/ReferralPage";
 import SupportPage from "./pages/SupportPage";
 import AdminSourcingPage from "./pages/AdminSourcingPage";
+import WishlistPage from "./pages/WishlistPage";
 
 // Components
 import Navbar from "./components/Navbar";
@@ -107,6 +108,10 @@ export const useAuth = () => useContext(AuthContext);
 // Cart Context
 const CartContext = createContext(null);
 export const useCart = () => useContext(CartContext);
+
+// Wishlist Context
+const WishlistContext = createContext(null);
+export const useWishlist = () => useContext(WishlistContext);
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
@@ -259,6 +264,91 @@ export const CartProvider = ({ children }) => {
   );
 };
 
+export const WishlistProvider = ({ children }) => {
+  const { user, token } = useAuth();
+  const [wishlist, setWishlist] = useState({ items: [], count: 0 });
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (user && token) {
+      fetchWishlist();
+    } else {
+      setWishlist({ items: [], count: 0 });
+    }
+  }, [user, token]);
+
+  const fetchWishlist = async () => {
+    if (!token) return;
+    setLoading(true);
+    try {
+      const response = await axios.get(`${API}/wishlist`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setWishlist(response.data);
+    } catch (error) {
+      console.error("Error fetching wishlist:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const addToWishlist = async (productId) => {
+    if (!token) return false;
+    try {
+      await axios.post(
+        `${API}/wishlist/add`,
+        { product_id: productId },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      await fetchWishlist();
+      return true;
+    } catch (error) {
+      console.error("Error adding to wishlist:", error);
+      return false;
+    }
+  };
+
+  const removeFromWishlist = async (productId) => {
+    if (!token) return false;
+    try {
+      await axios.delete(`${API}/wishlist/${productId}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      await fetchWishlist();
+      return true;
+    } catch (error) {
+      console.error("Error removing from wishlist:", error);
+      return false;
+    }
+  };
+
+  const isInWishlist = (productId) => {
+    return wishlist.items.some(item => item.id === productId);
+  };
+
+  const toggleWishlist = async (productId) => {
+    if (isInWishlist(productId)) {
+      return await removeFromWishlist(productId);
+    } else {
+      return await addToWishlist(productId);
+    }
+  };
+
+  return (
+    <WishlistContext.Provider value={{
+      wishlist,
+      loading,
+      addToWishlist,
+      removeFromWishlist,
+      isInWishlist,
+      toggleWishlist,
+      fetchWishlist
+    }}>
+      {children}
+    </WishlistContext.Provider>
+  );
+};
+
 // Protected Route wrapper
 const ProtectedRoute = ({ children, adminOnly = false }) => {
   const { user, loading } = useAuth();
@@ -325,87 +415,94 @@ function App() {
   return (
     <AuthProvider>
       <CartProvider>
-        <BrowserRouter>
-          <Toaster 
-            position="top-right"
-            toastOptions={{
-              style: {
-                background: '#FDF8F3',
-                color: '#2D4A3E',
-                border: '1px solid #E8DFD5',
-                fontFamily: 'Nunito, sans-serif'
-              }
-            }}
-          />
-          <Routes>
-            <Route path="/" element={<AppLayout><HomePage /></AppLayout>} />
-            <Route path="/products" element={<AppLayout><ProductsPage /></AppLayout>} />
-            <Route path="/products/:slug" element={<AppLayout><ProductDetailPage /></AppLayout>} />
-            <Route path="/cart" element={<AppLayout><CartPage /></AppLayout>} />
-            <Route path="/order-confirmation" element={<AppLayout><CheckoutSuccessPage /></AppLayout>} />
-            <Route path="/account" element={
-              <AppLayout>
-                <ProtectedRoute><AccountPage /></ProtectedRoute>
-              </AppLayout>
-            } />
-            <Route path="/referral" element={
-              <AppLayout>
-                <ReferralPage />
-              </AppLayout>
-            } />
-            <Route path="/support" element={
-              <AppLayout>
-                <SupportPage />
-              </AppLayout>
-            } />
-            <Route path="/admin" element={
-              <AppLayout>
-                <ProtectedRoute adminOnly><AdminDashboard /></ProtectedRoute>
-              </AppLayout>
-            } />
-            <Route path="/admin/promotions" element={
-              <AppLayout>
-                <ProtectedRoute adminOnly><AdminPromotionsPage /></ProtectedRoute>
-              </AppLayout>
-            } />
-            <Route path="/admin/products" element={
-              <AppLayout>
-                <ProtectedRoute adminOnly><AdminProductsPage /></ProtectedRoute>
-              </AppLayout>
-            } />
-            <Route path="/admin/orders" element={
-              <AppLayout>
-                <ProtectedRoute adminOnly><AdminOrdersPage /></ProtectedRoute>
-              </AppLayout>
-            } />
-            <Route path="/admin/analytics" element={
-              <AppLayout>
-                <ProtectedRoute adminOnly><AdminAnalyticsPage /></ProtectedRoute>
-              </AppLayout>
-            } />
-            <Route path="/admin/emails" element={
-              <AppLayout>
-                <ProtectedRoute adminOnly><AdminEmailAutomationPage /></ProtectedRoute>
-              </AppLayout>
-            } />
-            <Route path="/admin/segments" element={
-              <AppLayout>
-                <ProtectedRoute adminOnly><AdminCustomerSegmentsPage /></ProtectedRoute>
-              </AppLayout>
-            } />
-            <Route path="/admin/agents" element={
-              <AppLayout>
-                <ProtectedRoute adminOnly><AgentsPage /></ProtectedRoute>
-              </AppLayout>
-            } />
-            <Route path="/admin/sourcing" element={
-              <AppLayout>
-                <ProtectedRoute adminOnly><AdminSourcingPage /></ProtectedRoute>
-              </AppLayout>
-            } />
-            <Route path="*" element={<Navigate to="/" replace />} />
-          </Routes>
-        </BrowserRouter>
+        <WishlistProvider>
+          <BrowserRouter>
+            <Toaster 
+              position="top-right"
+              toastOptions={{
+                style: {
+                  background: '#FDF8F3',
+                  color: '#2D4A3E',
+                  border: '1px solid #E8DFD5',
+                  fontFamily: 'Nunito, sans-serif'
+                }
+              }}
+            />
+            <Routes>
+              <Route path="/" element={<AppLayout><HomePage /></AppLayout>} />
+              <Route path="/products" element={<AppLayout><ProductsPage /></AppLayout>} />
+              <Route path="/products/:slug" element={<AppLayout><ProductDetailPage /></AppLayout>} />
+              <Route path="/cart" element={<AppLayout><CartPage /></AppLayout>} />
+              <Route path="/wishlist" element={
+                <AppLayout>
+                  <ProtectedRoute><WishlistPage /></ProtectedRoute>
+                </AppLayout>
+              } />
+              <Route path="/order-confirmation" element={<AppLayout><CheckoutSuccessPage /></AppLayout>} />
+              <Route path="/account" element={
+                <AppLayout>
+                  <ProtectedRoute><AccountPage /></ProtectedRoute>
+                </AppLayout>
+              } />
+              <Route path="/referral" element={
+                <AppLayout>
+                  <ReferralPage />
+                </AppLayout>
+              } />
+              <Route path="/support" element={
+                <AppLayout>
+                  <SupportPage />
+                </AppLayout>
+              } />
+              <Route path="/admin" element={
+                <AppLayout>
+                  <ProtectedRoute adminOnly><AdminDashboard /></ProtectedRoute>
+                </AppLayout>
+              } />
+              <Route path="/admin/promotions" element={
+                <AppLayout>
+                  <ProtectedRoute adminOnly><AdminPromotionsPage /></ProtectedRoute>
+                </AppLayout>
+              } />
+              <Route path="/admin/products" element={
+                <AppLayout>
+                  <ProtectedRoute adminOnly><AdminProductsPage /></ProtectedRoute>
+                </AppLayout>
+              } />
+              <Route path="/admin/orders" element={
+                <AppLayout>
+                  <ProtectedRoute adminOnly><AdminOrdersPage /></ProtectedRoute>
+                </AppLayout>
+              } />
+              <Route path="/admin/analytics" element={
+                <AppLayout>
+                  <ProtectedRoute adminOnly><AdminAnalyticsPage /></ProtectedRoute>
+                </AppLayout>
+              } />
+              <Route path="/admin/emails" element={
+                <AppLayout>
+                  <ProtectedRoute adminOnly><AdminEmailAutomationPage /></ProtectedRoute>
+                </AppLayout>
+              } />
+              <Route path="/admin/segments" element={
+                <AppLayout>
+                  <ProtectedRoute adminOnly><AdminCustomerSegmentsPage /></ProtectedRoute>
+                </AppLayout>
+              } />
+              <Route path="/admin/agents" element={
+                <AppLayout>
+                  <ProtectedRoute adminOnly><AgentsPage /></ProtectedRoute>
+                </AppLayout>
+              } />
+              <Route path="/admin/sourcing" element={
+                <AppLayout>
+                  <ProtectedRoute adminOnly><AdminSourcingPage /></ProtectedRoute>
+                </AppLayout>
+              } />
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Routes>
+          </BrowserRouter>
+        </WishlistProvider>
       </CartProvider>
     </AuthProvider>
   );

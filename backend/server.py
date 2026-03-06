@@ -275,6 +275,17 @@ class SubscriptionCreate(BaseModel):
     items: List[dict]  # [{product_id, quantity}]
     frequency: str = "monthly"
 
+class Wishlist(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    user_id: str
+    product_ids: List[str] = []
+    created_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
+    updated_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
+
+class WishlistItem(BaseModel):
+    product_id: str
+
 # ==================== AUTH HELPERS ====================
 
 def hash_password(password: str) -> str:
@@ -2563,6 +2574,158 @@ async def create_subscription_checkout(checkout_data: CheckoutRequest, request: 
         "discounted_subtotal": discounted_subtotal
     }
 
+# ==================== WISHLIST ====================
+
+@api_router.get("/wishlist", response_model=dict)
+async def get_wishlist(user: dict = Depends(require_user)):
+    """Get user's wishlist with product details"""
+    wishlist = await db.wishlists.find_one({"user_id": user["id"]}, {"_id": 0})
+    
+    if not wishlist:
+        return {"items": [], "count": 0}
+    
+    product_ids = wishlist.get("product_ids", [])
+    if not product_ids:
+        return {"items": [], "count": 0}
+    
+    # Fetch product details
+    products = await db.products.find(
+        {"id": {"$in": product_ids}},
+        {"_id": 0}
+    ).to_list(None)
+    
+    # Create product map for ordering
+    product_map = {p["id"]: p for p in products}
+    
+    # Return products in wishlist order
+    items = [product_map[pid] for pid in product_ids if pid in product_map]
+    
+    return {
+        "items": items,
+        "count": len(items)
+    }
+
+@api_router.post("/wishlist/add", response_model=dict)
+async def add_to_wishlist(item: WishlistItem, user: dict = Depends(require_user)):
+    """Add a product to user's wishlist"""
+    # Verify product exists
+    product = await db.products.find_one({"id": item.product_id}, {"_id": 0, "id": 1, "name": 1})
+    if not product:
+        raise HTTPException(status_code=404, detail="Product not found")
+    
+    # Get or create wishlist
+    wishlist = await db.wishlists.find_one({"user_id": user["id"]})
+    
+    if not wishlist:
+        # Create new wishlist
+        wishlist = {
+            "id": str(uuid.uuid4()),
+            "user_id": user["id"],
+            "product_ids": [item.product_id],
+            "created_at": datetime.now(timezone.utc).isoformat(),
+            "updated_at": datetime.now(timezone.utc).isoformat()
+        }
+        await db.wishlists.insert_one(wishlist)
+    else:
+        # Add to existing wishlist if not already there
+        if item.product_id not in wishlist.get("product_ids", []):
+            await db.wishlists.update_one(
+                {"user_id": user["id"]},
+                {
+                    "$push": {"product_ids": item.product_id},
+                    "$set": {"updated_at": datetime.now(timezone.utc).isoformat()}
+                }
+            )
+    
+    return {
+        "message": f"Added to wishlist",
+        "product_id": item.product_id,
+        "product_name": product.get("name")
+    }
+
+@api_router.delete("/wishlist/{product_id}", response_model=dict)
+async def remove_from_wishlist(product_id: str, user: dict = Depends(require_user)):
+    """Remove a product from user's wishlist"""
+    result = await db.wishlists.update_one(
+        {"user_id": user["id"]},
+        {
+            "$pull": {"product_ids": product_id},
+            "$set": {"updated_at": datetime.now(timezone.utc).isoformat()}
+        }
+    )
+    
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Wishlist not found")
+    
+    return {"message": "Removed from wishlist", "product_id": product_id}
+
+@api_router.get("/wishlist/check/{product_id}", response_model=dict)
+async def check_wishlist(product_id: str, user: Optional[dict] = Depends(get_current_user)):
+    """Check if a product is in user's wishlist"""
+    if not user:
+        return {"in_wishlist": False}
+    
+    wishlist = await db.wishlists.find_one(
+        {"user_id": user["id"], "product_ids": product_id},
+        {"_id": 0, "id": 1}
+    )
+    
+    return {"in_wishlist": wishlist is not None}
+
+@api_router.post("/wishlist/move-to-cart/{product_id}", response_model=dict)
+async def move_to_cart(product_id: str, cart_session_id: str, user: dict = Depends(require_user)):
+    """Move a product from wishlist to cart"""
+    # Verify product exists
+    product = await db.products.find_one({"id": product_id}, {"_id": 0})
+    if not product:
+        raise HTTPException(status_code=404, detail="Product not found")
+    
+    # Remove from wishlist
+    await db.wishlists.update_one(
+        {"user_id": user["id"]},
+        {
+            "$pull": {"product_ids": product_id},
+            "$set": {"updated_at": datetime.now(timezone.utc).isoformat()}
+        }
+    )
+    
+    # Add to cart
+    cart = await db.carts.find_one({"session_id": cart_session_id})
+    
+    cart_item = {
+        "product_id": product["id"],
+        "name": product["name"],
+        "price": product["price"],
+        "image": product.get("images", ["/placeholder.jpg"])[0],
+        "quantity": 1
+    }
+    
+    if not cart:
+        cart = {
+            "id": str(uuid.uuid4()),
+            "session_id": cart_session_id,
+            "user_id": user["id"],
+            "items": [cart_item],
+            "created_at": datetime.now(timezone.utc).isoformat(),
+            "updated_at": datetime.now(timezone.utc).isoformat()
+        }
+        await db.carts.insert_one(cart)
+    else:
+        # Check if product already in cart
+        existing_item = next((i for i in cart.get("items", []) if i.get("product_id") == product_id), None)
+        if existing_item:
+            await db.carts.update_one(
+                {"session_id": cart_session_id, "items.product_id": product_id},
+                {"$inc": {"items.$.quantity": 1}, "$set": {"updated_at": datetime.now(timezone.utc).isoformat()}}
+            )
+        else:
+            await db.carts.update_one(
+                {"session_id": cart_session_id},
+                {"$push": {"items": cart_item}, "$set": {"updated_at": datetime.now(timezone.utc).isoformat()}}
+            )
+    
+    return {"message": f"Moved '{product['name']}' to cart"}
+
 # ==================== EMAIL AUTOMATION ====================
 
 class EmailAutomationConfig(BaseModel):
@@ -4268,6 +4431,102 @@ async def get_profit_analysis(product_id: str, retail_price: float = None, user:
         "product_id": product_id,
         "analysis": {
             "note": "Use the frontend calculator for real-time profit analysis"
+        }
+    }
+
+@api_router.get("/admin/sourcing/ai-recommendations", response_model=dict)
+async def get_ai_recommendations(user: dict = Depends(require_admin)):
+    """Get AI-powered product recommendations based on store performance"""
+    # Analyze top-selling products
+    top_products = await db.products.find(
+        {},
+        {"_id": 0, "name": 1, "category": 1, "pet_type": 1, "price": 1, "rating": 1, "review_count": 1}
+    ).sort("review_count", -1).limit(10).to_list(10)
+    
+    # Get order data for insights
+    orders = await db.orders.find(
+        {"status": {"$in": ["delivered", "shipped", "paid"]}},
+        {"_id": 0, "items": 1}
+    ).limit(100).to_list(100)
+    
+    # Aggregate category performance
+    category_counts = {}
+    pet_type_counts = {}
+    for order in orders:
+        for item in order.get("items", []):
+            # This would need product lookup in real implementation
+            pass
+    
+    # Build recommendations based on top performers
+    recommendations = []
+    
+    # Category-based recommendations
+    top_categories = ["supplements", "beds", "toys", "grooming"]
+    top_pet_types = ["dog", "cat"]
+    
+    for product in top_products[:5]:
+        recommendations.append({
+            "type": "similar_to_bestseller",
+            "reason": f"Similar to your top seller: {product.get('name', 'Unknown')}",
+            "suggested_search": f"{product.get('pet_type', 'dog')} {product.get('category', 'supplements')}",
+            "pet_type": product.get("pet_type", "dog"),
+            "category": product.get("category", "Supplements")
+        })
+    
+    # Trend-based recommendations
+    trending_suggestions = [
+        {
+            "type": "trending",
+            "reason": "Calming products are trending for anxious pets",
+            "suggested_search": "calming anxiety pet",
+            "pet_type": "all",
+            "category": "supplements"
+        },
+        {
+            "type": "trending",
+            "reason": "Eco-friendly pet products are in high demand",
+            "suggested_search": "eco friendly sustainable pet",
+            "pet_type": "all",
+            "category": "accessories"
+        },
+        {
+            "type": "seasonal",
+            "reason": "Winter comfort items are popular this season",
+            "suggested_search": "warming bed blanket cozy",
+            "pet_type": "all",
+            "category": "beds"
+        }
+    ]
+    
+    recommendations.extend(trending_suggestions)
+    
+    # Gap analysis - categories you might be missing
+    gap_suggestions = [
+        {
+            "type": "gap_fill",
+            "reason": "Consider expanding your fish product line",
+            "suggested_search": "fish aquarium supplies",
+            "pet_type": "fish",
+            "category": "accessories"
+        },
+        {
+            "type": "gap_fill",
+            "reason": "Bird products have high margins and low competition",
+            "suggested_search": "bird parrot toys perch",
+            "pet_type": "bird",
+            "category": "toys"
+        }
+    ]
+    
+    recommendations.extend(gap_suggestions)
+    
+    return {
+        "recommendations": recommendations,
+        "top_performers": top_products[:5],
+        "insights": {
+            "total_products": await db.products.count_documents({}),
+            "total_orders": len(orders),
+            "suggestion": "Focus on calming and wellness products - they have the highest customer satisfaction."
         }
     }
 

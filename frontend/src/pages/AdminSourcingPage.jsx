@@ -25,7 +25,11 @@ import {
   Warehouse,
   ShoppingBag,
   RefreshCw,
-  X
+  X,
+  Sparkles,
+  Lightbulb,
+  Target,
+  Zap
 } from "lucide-react";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
@@ -83,13 +87,33 @@ const AdminSourcingPage = () => {
   const [calcProduct, setCalcProduct] = useState(null);
   const [calcRetailPrice, setCalcRetailPrice] = useState(0);
 
+  // AI Recommendations State
+  const [recommendations, setRecommendations] = useState(null);
+  const [loadingRecs, setLoadingRecs] = useState(false);
+  const [showRecs, setShowRecs] = useState(true);
+
   useEffect(() => {
     fetchCategories();
+    fetchRecommendations();
   }, []);
 
   useEffect(() => {
     searchProducts();
   }, [page]);
+
+  const fetchRecommendations = async () => {
+    setLoadingRecs(true);
+    try {
+      const response = await axios.get(`${API}/admin/sourcing/ai-recommendations`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setRecommendations(response.data);
+    } catch (error) {
+      console.error("Error fetching recommendations:", error);
+    } finally {
+      setLoadingRecs(false);
+    }
+  };
 
   const fetchCategories = async () => {
     try {
@@ -134,6 +158,15 @@ const AdminSourcingPage = () => {
     e?.preventDefault();
     setPage(1);
     searchProducts();
+  };
+
+  const applyRecommendation = (rec) => {
+    setSearchQuery(rec.suggested_search);
+    if (rec.pet_type !== "all") setPetType(rec.pet_type);
+    if (rec.category) setProductType(rec.category);
+    setPage(1);
+    setTimeout(() => searchProducts(), 100);
+    toast.success(`Searching: "${rec.suggested_search}"`);
   };
 
   const openImportDialog = (product) => {
@@ -251,6 +284,72 @@ const AdminSourcingPage = () => {
             </div>
           </div>
         </div>
+
+        {/* AI Recommendations */}
+        {showRecs && recommendations && (
+          <div className="bg-gradient-to-r from-[#2D4A3E] to-[#3D5A4E] rounded-2xl shadow-lg p-6 mb-8 text-white">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
+                  <Sparkles className="w-5 h-5" />
+                </div>
+                <div>
+                  <h2 className="font-semibold text-lg">AI Product Recommendations</h2>
+                  <p className="text-white/70 text-sm">Based on your store performance & trends</p>
+                </div>
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-white/70 hover:text-white hover:bg-white/10"
+                onClick={() => setShowRecs(false)}
+              >
+                <X className="w-4 h-4" />
+              </Button>
+            </div>
+            
+            {loadingRecs ? (
+              <div className="flex items-center justify-center py-4">
+                <Loader2 className="w-6 h-6 animate-spin" />
+                <span className="ml-2">Analyzing your store...</span>
+              </div>
+            ) : (
+              <>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 mb-4">
+                  {recommendations?.recommendations?.slice(0, 6).map((rec, idx) => (
+                    <button
+                      key={idx}
+                      onClick={() => applyRecommendation(rec)}
+                      className="text-left p-3 bg-white/10 hover:bg-white/20 rounded-xl transition-all group"
+                      data-testid={`ai-rec-${idx}`}
+                    >
+                      <div className="flex items-start gap-2">
+                        {rec.type === "trending" && <TrendingUp className="w-4 h-4 mt-0.5 text-yellow-300" />}
+                        {rec.type === "similar_to_bestseller" && <Target className="w-4 h-4 mt-0.5 text-green-300" />}
+                        {rec.type === "seasonal" && <Zap className="w-4 h-4 mt-0.5 text-blue-300" />}
+                        {rec.type === "gap_fill" && <Lightbulb className="w-4 h-4 mt-0.5 text-orange-300" />}
+                        <div className="flex-1">
+                          <p className="text-sm font-medium line-clamp-2">{rec.reason}</p>
+                          <p className="text-xs text-white/60 mt-1 flex items-center gap-1">
+                            <Search className="w-3 h-3" />
+                            {rec.suggested_search}
+                          </p>
+                        </div>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+                
+                {recommendations?.insights && (
+                  <div className="flex items-center gap-2 text-sm text-white/80 bg-white/10 rounded-lg px-3 py-2">
+                    <Lightbulb className="w-4 h-4 text-yellow-300" />
+                    {recommendations.insights.suggestion}
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+        )}
 
         {/* Search & Filters */}
         <div className="bg-white rounded-2xl shadow-sm border border-[#E8E6DE] p-6 mb-8">

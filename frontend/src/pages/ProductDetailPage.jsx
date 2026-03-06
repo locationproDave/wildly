@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import axios from "axios";
-import { useCart } from "../App";
+import { useCart, useWishlist, useAuth } from "../App";
+import { toast } from "sonner";
 import { 
   Star, 
   Dog, 
@@ -16,7 +17,8 @@ import {
   Bird,
   Fish,
   Rabbit,
-  Squirrel
+  Squirrel,
+  Heart
 } from "lucide-react";
 import { Button } from "../components/ui/button";
 import ProductReviews from "../components/ProductReviews";
@@ -29,6 +31,8 @@ const ProductDetailPage = () => {
   const [loading, setLoading] = useState(true);
   const [quantity, setQuantity] = useState(1);
   const { addToCart } = useCart();
+  const { isInWishlist, toggleWishlist } = useWishlist();
+  const { user } = useAuth();
 
   useEffect(() => {
     fetchProduct();
@@ -47,6 +51,18 @@ const ProductDetailPage = () => {
 
   const handleAddToCart = () => {
     addToCart(product.id, quantity);
+  };
+
+  const handleWishlist = async () => {
+    if (!user) {
+      toast.error("Please sign in to save to wishlist");
+      return;
+    }
+    const success = await toggleWishlist(product.id);
+    if (success) {
+      const inWishlist = isInWishlist(product.id);
+      toast.success(inWishlist ? "Removed from wishlist" : "Added to wishlist");
+    }
   };
 
   if (loading) {
@@ -213,6 +229,16 @@ const ProductDetailPage = () => {
                 data-testid="add-to-cart-btn"
               >
                 Add to Cart — ${(product.price * quantity).toFixed(2)}
+              </Button>
+              <Button
+                onClick={handleWishlist}
+                variant="outline"
+                className={`p-4 rounded-full border-[#E8DFD5] ${isInWishlist(product.id) ? 'bg-red-50' : ''}`}
+                data-testid="wishlist-btn"
+              >
+                <Heart 
+                  className={`w-6 h-6 ${isInWishlist(product.id) ? 'fill-[#D66D5A] text-[#D66D5A]' : 'text-[#5C6D5E]'}`} 
+                />
               </Button>
             </div>
 
