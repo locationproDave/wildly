@@ -429,6 +429,20 @@ const CartPage = () => {
                   ? "Secure payment powered by Stripe" 
                   : "Secure payment powered by PayPal"}
               </p>
+
+              {/* Refer & Earn */}
+              <div className="mt-6 pt-6 border-t border-[#E8DFD5]">
+                <Link 
+                  to="/referral"
+                  className="flex items-center justify-center gap-2 p-3 bg-[#D4A574]/10 hover:bg-[#D4A574]/20 rounded-xl transition-colors"
+                >
+                  <span className="text-lg">🎁</span>
+                  <div className="text-center">
+                    <p className="font-semibold text-[#2D4A3E] text-sm">Refer & Earn $10</p>
+                    <p className="text-xs text-[#5C6D5E]">Share with friends, get rewards!</p>
+                  </div>
+                </Link>
+              </div>
             </div>
           </div>
         </div>
