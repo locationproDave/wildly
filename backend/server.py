@@ -1095,6 +1095,146 @@ async def get_admin_stats(user: dict = Depends(require_admin)):
         "total_customers": total_customers
     }
 
+@api_router.get("/admin/analytics", response_model=dict)
+async def get_analytics(user: dict = Depends(require_admin)):
+    """Get comprehensive analytics data for admin dashboard"""
+    
+    # Get all orders for analysis
+    all_orders = await db.orders.find({}, {"_id": 0}).sort("created_at", -1).to_list(1000)
+    
+    # Calculate total metrics
+    total_revenue = sum(o.get("total", 0) for o in all_orders if o.get("payment_status") == "paid")
+    total_orders = len(all_orders)
+    total_customers = await db.users.count_documents({"is_admin": {"$ne": True}})
+    
+    # Calculate average order value
+    paid_orders = [o for o in all_orders if o.get("payment_status") == "paid"]
+    avg_order_value = total_revenue / len(paid_orders) if paid_orders else 0
+    
+    # Sales by day (last 30 days)
+    from collections import defaultdict
+    daily_sales = defaultdict(lambda: {"revenue": 0, "orders": 0})
+    for order in all_orders:
+        if order.get("payment_status") == "paid":
+            date_str = order.get("created_at", "")[:10]  # YYYY-MM-DD
+            if date_str:
+                daily_sales[date_str]["revenue"] += order.get("total", 0)
+                daily_sales[date_str]["orders"] += 1
+    
+    # Convert to sorted list (last 30 days)
+    sales_trend = []
+    today = datetime.now(timezone.utc)
+    for i in range(30):
+        date = (today - timedelta(days=29-i)).strftime("%Y-%m-%d")
+        day_data = daily_sales.get(date, {"revenue": 0, "orders": 0})
+        sales_trend.append({
+            "date": date,
+            "revenue": round(day_data["revenue"], 2),
+            "orders": day_data["orders"]
+        })
+    
+    # Top selling products
+    product_sales = defaultdict(lambda: {"quantity": 0, "revenue": 0, "name": "", "image": ""})
+    for order in all_orders:
+        if order.get("payment_status") == "paid":
+            for item in order.get("items", []):
+                pid = item.get("product_id", "")
+                product_sales[pid]["quantity"] += item.get("quantity", 0)
+                product_sales[pid]["revenue"] += item.get("price", 0) * item.get("quantity", 0)
+                product_sales[pid]["name"] = item.get("product_name", "Unknown")
+                product_sales[pid]["image"] = item.get("image", "")
+    
+    top_products = sorted(
+        [{"id": k, **v} for k, v in product_sales.items()],
+        key=lambda x: x["revenue"],
+        reverse=True
+    )[:10]
+    
+    # Sales by category
+    category_sales = defaultdict(lambda: {"revenue": 0, "orders": 0})
+    products = await db.products.find({}, {"_id": 0, "id": 1, "category": 1}).to_list(500)
+    product_categories = {p["id"]: p.get("category", "other") for p in products}
+    
+    for order in all_orders:
+        if order.get("payment_status") == "paid":
+            for item in order.get("items", []):
+                pid = item.get("product_id", "")
+                cat = product_categories.get(pid, "other")
+                category_sales[cat]["revenue"] += item.get("price", 0) * item.get("quantity", 0)
+                category_sales[cat]["orders"] += 1
+    
+    category_breakdown = [
+        {"category": k, "revenue": round(v["revenue"], 2), "orders": v["orders"]}
+        for k, v in category_sales.items()
+    ]
+    category_breakdown.sort(key=lambda x: x["revenue"], reverse=True)
+    
+    # Sales by pet type
+    pet_type_sales = defaultdict(lambda: {"revenue": 0, "orders": 0})
+    product_pet_types = {p["id"]: p.get("pet_type", "other") for p in await db.products.find({}, {"_id": 0, "id": 1, "pet_type": 1}).to_list(500)}
+    
+    for order in all_orders:
+        if order.get("payment_status") == "paid":
+            for item in order.get("items", []):
+                pid = item.get("product_id", "")
+                pt = product_pet_types.get(pid, "other")
+                pet_type_sales[pt]["revenue"] += item.get("price", 0) * item.get("quantity", 0)
+                pet_type_sales[pt]["orders"] += 1
+    
+    pet_type_breakdown = [
+        {"pet_type": k, "revenue": round(v["revenue"], 2), "orders": v["orders"]}
+        for k, v in pet_type_sales.items()
+    ]
+    pet_type_breakdown.sort(key=lambda x: x["revenue"], reverse=True)
+    
+    # Order status distribution
+    status_counts = defaultdict(int)
+    for order in all_orders:
+        status_counts[order.get("status", "unknown")] += 1
+    
+    order_status_breakdown = [
+        {"status": k, "count": v}
+        for k, v in status_counts.items()
+    ]
+    
+    # Recent customers (last 10 signups)
+    recent_customers = await db.users.find(
+        {"is_admin": {"$ne": True}},
+        {"_id": 0, "id": 1, "name": 1, "email": 1, "created_at": 1}
+    ).sort("created_at", -1).limit(10).to_list(10)
+    
+    # Customer acquisition (signups per day, last 30 days)
+    customer_signups = defaultdict(int)
+    all_users = await db.users.find({"is_admin": {"$ne": True}}, {"_id": 0, "created_at": 1}).to_list(1000)
+    for user in all_users:
+        date_str = user.get("created_at", "")[:10]
+        if date_str:
+            customer_signups[date_str] += 1
+    
+    acquisition_trend = []
+    for i in range(30):
+        date = (today - timedelta(days=29-i)).strftime("%Y-%m-%d")
+        acquisition_trend.append({
+            "date": date,
+            "signups": customer_signups.get(date, 0)
+        })
+    
+    return {
+        "summary": {
+            "total_revenue": round(total_revenue, 2),
+            "total_orders": total_orders,
+            "total_customers": total_customers,
+            "avg_order_value": round(avg_order_value, 2)
+        },
+        "sales_trend": sales_trend,
+        "top_products": top_products,
+        "category_breakdown": category_breakdown,
+        "pet_type_breakdown": pet_type_breakdown,
+        "order_status_breakdown": order_status_breakdown,
+        "recent_customers": recent_customers,
+        "acquisition_trend": acquisition_trend
+    }
+
 @api_router.get("/admin/products", response_model=List[dict])
 async def get_all_products_admin(
     search: Optional[str] = None,

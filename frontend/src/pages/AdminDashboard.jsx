@@ -14,7 +14,8 @@ import {
   CheckCircle,
   Tag,
   PackagePlus,
-  ClipboardList
+  ClipboardList,
+  BarChart3
 } from "lucide-react";
 import { Button } from "../components/ui/button";
 import { Badge } from "../components/ui/badge";
@@ -107,6 +108,12 @@ const AdminDashboard = () => {
             <p className="text-[#5C6D5E]">Manage your store</p>
           </div>
           <div className="flex items-center gap-3">
+            <Link to="/admin/analytics">
+              <Button variant="outline" className="rounded-full" data-testid="analytics-btn">
+                <BarChart3 className="w-4 h-4 mr-2" />
+                Analytics
+              </Button>
+            </Link>
             <Link to="/admin/orders">
               <Button variant="outline" className="rounded-full" data-testid="orders-btn">
                 <ClipboardList className="w-4 h-4 mr-2" />
