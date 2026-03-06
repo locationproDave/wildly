@@ -77,7 +77,7 @@ const Navbar = ({ onAuthClick }) => {
           </Link>
 
           {/* Desktop Navigation - Pet types with hover dropdowns */}
-          <div className="hidden lg:flex items-center gap-4 flex-1 justify-center">
+          <div className="hidden lg:flex items-center gap-8 flex-1 justify-center px-4">
             {/* Each pet type as main nav item with hover dropdown for categories */}
             {petCategories.map((pet) => {
               const Icon = pet.icon;
@@ -86,7 +86,7 @@ const Navbar = ({ onAuthClick }) => {
                   <HoverCardTrigger asChild>
                     <Link
                       to={pet.path}
-                      className="flex items-center gap-1 text-sm font-semibold text-[#2D4A3E] hover:text-[#1F342B] transition-colors whitespace-nowrap"
+                      className="flex items-center gap-1.5 text-sm font-semibold text-[#2D4A3E] hover:text-[#1F342B] transition-colors whitespace-nowrap"
                       data-testid={`nav-link-${pet.label.toLowerCase()}`}
                     >
                       <Icon className="w-4 h-4" />
