@@ -956,30 +956,31 @@ async def seed_products():
             "rating": 4.5,
             "review_count": 145
         },
-        # BOTH DOGS & CATS
+        # DOG-SPECIFIC (weighted blankets not safe for cats)
         {
             "id": str(uuid.uuid4()),
-            "name": "Weighted Calming Blanket for Pets",
+            "name": "Weighted Calming Blanket for Dogs",
             "slug": "weighted-calming-blanket",
-            "description": "The gentle, even pressure of our Weighted Calming Blanket mimics the feeling of being held, which many pets find naturally comforting. At 3 lbs, it's ideal for medium dogs and large cats. The ultra-soft minky fabric on one side and breathable cotton on the other means comfort in any season.",
-            "short_description": "3lb weighted blanket with deep pressure comfort for dogs and cats",
+            "description": "The gentle, even pressure of our Weighted Calming Blanket mimics the feeling of being held, which many dogs find naturally comforting. At 3 lbs, it's ideal for medium to large dogs (20+ lbs). The ultra-soft minky fabric on one side and breathable cotton on the other means comfort in any season. Note: Not recommended for cats or small dogs under 20 lbs due to weight safety concerns.",
+            "short_description": "3lb weighted blanket with deep pressure comfort for medium to large dogs",
             "price": 59.99,
             "compare_at_price": 79.99,
             "cost": 18.00,
             "category": "Beds & Blankets",
             "subcategory": "Blankets",
             "images": ["https://images.unsplash.com/photo-1769068874492-a848eae2e5fa?w=600"],
-            "tags": ["weighted", "blanket", "calming", "anxiety", "comfort"],
-            "pet_type": "both",
+            "tags": ["weighted", "blanket", "calming", "anxiety", "comfort", "large dogs"],
+            "pet_type": "dog",
             "in_stock": True,
             "stock_quantity": 100,
             "supplier": "Spocket",
-            "features": ["3lb weighted design", "Dual-sided fabric", "Machine washable", "Even weight distribution"],
+            "features": ["3lb weighted design", "Dual-sided fabric", "Machine washable", "Even weight distribution", "For dogs 20+ lbs"],
             "dimensions": "36\" x 48\"",
             "weight": "3 lbs",
             "rating": 4.7,
             "review_count": 156
         },
+        # BOTH DOGS & CATS (CBD is safe for both in proper doses)
         {
             "id": str(uuid.uuid4()),
             "name": "Premium CBD Oil for Pets",
