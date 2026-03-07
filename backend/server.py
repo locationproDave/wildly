@@ -4664,6 +4664,10 @@ async def health_check():
 # Include the router
 app.include_router(api_router)
 
+# Include Shopify router
+from services.shopify_service import router as shopify_router
+app.include_router(shopify_router)
+
 app.add_middleware(
     CORSMiddleware,
     allow_credentials=True,
