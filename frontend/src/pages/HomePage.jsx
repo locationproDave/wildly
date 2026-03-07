@@ -9,22 +9,18 @@ import {
   Shield, 
   Heart,
   Sparkles,
-  Dog,
-  Cat,
-  Egg,
   Pill,
-  Wind,
-  Leaf,
-  Bird,
-  Rabbit,
-  Fish,
-  Squirrel,
+  Bone,
+  Scissors,
+  Package,
+  Bed,
   Gift,
   Award,
   TrendingUp,
   Percent,
   X,
-  RefreshCw
+  RefreshCw,
+  ShoppingBag
 } from "lucide-react";
 import { Button } from "../components/ui/button";
 
@@ -75,14 +71,14 @@ const HomePage = () => {
   ];
 
   const categories = [
-    { name: "Dogs", slug: "dog", icon: Dog, pet: "dog", color: "#2D4A3E", isPetFilter: true },
-    { name: "Cats", slug: "cat", icon: Cat, pet: "cat", color: "#6B8F71", isPetFilter: true },
-    { name: "Birds", slug: "bird", icon: Bird, pet: "bird", color: "#D4A574", isPetFilter: true },
-    { name: "Fish", slug: "fish", icon: Fish, pet: "fish", color: "#7CA5B8", isPetFilter: true },
-    { name: "Rabbits", slug: "rabbit", icon: Rabbit, pet: "rabbit", color: "#9B8B7A", isPetFilter: true },
-    { name: "Small Pets", slug: "small_pet", icon: Squirrel, pet: "small_pet", color: "#D66D5A", isPetFilter: true },
-    { name: "Chickens", slug: "chicken", icon: Egg, pet: "chicken", color: "#E8B05C", isPetFilter: true },
-    { name: "Supplements", slug: "Supplements", icon: Pill, pet: "both", color: "#768A75", isPetFilter: false }
+    { name: "Supplements", slug: "Supplements", icon: Pill, color: "#6B8F71" },
+    { name: "Treats", slug: "Treats", icon: Bone, color: "#D4A574" },
+    { name: "Toys", slug: "Toys", icon: Gift, color: "#7CA5B8" },
+    { name: "Grooming", slug: "Grooming", icon: Scissors, color: "#9B8B7A" },
+    { name: "Food", slug: "Food", icon: Package, color: "#D66D5A" },
+    { name: "Beds", slug: "Beds", icon: Bed, color: "#768A75" },
+    { name: "Accessories", slug: "Accessories", icon: ShoppingBag, color: "#E8B05C" },
+    { name: "Health", slug: "Health", icon: Heart, color: "#C45C4A" }
   ];
 
   return (
@@ -156,6 +152,34 @@ const HomePage = () => {
         </div>
       </section>
 
+      {/* Subscribe & Save Banner */}
+      <section className="bg-gradient-to-r from-[#D4A574] to-[#C49564] py-4 sm:py-6">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+            <div className="flex items-center gap-3 text-[#2D4A3E]">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0">
+                <RefreshCw className="w-5 h-5 sm:w-6 sm:h-6" />
+              </div>
+              <div>
+                <h3 className="text-base sm:text-lg font-bold font-['Fraunces']">Subscribe & Save 10%</h3>
+                <p className="text-[#2D4A3E]/80 text-xs sm:text-sm">
+                  Never run out of essentials. Auto-delivery to your door.
+                </p>
+              </div>
+            </div>
+            <Link to="/products">
+              <Button 
+                className="bg-[#2D4A3E] text-white hover:bg-[#1F342B] rounded-full px-6 py-2 font-semibold text-sm"
+                data-testid="subscribe-cta"
+              >
+                Shop Now
+                <ArrowRight className="w-4 h-4 ml-2" />
+              </Button>
+            </Link>
+          </div>
+        </div>
+      </section>
+
       {/* Categories */}
       <section className="py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -171,9 +195,7 @@ const HomePage = () => {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
             {categories.map((category, index) => {
               const IconComponent = category.icon;
-              const linkUrl = category.isPetFilter 
-                ? `/products?pet_type=${encodeURIComponent(category.slug)}`
-                : `/products?category=${encodeURIComponent(category.slug)}`;
+              const linkUrl = `/products?category=${encodeURIComponent(category.slug)}`;
               return (
                 <Link
                   key={index}
@@ -196,8 +218,8 @@ const HomePage = () => {
       </section>
 
       {/* Best Sellers Section */}
-      <section className="py-12 bg-[#FDF8F3]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <section className="py-12 bg-[#FDF8F3] overflow-visible">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4">
           <div className="flex items-center justify-between mb-8">
             <div>
               <div className="inline-flex items-center gap-2 bg-[#C45C4A]/10 text-[#C45C4A] px-3 py-1.5 rounded-full text-sm font-medium mb-3">
