@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "../App";
 import { toast } from "sonner";
 import { 
@@ -22,6 +23,7 @@ import {
 
 const AuthModal = ({ isOpen, onClose }) => {
   const { login, register } = useAuth();
+  const navigate = useNavigate();
   const [isLogin, setIsLogin] = useState(true);
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
@@ -36,14 +38,20 @@ const AuthModal = ({ isOpen, onClose }) => {
 
     try {
       if (isLogin) {
-        await login(formData.email, formData.password);
+        const userData = await login(formData.email, formData.password);
         toast.success("Welcome back!");
+        onClose();
+        setFormData({ email: "", password: "", name: "" });
+        // Redirect admin users to admin dashboard
+        if (userData?.is_admin) {
+          navigate("/admin");
+        }
       } else {
         const result = await register(formData.email, formData.password, formData.name);
         toast.success(result.message || "Account created!");
+        onClose();
+        setFormData({ email: "", password: "", name: "" });
       }
-      onClose();
-      setFormData({ email: "", password: "", name: "" });
     } catch (error) {
       toast.error(error.response?.data?.detail || "Authentication failed");
     } finally {
