@@ -401,6 +401,65 @@ async def get_agent_response(query: str, agent_type: str, session_id: str, chat_
 
 # ==================== AUTH ROUTES ====================
 
+class AdminSetupRequest(BaseModel):
+    email: str
+    password: str
+    name: str = "Admin"
+    setup_key: str
+
+@api_router.post("/auth/admin-setup", response_model=dict)
+async def admin_setup(request: AdminSetupRequest):
+    """One-time admin setup endpoint - requires ADMIN_SETUP_KEY env variable"""
+    setup_key = os.environ.get("ADMIN_SETUP_KEY", "wildly-ones-setup-2024")
+    
+    if request.setup_key != setup_key:
+        raise HTTPException(status_code=403, detail="Invalid setup key")
+    
+    # Check if user exists
+    existing = await db.users.find_one({"email": request.email})
+    
+    if existing:
+        # Update existing user to be admin and reset password
+        await db.users.update_one(
+            {"email": request.email},
+            {
+                "$set": {
+                    "password_hash": hash_password(request.password),
+                    "is_admin": True,
+                    "name": request.name
+                }
+            }
+        )
+        user_id = existing.get("id")
+        message = "Admin user updated successfully"
+    else:
+        # Create new admin user
+        user_id = str(uuid.uuid4())
+        user_doc = {
+            "id": user_id,
+            "email": request.email,
+            "name": request.name,
+            "password_hash": hash_password(request.password),
+            "discount_code": None,
+            "is_admin": True,
+            "created_at": datetime.now(timezone.utc).isoformat()
+        }
+        await db.users.insert_one(user_doc)
+        message = "Admin user created successfully"
+    
+    token = create_token(user_id)
+    
+    return {
+        "message": message,
+        "token": token,
+        "user": {
+            "id": user_id,
+            "email": request.email,
+            "name": request.name,
+            "is_admin": True
+        }
+    }
+
 @api_router.post("/auth/register", response_model=dict)
 async def register(user_data: UserCreate):
     existing = await db.users.find_one({"email": user_data.email})
