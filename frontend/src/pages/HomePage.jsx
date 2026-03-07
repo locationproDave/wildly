@@ -134,25 +134,25 @@ const HomePage = () => {
       </section>
 
       {/* Subscribe & Save Banner - Light Sage Green */}
-      <section className="bg-[#7A9A7E] py-3">
+      <section className="bg-[#7A9A7E] py-4">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3 text-white">
-              <RefreshCw className="w-5 h-5" />
+              <RefreshCw className="w-5 h-5 sm:w-6 sm:h-6" />
               <div>
-                <span className="text-sm sm:text-base font-semibold">Subscribe & Save 10%</span>
-                <span className="text-white/80 text-xs sm:text-sm ml-2 hidden sm:inline">
+                <span className="text-base sm:text-lg font-semibold">Subscribe & Save 10%</span>
+                <span className="text-white/80 text-sm ml-2 hidden sm:inline">
                   — Never run out of what keeps your pet healthy
                 </span>
               </div>
             </div>
             <Link to="/products">
               <Button 
-                className="bg-white text-[#2D4A3E] hover:bg-gray-100 rounded-md px-4 py-1.5 font-medium text-sm"
+                className="bg-white text-[#2D4A3E] hover:bg-gray-100 rounded-md px-5 py-2 font-medium text-sm"
                 data-testid="subscribe-cta"
               >
                 Shop Now
-                <ArrowRight className="w-3 h-3 ml-1" />
+                <ArrowRight className="w-4 h-4 ml-1" />
               </Button>
             </Link>
           </div>
@@ -160,16 +160,16 @@ const HomePage = () => {
       </section>
 
       {/* Trust Badges - Darker Green */}
-      <section className="bg-[#4A6B4F] py-3">
+      <section className="bg-[#4A6B4F] py-4">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center">
             {features.map((feature, index) => (
-              <div key={index} className="flex items-center gap-2 text-white">
-                <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center">
+              <div key={index} className="flex items-center gap-3 text-white">
+                <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-white/10 flex items-center justify-center">
                   {feature.icon}
                 </div>
                 <div>
-                  <h3 className="font-medium text-xs sm:text-sm">{feature.title}</h3>
+                  <h3 className="font-medium text-sm sm:text-base">{feature.title}</h3>
                   <p className="text-white/70 text-xs hidden md:block">{feature.description}</p>
                 </div>
               </div>
