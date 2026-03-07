@@ -1,0 +1,119 @@
+/* Wildly Ones - Shopify Custom CSS */
+
+/* Colors */
+:root {
+  --wo-primary: #2D4A3E;
+  --wo-sage: #7A9A7E;
+  --wo-sage-dark: #4A6B4F;
+  --wo-tan: #D4A574;
+  --wo-cream: #FDF8F3;
+  --wo-text: #5C6D5E;
+}
+
+/* Background */
+body,
+.page-width {
+  background-color: var(--wo-cream);
+}
+
+/* Headings */
+h1, h2, h3, h4, h5, h6 {
+  color: var(--wo-primary);
+}
+
+/* Links */
+a {
+  color: var(--wo-primary);
+}
+
+a:hover {
+  color: var(--wo-sage);
+}
+
+/* Buttons */
+.button,
+.btn,
+.shopify-payment-button__button,
+button[type="submit"] {
+  background-color: var(--wo-primary);
+  color: white;
+  border-radius: 50px;
+  border: none;
+}
+
+.button:hover,
+.btn:hover {
+  background-color: #1F342B;
+}
+
+/* Product Cards */
+.card,
+.product-card {
+  background-color: white;
+  border-radius: 16px;
+  box-shadow: 0 2px 8px rgba(45,74,62,0.08);
+}
+
+.card:hover,
+.product-card:hover {
+  box-shadow: 0 8px 24px rgba(45,74,62,0.12);
+  transform: translateY(-4px);
+}
+
+/* Prices */
+.price {
+  color: var(--wo-primary);
+  font-weight: 600;
+}
+
+/* Header */
+.header {
+  background-color: white;
+  border-bottom: 1px solid rgba(45,74,62,0.1);
+}
+
+/* Announcement Bar */
+.announcement-bar {
+  background-color: var(--wo-sage);
+}
+
+/* Footer */
+.footer {
+  background-color: var(--wo-primary);
+  color: white;
+}
+
+.footer a {
+  color: rgba(255,255,255,0.8);
+}
+
+.footer a:hover {
+  color: var(--wo-tan);
+}
+
+/* Cart Badge */
+.cart-count-bubble {
+  background-color: var(--wo-tan);
+  color: var(--wo-primary);
+}
+
+/* Forms */
+input,
+select,
+textarea {
+  border: 2px solid rgba(45,74,62,0.2);
+  border-radius: 8px;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  border-color: var(--wo-primary);
+  outline: none;
+}
+
+/* Sale Badge */
+.badge--sale {
+  background-color: #D66D5A;
+  color: white;
+}
