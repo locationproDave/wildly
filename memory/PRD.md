@@ -85,6 +85,21 @@ Build a pet wellness e-commerce store with:
 - [x] Loyalty program (Bronze/Silver/Gold/Platinum tiers)
 - [x] Promo code support
 
+### Admin Dashboard (Redesigned - March 7, 2026)
+- [x] **Left Sidebar Navigation** - Collapsible, mobile-responsive
+- [x] **Quick Stats Cards** - Revenue, Orders, Products, Customers with trends
+- [x] **Order Status Overview** - Pending, Processing, Shipped, Delivered counts
+- [x] **Recent Orders List** - With status badges and quick actions
+- [x] **Quick Action Cards** - Links to key admin functions
+
+### User Account Settings (NEW - March 7, 2026)
+- [x] **Edit Profile** - Change name and email
+- [x] **Change Password** - With current password verification
+- [x] **Backend APIs**:
+  - `PUT /api/auth/profile` - Update user profile
+  - `PUT /api/auth/password` - Change password
+  - `POST /api/auth/admin-setup` - One-time admin setup
+
 ### AI Agents (7 Specialized)
 - [x] Product Sourcing Agent
 - [x] Due Diligence Agent

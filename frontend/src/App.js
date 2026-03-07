@@ -165,8 +165,14 @@ export const AuthProvider = ({ children }) => {
     setUser(null);
   };
 
+  const refreshUser = async () => {
+    if (token) {
+      await fetchUser();
+    }
+  };
+
   return (
-    <AuthContext.Provider value={{ user, token, loading, login, register, logout, API }}>
+    <AuthContext.Provider value={{ user, token, loading, login, register, logout, refreshUser, API }}>
       {children}
     </AuthContext.Provider>
   );

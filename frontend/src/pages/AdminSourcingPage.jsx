@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { useAuth } from "../App";
 import axios from "axios";
 import { toast } from "sonner";
+import AdminSidebar from "../components/admin/AdminSidebar";
 import {
   Search,
   Filter,
@@ -254,35 +255,23 @@ const AdminSourcingPage = () => {
   };
 
   return (
-    <div className="min-h-screen pt-24 pb-12 bg-[#FDF8F3]">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <AdminSidebar>
+      <div className="space-y-6">
         {/* Header */}
-        <div className="mb-8">
-          <Link
-            to="/admin"
-            className="inline-flex items-center text-[#5C6D5E] hover:text-[#2D4A3E] mb-4"
-          >
-            <ChevronLeft className="w-4 h-4 mr-1" />
-            Back to Dashboard
-          </Link>
-          
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div>
-              <h1 className="text-3xl font-bold text-[#2F3E32] font-['Fraunces']">
-                Product Sourcing
-              </h1>
-              <p className="text-[#5C6D5E] mt-1">
-                Find and import products from verified suppliers
-              </p>
-            </div>
-            
-            <div className="flex items-center gap-3">
-              <Badge variant="outline" className="py-2 px-3">
-                <Package className="w-4 h-4 mr-2" />
-                {total} Products Found
-              </Badge>
-            </div>
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <h1 className="text-2xl font-bold text-[#2F3E32] font-['Fraunces']">
+              Product Sourcing
+            </h1>
+            <p className="text-[#5C6D5E] mt-1">
+              Find and import products from verified suppliers
+            </p>
           </div>
+          
+          <Badge variant="outline" className="py-2 px-3 w-fit">
+            <Package className="w-4 h-4 mr-2" />
+            {total} Products Found
+          </Badge>
         </div>
 
         {/* AI Recommendations */}
@@ -860,7 +849,7 @@ const AdminSourcingPage = () => {
           </DialogContent>
         </Dialog>
       </div>
-    </div>
+    </AdminSidebar>
   );
 };
 

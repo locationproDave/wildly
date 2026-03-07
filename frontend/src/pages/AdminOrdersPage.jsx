@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../App";
 import axios from "axios";
+import AdminSidebar from "../components/admin/AdminSidebar";
 import { 
   Package, 
   ChevronLeft,
@@ -165,27 +166,18 @@ const AdminOrdersPage = () => {
   };
 
   return (
-    <div className="min-h-screen pt-24 pb-12">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <AdminSidebar>
+      <div className="space-y-6">
         {/* Header */}
-        <div className="flex items-center justify-between mb-8">
-          <div className="flex items-center gap-4">
-            <Link to="/admin">
-              <Button variant="ghost" size="icon" className="rounded-full">
-                <ChevronLeft className="w-5 h-5" />
-              </Button>
-            </Link>
-            <div>
-              <h1 className="text-3xl font-bold text-[#2D4A3E] font-['Fraunces']" data-testid="page-title">
-                Order Management
-              </h1>
-              <p className="text-[#5C6D5E]">{orders.length} total orders</p>
-            </div>
-          </div>
+        <div>
+          <h1 className="text-2xl font-bold text-[#2D4A3E] font-['Fraunces']" data-testid="page-title">
+            Order Management
+          </h1>
+          <p className="text-[#5C6D5E]">{orders.length} total orders</p>
         </div>
 
         {/* Status Filters */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <div 
             className={`bg-white rounded-xl p-4 cursor-pointer transition-all hover:shadow-md ${statusFilter === "" ? "ring-2 ring-[#2D4A3E]" : ""}`}
             onClick={() => setStatusFilter("")}
@@ -532,7 +524,7 @@ const AdminOrdersPage = () => {
           </DialogContent>
         </Dialog>
       </div>
-    </div>
+    </AdminSidebar>
   );
 };
 

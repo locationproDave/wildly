@@ -525,6 +525,71 @@ async def get_me(user: dict = Depends(require_user)):
         "discount_code": user.get("discount_code")
     }
 
+class ProfileUpdate(BaseModel):
+    name: Optional[str] = None
+    email: Optional[str] = None
+
+class PasswordUpdate(BaseModel):
+    current_password: str
+    new_password: str
+
+@api_router.put("/auth/profile", response_model=dict)
+async def update_profile(profile: ProfileUpdate, user: dict = Depends(require_user)):
+    """Update user profile (name, email)"""
+    update_data = {}
+    
+    if profile.name:
+        update_data["name"] = profile.name
+    
+    if profile.email and profile.email != user["email"]:
+        # Check if email is already taken
+        existing = await db.users.find_one({"email": profile.email, "id": {"$ne": user["id"]}})
+        if existing:
+            raise HTTPException(status_code=400, detail="Email already in use")
+        update_data["email"] = profile.email
+    
+    if not update_data:
+        raise HTTPException(status_code=400, detail="No fields to update")
+    
+    await db.users.update_one(
+        {"id": user["id"]},
+        {"$set": update_data}
+    )
+    
+    # Fetch updated user
+    updated_user = await db.users.find_one({"id": user["id"]}, {"_id": 0, "password_hash": 0})
+    
+    return {
+        "message": "Profile updated successfully",
+        "user": {
+            "id": updated_user["id"],
+            "email": updated_user["email"],
+            "name": updated_user["name"],
+            "is_admin": updated_user.get("is_admin", False),
+            "discount_code": updated_user.get("discount_code")
+        }
+    }
+
+@api_router.put("/auth/password", response_model=dict)
+async def update_password(passwords: PasswordUpdate, user: dict = Depends(require_user)):
+    """Update user password"""
+    # Verify current password
+    if not verify_password(passwords.current_password, user["password_hash"]):
+        raise HTTPException(status_code=400, detail="Current password is incorrect")
+    
+    # Validate new password
+    if len(passwords.new_password) < 6:
+        raise HTTPException(status_code=400, detail="New password must be at least 6 characters")
+    
+    # Update password
+    new_hash = hash_password(passwords.new_password)
+    await db.users.update_one(
+        {"id": user["id"]},
+        {"$set": {"password_hash": new_hash}}
+    )
+    
+    return {"message": "Password updated successfully"}
+
 # ==================== PRODUCT ROUTES ====================
 
 @api_router.get("/products", response_model=List[dict])

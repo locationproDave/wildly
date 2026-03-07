@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../App";
 import axios from "axios";
+import AdminSidebar from "../components/admin/AdminSidebar";
 import { 
   ChevronLeft,
   DollarSign,
@@ -185,25 +186,18 @@ const AdminAnalyticsPage = () => {
   const revenueTrend = previousRevenue > 0 ? ((recentRevenue - previousRevenue) / previousRevenue) * 100 : 0;
 
   return (
-    <div className="min-h-screen pt-16 sm:pt-24 pb-8 sm:pb-12 bg-[#FDF8F3]">
-      <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
+    <AdminSidebar>
+      <div className="space-y-6">
         {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 sm:mb-8">
-          <div className="flex items-center gap-3 sm:gap-4">
-            <Link to="/admin">
-              <Button variant="ghost" size="icon" className="rounded-full h-8 w-8 sm:h-10 sm:w-10">
-                <ChevronLeft className="w-4 h-4 sm:w-5 sm:h-5" />
-              </Button>
-            </Link>
-            <div>
-              <h1 className="text-xl sm:text-3xl font-bold text-[#2D4A3E] font-['Fraunces']" data-testid="page-title">
-                Analytics
-              </h1>
-              <p className="text-xs sm:text-base text-[#5C6D5E]">Track performance</p>
-            </div>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <h1 className="text-2xl font-bold text-[#2D4A3E] font-['Fraunces']" data-testid="page-title">
+              Analytics
+            </h1>
+            <p className="text-sm text-[#5C6D5E]">Track store performance</p>
           </div>
           <Select value={timeRange} onValueChange={setTimeRange}>
-            <SelectTrigger className="w-[130px] sm:w-[150px] rounded-full border-[#E8DFD5] text-sm">
+            <SelectTrigger className="w-[150px] rounded-full border-[#E8DFD5] text-sm">
               <Calendar className="w-4 h-4 mr-2" />
               <SelectValue />
             </SelectTrigger>
@@ -373,7 +367,7 @@ const AdminAnalyticsPage = () => {
           </div>
         </div>
       </div>
-    </div>
+    </AdminSidebar>
   );
 };
 
