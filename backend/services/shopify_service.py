@@ -1,420 +1,248 @@
 # shopify_service.py
-# FastAPI service for Shopify Storefront API integration
-# Add this to your existing FastAPI app
-#
-# Install deps: pip install httpx fastapi python-dotenv
+# FastAPI service for Shopify Admin API integration
 
 import os
 import httpx
 from fastapi import APIRouter, HTTPException
-from fastapi.responses import JSONResponse
 from pydantic import BaseModel
-from typing import Optional
+from typing import Optional, List
+from datetime import datetime, timedelta
 from dotenv import load_dotenv
 
 load_dotenv()
 
 router = APIRouter(prefix="/api/shop", tags=["shop"])
 
+# Shopify credentials
 SHOPIFY_STORE = os.getenv("SHOPIFY_STORE", "wildly-ones.myshopify.com")
-SHOPIFY_STOREFRONT_TOKEN = os.getenv("SHOPIFY_STOREFRONT_TOKEN")
-SHOPIFY_API_VERSION = "2025-01"
-STOREFRONT_URL = f"https://{SHOPIFY_STORE}/api/{SHOPIFY_API_VERSION}/graphql.json"
+SHOPIFY_CLIENT_ID = os.getenv("SHOPIFY_CLIENT_ID")
+SHOPIFY_CLIENT_SECRET = os.getenv("SHOPIFY_CLIENT_SECRET")
+SHOPIFY_API_VERSION = "2024-01"
 
-HEADERS = {
-    "Content-Type": "application/json",
-    "X-Shopify-Storefront-Access-Token": SHOPIFY_STOREFRONT_TOKEN or "",
+# Token cache
+_token_cache = {
+    "access_token": None,
+    "expires_at": None
 }
 
 
-# ─────────────────────────────────────────────
-# Helper
-# ─────────────────────────────────────────────
-async def shopify_query(query: str, variables: dict = {}) -> dict:
+async def get_access_token() -> str:
+    """Get or refresh the Shopify Admin API access token"""
+    global _token_cache
+    
+    # Check if we have a valid cached token
+    if _token_cache["access_token"] and _token_cache["expires_at"]:
+        if datetime.now() < _token_cache["expires_at"]:
+            return _token_cache["access_token"]
+    
+    # Generate new token
+    if not SHOPIFY_CLIENT_ID or not SHOPIFY_CLIENT_SECRET:
+        raise HTTPException(status_code=500, detail="Shopify credentials not configured")
+    
     async with httpx.AsyncClient() as client:
         response = await client.post(
-            STOREFRONT_URL,
-            headers=HEADERS,
-            json={"query": query, "variables": variables},
-            timeout=15.0,
+            f"https://{SHOPIFY_STORE}/admin/oauth/access_token",
+            json={
+                "client_id": SHOPIFY_CLIENT_ID,
+                "client_secret": SHOPIFY_CLIENT_SECRET,
+                "grant_type": "client_credentials"
+            },
+            timeout=15.0
         )
+    
     if response.status_code != 200:
-        raise HTTPException(status_code=response.status_code, detail="Shopify API error")
+        raise HTTPException(status_code=response.status_code, detail="Failed to get Shopify access token")
+    
     data = response.json()
-    if "errors" in data:
-        raise HTTPException(status_code=400, detail=data["errors"])
-    return data["data"]
+    _token_cache["access_token"] = data["access_token"]
+    _token_cache["expires_at"] = datetime.now() + timedelta(seconds=data.get("expires_in", 86400) - 300)
+    
+    return _token_cache["access_token"]
+
+
+async def shopify_request(endpoint: str, method: str = "GET", json_data: dict = None) -> dict:
+    """Make a request to Shopify Admin API"""
+    token = await get_access_token()
+    url = f"https://{SHOPIFY_STORE}/admin/api/{SHOPIFY_API_VERSION}/{endpoint}"
+    
+    headers = {
+        "X-Shopify-Access-Token": token,
+        "Content-Type": "application/json"
+    }
+    
+    async with httpx.AsyncClient() as client:
+        if method == "GET":
+            response = await client.get(url, headers=headers, timeout=15.0)
+        elif method == "POST":
+            response = await client.post(url, headers=headers, json=json_data, timeout=15.0)
+        elif method == "PUT":
+            response = await client.put(url, headers=headers, json=json_data, timeout=15.0)
+        elif method == "DELETE":
+            response = await client.delete(url, headers=headers, timeout=15.0)
+        else:
+            raise HTTPException(status_code=400, detail=f"Unsupported method: {method}")
+    
+    if response.status_code not in [200, 201]:
+        raise HTTPException(status_code=response.status_code, detail=f"Shopify API error: {response.text}")
+    
+    return response.json()
 
 
 # ─────────────────────────────────────────────
 # Products
 # ─────────────────────────────────────────────
 @router.get("/products")
-async def get_products(limit: int = 20, cursor: Optional[str] = None):
-    """Fetch paginated products."""
-    after = f', after: "{cursor}"' if cursor else ""
-    query = f"""
-    {{
-      products(first: {limit}{after}) {{
-        pageInfo {{ hasNextPage endCursor }}
-        edges {{
-          node {{
-            id
-            title
-            handle
-            description
-            priceRange {{
-              minVariantPrice {{ amount currencyCode }}
-            }}
-            images(first: 3) {{
-              edges {{ node {{ url altText }} }}
-            }}
-            variants(first: 10) {{
-              edges {{
-                node {{
-                  id
-                  title
-                  price {{ amount currencyCode }}
-                  availableForSale
-                  selectedOptions {{ name value }}
-                }}
-              }}
-            }}
-            tags
-            vendor
-          }}
-        }}
-      }}
-    }}
-    """
-    data = await shopify_query(query)
-    products = [edge["node"] for edge in data["products"]["edges"]]
-    page_info = data["products"]["pageInfo"]
-    return {"products": products, "pageInfo": page_info}
+async def get_products(limit: int = 50, page_info: Optional[str] = None):
+    """Fetch products from Shopify"""
+    endpoint = f"products.json?limit={limit}"
+    if page_info:
+        endpoint += f"&page_info={page_info}"
+    
+    data = await shopify_request(endpoint)
+    return {"products": data.get("products", [])}
 
 
-@router.get("/products/{handle}")
-async def get_product(handle: str):
-    """Fetch a single product by handle."""
-    query = """
-    query GetProduct($handle: String!) {
-      productByHandle(handle: $handle) {
-        id
-        title
-        handle
-        descriptionHtml
-        priceRange {
-          minVariantPrice { amount currencyCode }
-          maxVariantPrice { amount currencyCode }
-        }
-        images(first: 10) {
-          edges { node { url altText width height } }
-        }
-        variants(first: 20) {
-          edges {
-            node {
-              id
-              title
-              price { amount currencyCode }
-              compareAtPrice { amount currencyCode }
-              availableForSale
-              quantityAvailable
-              selectedOptions { name value }
-            }
-          }
-        }
-        options { id name values }
-        tags
-        vendor
-        productType
-      }
-    }
-    """
-    data = await shopify_query(query, {"handle": handle})
-    if not data.get("productByHandle"):
+@router.get("/products/{product_id}")
+async def get_product(product_id: str):
+    """Fetch a single product by ID"""
+    data = await shopify_request(f"products/{product_id}.json")
+    if not data.get("product"):
         raise HTTPException(status_code=404, detail="Product not found")
-    return data["productByHandle"]
+    return data["product"]
+
+
+@router.get("/products/handle/{handle}")
+async def get_product_by_handle(handle: str):
+    """Fetch a product by handle"""
+    data = await shopify_request(f"products.json?handle={handle}")
+    products = data.get("products", [])
+    if not products:
+        raise HTTPException(status_code=404, detail="Product not found")
+    return products[0]
 
 
 # ─────────────────────────────────────────────
 # Collections
 # ─────────────────────────────────────────────
 @router.get("/collections")
-async def get_collections(limit: int = 10):
-    """Fetch all collections."""
-    query = f"""
-    {{
-      collections(first: {limit}) {{
-        edges {{
-          node {{
-            id
-            title
-            handle
-            description
-            image {{ url altText }}
-            products(first: 4) {{
-              edges {{
-                node {{
-                  id title handle
-                  priceRange {{ minVariantPrice {{ amount currencyCode }} }}
-                  images(first: 1) {{ edges {{ node {{ url altText }} }} }}
-                }}
-              }}
-            }}
-          }}
-        }}
-      }}
-    }}
-    """
-    data = await shopify_query(query)
-    return [edge["node"] for edge in data["collections"]["edges"]]
+async def get_collections(limit: int = 50):
+    """Fetch all collections"""
+    # Get custom collections
+    custom = await shopify_request(f"custom_collections.json?limit={limit}")
+    # Get smart collections
+    smart = await shopify_request(f"smart_collections.json?limit={limit}")
+    
+    collections = custom.get("custom_collections", []) + smart.get("smart_collections", [])
+    return {"collections": collections}
 
 
-@router.get("/collections/{handle}/products")
-async def get_collection_products(handle: str, limit: int = 20):
-    """Fetch products in a specific collection."""
-    query = """
-    query CollectionProducts($handle: String!, $limit: Int!) {
-      collectionByHandle(handle: $handle) {
-        title
-        products(first: $limit) {
-          edges {
-            node {
-              id title handle
-              priceRange { minVariantPrice { amount currencyCode } }
-              images(first: 2) { edges { node { url altText } } }
-              variants(first: 5) {
-                edges {
-                  node {
-                    id title
-                    price { amount currencyCode }
-                    availableForSale
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-    """
-    data = await shopify_query(query, {"handle": handle, "limit": limit})
-    if not data.get("collectionByHandle"):
-        raise HTTPException(status_code=404, detail="Collection not found")
-    collection = data["collectionByHandle"]
-    products = [edge["node"] for edge in collection["products"]["edges"]]
-    return {"collection": collection["title"], "products": products}
+@router.get("/collections/{collection_id}")
+async def get_collection(collection_id: str):
+    """Fetch a single collection"""
+    try:
+        data = await shopify_request(f"custom_collections/{collection_id}.json")
+        return data.get("custom_collection")
+    except:
+        data = await shopify_request(f"smart_collections/{collection_id}.json")
+        return data.get("smart_collection")
+
+
+@router.get("/collections/{collection_id}/products")
+async def get_collection_products(collection_id: str, limit: int = 50):
+    """Fetch products in a collection"""
+    data = await shopify_request(f"products.json?collection_id={collection_id}&limit={limit}")
+    return {"products": data.get("products", [])}
 
 
 # ─────────────────────────────────────────────
-# Cart
+# Inventory
 # ─────────────────────────────────────────────
-class CartCreateInput(BaseModel):
-    variantId: str
-    quantity: int = 1
+@router.get("/inventory")
+async def get_inventory_levels(limit: int = 50):
+    """Fetch inventory levels"""
+    data = await shopify_request(f"inventory_levels.json?limit={limit}")
+    return {"inventory_levels": data.get("inventory_levels", [])}
 
 
-class CartAddInput(BaseModel):
-    cartId: str
-    variantId: str
-    quantity: int = 1
+# ─────────────────────────────────────────────
+# Orders (for sourcing agent)
+# ─────────────────────────────────────────────
+@router.get("/orders")
+async def get_orders(limit: int = 50, status: str = "any"):
+    """Fetch orders"""
+    data = await shopify_request(f"orders.json?limit={limit}&status={status}")
+    return {"orders": data.get("orders", [])}
 
 
-class CartUpdateInput(BaseModel):
-    cartId: str
-    lineId: str
-    quantity: int
+@router.get("/orders/{order_id}")
+async def get_order(order_id: str):
+    """Fetch a single order"""
+    data = await shopify_request(f"orders/{order_id}.json")
+    return data.get("order")
 
 
-class CartRemoveInput(BaseModel):
-    cartId: str
-    lineIds: list[str]
+# ─────────────────────────────────────────────
+# Product Sync (for sourcing agent to import)
+# ─────────────────────────────────────────────
+class ProductCreate(BaseModel):
+    title: str
+    body_html: Optional[str] = ""
+    vendor: Optional[str] = ""
+    product_type: Optional[str] = ""
+    tags: Optional[List[str]] = []
+    variants: Optional[List[dict]] = []
+    images: Optional[List[dict]] = []
 
 
-@router.post("/cart/create")
-async def create_cart(item: CartCreateInput):
-    """Create a new cart with one item."""
-    query = """
-    mutation CartCreate($variantId: ID!, $quantity: Int!) {
-      cartCreate(input: {
-        lines: [{ quantity: $quantity merchandiseId: $variantId }]
-      }) {
-        cart {
-          id
-          checkoutUrl
-          totalQuantity
-          cost {
-            totalAmount { amount currencyCode }
-            subtotalAmount { amount currencyCode }
-          }
-          lines(first: 20) {
-            edges {
-              node {
-                id quantity
-                merchandise {
-                  ... on ProductVariant {
-                    id title price { amount currencyCode }
-                    product { title handle images(first:1) { edges { node { url } } } }
-                  }
-                }
-              }
-            }
-          }
+@router.post("/products")
+async def create_product(product: ProductCreate):
+    """Create a new product in Shopify"""
+    product_data = {
+        "product": {
+            "title": product.title,
+            "body_html": product.body_html,
+            "vendor": product.vendor,
+            "product_type": product.product_type,
+            "tags": ",".join(product.tags) if product.tags else "",
+            "variants": product.variants or [{"price": "0.00"}],
+            "images": product.images or []
         }
-        userErrors { field message }
-      }
     }
-    """
-    data = await shopify_query(query, {"variantId": item.variantId, "quantity": item.quantity})
-    errors = data["cartCreate"].get("userErrors", [])
-    if errors:
-        raise HTTPException(status_code=400, detail=errors)
-    return data["cartCreate"]["cart"]
+    
+    data = await shopify_request("products.json", method="POST", json_data=product_data)
+    return data.get("product")
 
 
-@router.post("/cart/add")
-async def add_to_cart(item: CartAddInput):
-    """Add a product to an existing cart."""
-    query = """
-    mutation CartLinesAdd($cartId: ID!, $variantId: ID!, $quantity: Int!) {
-      cartLinesAdd(cartId: $cartId, lines: [{ quantity: $quantity merchandiseId: $variantId }]) {
-        cart {
-          id checkoutUrl totalQuantity
-          cost { totalAmount { amount currencyCode } }
-          lines(first: 20) {
-            edges {
-              node {
-                id quantity
-                merchandise {
-                  ... on ProductVariant {
-                    id title price { amount currencyCode }
-                    product { title handle images(first:1) { edges { node { url } } } }
-                  }
-                }
-              }
-            }
-          }
+@router.put("/products/{product_id}")
+async def update_product(product_id: str, product: ProductCreate):
+    """Update an existing product"""
+    product_data = {
+        "product": {
+            "id": product_id,
+            "title": product.title,
+            "body_html": product.body_html,
+            "vendor": product.vendor,
+            "product_type": product.product_type,
+            "tags": ",".join(product.tags) if product.tags else ""
         }
-        userErrors { field message }
-      }
     }
-    """
-    data = await shopify_query(query, {
-        "cartId": item.cartId,
-        "variantId": item.variantId,
-        "quantity": item.quantity
-    })
-    errors = data["cartLinesAdd"].get("userErrors", [])
-    if errors:
-        raise HTTPException(status_code=400, detail=errors)
-    return data["cartLinesAdd"]["cart"]
+    
+    data = await shopify_request(f"products/{product_id}.json", method="PUT", json_data=product_data)
+    return data.get("product")
 
 
-@router.put("/cart/update")
-async def update_cart_item(item: CartUpdateInput):
-    """Update quantity of a cart line."""
-    query = """
-    mutation CartLinesUpdate($cartId: ID!, $lineId: ID!, $quantity: Int!) {
-      cartLinesUpdate(cartId: $cartId, lines: [{ id: $lineId quantity: $quantity }]) {
-        cart {
-          id checkoutUrl totalQuantity
-          cost { totalAmount { amount currencyCode } }
-          lines(first: 20) {
-            edges {
-              node {
-                id quantity
-                merchandise {
-                  ... on ProductVariant {
-                    id title price { amount currencyCode }
-                    product { title handle }
-                  }
-                }
-              }
-            }
-          }
-        }
-        userErrors { field message }
-      }
-    }
-    """
-    data = await shopify_query(query, {
-        "cartId": item.cartId,
-        "lineId": item.lineId,
-        "quantity": item.quantity
-    })
-    errors = data["cartLinesUpdate"].get("userErrors", [])
-    if errors:
-        raise HTTPException(status_code=400, detail=errors)
-    return data["cartLinesUpdate"]["cart"]
+@router.delete("/products/{product_id}")
+async def delete_product(product_id: str):
+    """Delete a product"""
+    await shopify_request(f"products/{product_id}.json", method="DELETE")
+    return {"success": True, "deleted_id": product_id}
 
 
-@router.post("/cart/remove")
-async def remove_from_cart(item: CartRemoveInput):
-    """Remove items from cart."""
-    query = """
-    mutation CartLinesRemove($cartId: ID!, $lineIds: [ID!]!) {
-      cartLinesRemove(cartId: $cartId, lineIds: $lineIds) {
-        cart {
-          id checkoutUrl totalQuantity
-          cost { totalAmount { amount currencyCode } }
-          lines(first: 20) {
-            edges {
-              node {
-                id quantity
-                merchandise {
-                  ... on ProductVariant {
-                    id title price { amount currencyCode }
-                    product { title handle }
-                  }
-                }
-              }
-            }
-          }
-        }
-        userErrors { field message }
-      }
-    }
-    """
-    data = await shopify_query(query, {"cartId": item.cartId, "lineIds": item.lineIds})
-    errors = data["cartLinesRemove"].get("userErrors", [])
-    if errors:
-        raise HTTPException(status_code=400, detail=errors)
-    return data["cartLinesRemove"]["cart"]
-
-
-@router.get("/cart/{cart_id}")
-async def get_cart(cart_id: str):
-    """Fetch current cart state."""
-    query = """
-    query GetCart($cartId: ID!) {
-      cart(id: $cartId) {
-        id checkoutUrl totalQuantity
-        cost {
-          totalAmount { amount currencyCode }
-          subtotalAmount { amount currencyCode }
-          totalTaxAmount { amount currencyCode }
-        }
-        lines(first: 20) {
-          edges {
-            node {
-              id quantity
-              cost { totalAmount { amount currencyCode } }
-              merchandise {
-                ... on ProductVariant {
-                  id title price { amount currencyCode }
-                  product {
-                    title handle
-                    images(first: 1) { edges { node { url altText } } }
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-    """
-    data = await shopify_query(query, {"cartId": cart_id})
-    if not data.get("cart"):
-        raise HTTPException(status_code=404, detail="Cart not found")
-    return data["cart"]
+# ─────────────────────────────────────────────
+# Store Info
+# ─────────────────────────────────────────────
+@router.get("/shop")
+async def get_shop_info():
+    """Get shop information"""
+    data = await shopify_request("shop.json")
+    return data.get("shop")
