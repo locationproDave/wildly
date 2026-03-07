@@ -1,291 +1,420 @@
-"""
-Shopify Storefront API Service
-Fetches products from Shopify store using the Storefront API
-"""
+# shopify_service.py
+# FastAPI service for Shopify Storefront API integration
+# Add this to your existing FastAPI app
+#
+# Install deps: pip install httpx fastapi python-dotenv
 
 import os
 import httpx
 from fastapi import APIRouter, HTTPException
-from typing import Optional, List, Dict, Any
+from fastapi.responses import JSONResponse
+from pydantic import BaseModel
+from typing import Optional
+from dotenv import load_dotenv
 
-router = APIRouter(prefix="/api/shop", tags=["shopify"])
+load_dotenv()
 
-SHOPIFY_STORE = os.environ.get("SHOPIFY_STORE")
-SHOPIFY_STOREFRONT_TOKEN = os.environ.get("SHOPIFY_STOREFRONT_TOKEN")
+router = APIRouter(prefix="/api/shop", tags=["shop"])
 
-def get_storefront_url():
-    return f"https://{SHOPIFY_STORE}/api/2024-01/graphql.json"
+SHOPIFY_STORE = os.getenv("SHOPIFY_STORE", "wildly-ones.myshopify.com")
+SHOPIFY_STOREFRONT_TOKEN = os.getenv("SHOPIFY_STOREFRONT_TOKEN")
+SHOPIFY_API_VERSION = "2025-01"
+STOREFRONT_URL = f"https://{SHOPIFY_STORE}/api/{SHOPIFY_API_VERSION}/graphql.json"
 
-def get_headers():
-    return {
-        "Content-Type": "application/json",
-        "X-Shopify-Storefront-Access-Token": SHOPIFY_STOREFRONT_TOKEN
-    }
+HEADERS = {
+    "Content-Type": "application/json",
+    "X-Shopify-Storefront-Access-Token": SHOPIFY_STOREFRONT_TOKEN or "",
+}
 
-async def graphql_query(query: str, variables: dict = None) -> dict:
-    """Execute a GraphQL query against Shopify Storefront API"""
-    if not SHOPIFY_STORE or not SHOPIFY_STOREFRONT_TOKEN:
-        raise HTTPException(status_code=500, detail="Shopify credentials not configured")
-    
+
+# ─────────────────────────────────────────────
+# Helper
+# ─────────────────────────────────────────────
+async def shopify_query(query: str, variables: dict = {}) -> dict:
     async with httpx.AsyncClient() as client:
         response = await client.post(
-            get_storefront_url(),
-            json={"query": query, "variables": variables or {}},
-            headers=get_headers(),
-            timeout=30.0
+            STOREFRONT_URL,
+            headers=HEADERS,
+            json={"query": query, "variables": variables},
+            timeout=15.0,
         )
-        
-        if response.status_code == 401:
-            raise HTTPException(status_code=401, detail="Shopify authentication failed - check your Storefront Access Token")
-        
-        if response.status_code != 200:
-            raise HTTPException(status_code=response.status_code, detail=f"Shopify API error: {response.text}")
-        
-        data = response.json()
-        if "errors" in data:
-            raise HTTPException(status_code=400, detail=data["errors"])
-        
-        return data.get("data", {})
+    if response.status_code != 200:
+        raise HTTPException(status_code=response.status_code, detail="Shopify API error")
+    data = response.json()
+    if "errors" in data:
+        raise HTTPException(status_code=400, detail=data["errors"])
+    return data["data"]
 
 
+# ─────────────────────────────────────────────
+# Products
+# ─────────────────────────────────────────────
 @router.get("/products")
-async def get_products(first: int = 20, after: Optional[str] = None):
-    """Fetch products from Shopify store"""
-    query = """
-    query GetProducts($first: Int!, $after: String) {
-        products(first: $first, after: $after) {
-            pageInfo {
-                hasNextPage
-                endCursor
-            }
-            edges {
-                node {
-                    id
-                    title
-                    handle
-                    description
-                    descriptionHtml
-                    productType
-                    tags
-                    vendor
-                    createdAt
-                    updatedAt
-                    priceRange {
-                        minVariantPrice {
-                            amount
-                            currencyCode
-                        }
-                        maxVariantPrice {
-                            amount
-                            currencyCode
-                        }
-                    }
-                    compareAtPriceRange {
-                        minVariantPrice {
-                            amount
-                            currencyCode
-                        }
-                        maxVariantPrice {
-                            amount
-                            currencyCode
-                        }
-                    }
-                    images(first: 5) {
-                        edges {
-                            node {
-                                id
-                                url
-                                altText
-                                width
-                                height
-                            }
-                        }
-                    }
-                    variants(first: 10) {
-                        edges {
-                            node {
-                                id
-                                title
-                                sku
-                                availableForSale
-                                price {
-                                    amount
-                                    currencyCode
-                                }
-                                compareAtPrice {
-                                    amount
-                                    currencyCode
-                                }
-                                selectedOptions {
-                                    name
-                                    value
-                                }
-                            }
-                        }
-                    }
-                    availableForSale
-                }
-            }
-        }
-    }
-    """
-    
-    data = await graphql_query(query, {"first": first, "after": after})
-    products_data = data.get("products", {})
-    
-    # Transform to simpler format
-    products = []
-    for edge in products_data.get("edges", []):
-        node = edge["node"]
-        products.append({
-            "id": node["id"],
-            "title": node["title"],
-            "handle": node["handle"],
-            "description": node["description"],
-            "descriptionHtml": node["descriptionHtml"],
-            "productType": node["productType"],
-            "tags": node["tags"],
-            "vendor": node["vendor"],
-            "availableForSale": node["availableForSale"],
-            "priceRange": node["priceRange"],
-            "compareAtPriceRange": node["compareAtPriceRange"],
-            "images": [img["node"] for img in node.get("images", {}).get("edges", [])],
-            "variants": [var["node"] for var in node.get("variants", {}).get("edges", [])],
-            "createdAt": node["createdAt"],
-            "updatedAt": node["updatedAt"]
-        })
-    
-    return {
-        "products": products,
-        "pageInfo": products_data.get("pageInfo", {})
-    }
-
-
-@router.get("/products/{handle}")
-async def get_product_by_handle(handle: str):
-    """Fetch a single product by handle"""
-    query = """
-    query GetProductByHandle($handle: String!) {
-        productByHandle(handle: $handle) {
+async def get_products(limit: int = 20, cursor: Optional[str] = None):
+    """Fetch paginated products."""
+    after = f', after: "{cursor}"' if cursor else ""
+    query = f"""
+    {{
+      products(first: {limit}{after}) {{
+        pageInfo {{ hasNextPage endCursor }}
+        edges {{
+          node {{
             id
             title
             handle
             description
-            descriptionHtml
-            productType
+            priceRange {{
+              minVariantPrice {{ amount currencyCode }}
+            }}
+            images(first: 3) {{
+              edges {{ node {{ url altText }} }}
+            }}
+            variants(first: 10) {{
+              edges {{
+                node {{
+                  id
+                  title
+                  price {{ amount currencyCode }}
+                  availableForSale
+                  selectedOptions {{ name value }}
+                }}
+              }}
+            }}
             tags
             vendor
-            createdAt
-            updatedAt
-            priceRange {
-                minVariantPrice {
-                    amount
-                    currencyCode
-                }
-                maxVariantPrice {
-                    amount
-                    currencyCode
-                }
-            }
-            compareAtPriceRange {
-                minVariantPrice {
-                    amount
-                    currencyCode
-                }
-            }
-            images(first: 10) {
-                edges {
-                    node {
-                        id
-                        url
-                        altText
-                        width
-                        height
-                    }
-                }
-            }
-            variants(first: 20) {
-                edges {
-                    node {
-                        id
-                        title
-                        sku
-                        availableForSale
-                        price {
-                            amount
-                            currencyCode
-                        }
-                        compareAtPrice {
-                            amount
-                            currencyCode
-                        }
-                        selectedOptions {
-                            name
-                            value
-                        }
-                        quantityAvailable
-                    }
-                }
-            }
-            availableForSale
-            options {
-                id
-                name
-                values
-            }
-        }
-    }
+          }}
+        }}
+      }}
+    }}
     """
-    
-    data = await graphql_query(query, {"handle": handle})
-    product = data.get("productByHandle")
-    
-    if not product:
-        raise HTTPException(status_code=404, detail="Product not found")
-    
-    return {
-        "id": product["id"],
-        "title": product["title"],
-        "handle": product["handle"],
-        "description": product["description"],
-        "descriptionHtml": product["descriptionHtml"],
-        "productType": product["productType"],
-        "tags": product["tags"],
-        "vendor": product["vendor"],
-        "availableForSale": product["availableForSale"],
-        "priceRange": product["priceRange"],
-        "compareAtPriceRange": product["compareAtPriceRange"],
-        "images": [img["node"] for img in product.get("images", {}).get("edges", [])],
-        "variants": [var["node"] for var in product.get("variants", {}).get("edges", [])],
-        "options": product.get("options", []),
-        "createdAt": product["createdAt"],
-        "updatedAt": product["updatedAt"]
-    }
+    data = await shopify_query(query)
+    products = [edge["node"] for edge in data["products"]["edges"]]
+    page_info = data["products"]["pageInfo"]
+    return {"products": products, "pageInfo": page_info}
 
 
-@router.get("/collections")
-async def get_collections(first: int = 20):
-    """Fetch collections from Shopify store"""
+@router.get("/products/{handle}")
+async def get_product(handle: str):
+    """Fetch a single product by handle."""
     query = """
-    query GetCollections($first: Int!) {
-        collections(first: $first) {
-            edges {
-                node {
-                    id
-                    title
-                    handle
-                    description
-                    image {
-                        url
-                        altText
-                    }
-                }
-            }
+    query GetProduct($handle: String!) {
+      productByHandle(handle: $handle) {
+        id
+        title
+        handle
+        descriptionHtml
+        priceRange {
+          minVariantPrice { amount currencyCode }
+          maxVariantPrice { amount currencyCode }
         }
+        images(first: 10) {
+          edges { node { url altText width height } }
+        }
+        variants(first: 20) {
+          edges {
+            node {
+              id
+              title
+              price { amount currencyCode }
+              compareAtPrice { amount currencyCode }
+              availableForSale
+              quantityAvailable
+              selectedOptions { name value }
+            }
+          }
+        }
+        options { id name values }
+        tags
+        vendor
+        productType
+      }
     }
     """
-    
-    data = await graphql_query(query, {"first": first})
-    collections = [edge["node"] for edge in data.get("collections", {}).get("edges", [])]
-    
-    return {"collections": collections}
+    data = await shopify_query(query, {"handle": handle})
+    if not data.get("productByHandle"):
+        raise HTTPException(status_code=404, detail="Product not found")
+    return data["productByHandle"]
+
+
+# ─────────────────────────────────────────────
+# Collections
+# ─────────────────────────────────────────────
+@router.get("/collections")
+async def get_collections(limit: int = 10):
+    """Fetch all collections."""
+    query = f"""
+    {{
+      collections(first: {limit}) {{
+        edges {{
+          node {{
+            id
+            title
+            handle
+            description
+            image {{ url altText }}
+            products(first: 4) {{
+              edges {{
+                node {{
+                  id title handle
+                  priceRange {{ minVariantPrice {{ amount currencyCode }} }}
+                  images(first: 1) {{ edges {{ node {{ url altText }} }} }}
+                }}
+              }}
+            }}
+          }}
+        }}
+      }}
+    }}
+    """
+    data = await shopify_query(query)
+    return [edge["node"] for edge in data["collections"]["edges"]]
+
+
+@router.get("/collections/{handle}/products")
+async def get_collection_products(handle: str, limit: int = 20):
+    """Fetch products in a specific collection."""
+    query = """
+    query CollectionProducts($handle: String!, $limit: Int!) {
+      collectionByHandle(handle: $handle) {
+        title
+        products(first: $limit) {
+          edges {
+            node {
+              id title handle
+              priceRange { minVariantPrice { amount currencyCode } }
+              images(first: 2) { edges { node { url altText } } }
+              variants(first: 5) {
+                edges {
+                  node {
+                    id title
+                    price { amount currencyCode }
+                    availableForSale
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+    """
+    data = await shopify_query(query, {"handle": handle, "limit": limit})
+    if not data.get("collectionByHandle"):
+        raise HTTPException(status_code=404, detail="Collection not found")
+    collection = data["collectionByHandle"]
+    products = [edge["node"] for edge in collection["products"]["edges"]]
+    return {"collection": collection["title"], "products": products}
+
+
+# ─────────────────────────────────────────────
+# Cart
+# ─────────────────────────────────────────────
+class CartCreateInput(BaseModel):
+    variantId: str
+    quantity: int = 1
+
+
+class CartAddInput(BaseModel):
+    cartId: str
+    variantId: str
+    quantity: int = 1
+
+
+class CartUpdateInput(BaseModel):
+    cartId: str
+    lineId: str
+    quantity: int
+
+
+class CartRemoveInput(BaseModel):
+    cartId: str
+    lineIds: list[str]
+
+
+@router.post("/cart/create")
+async def create_cart(item: CartCreateInput):
+    """Create a new cart with one item."""
+    query = """
+    mutation CartCreate($variantId: ID!, $quantity: Int!) {
+      cartCreate(input: {
+        lines: [{ quantity: $quantity merchandiseId: $variantId }]
+      }) {
+        cart {
+          id
+          checkoutUrl
+          totalQuantity
+          cost {
+            totalAmount { amount currencyCode }
+            subtotalAmount { amount currencyCode }
+          }
+          lines(first: 20) {
+            edges {
+              node {
+                id quantity
+                merchandise {
+                  ... on ProductVariant {
+                    id title price { amount currencyCode }
+                    product { title handle images(first:1) { edges { node { url } } } }
+                  }
+                }
+              }
+            }
+          }
+        }
+        userErrors { field message }
+      }
+    }
+    """
+    data = await shopify_query(query, {"variantId": item.variantId, "quantity": item.quantity})
+    errors = data["cartCreate"].get("userErrors", [])
+    if errors:
+        raise HTTPException(status_code=400, detail=errors)
+    return data["cartCreate"]["cart"]
+
+
+@router.post("/cart/add")
+async def add_to_cart(item: CartAddInput):
+    """Add a product to an existing cart."""
+    query = """
+    mutation CartLinesAdd($cartId: ID!, $variantId: ID!, $quantity: Int!) {
+      cartLinesAdd(cartId: $cartId, lines: [{ quantity: $quantity merchandiseId: $variantId }]) {
+        cart {
+          id checkoutUrl totalQuantity
+          cost { totalAmount { amount currencyCode } }
+          lines(first: 20) {
+            edges {
+              node {
+                id quantity
+                merchandise {
+                  ... on ProductVariant {
+                    id title price { amount currencyCode }
+                    product { title handle images(first:1) { edges { node { url } } } }
+                  }
+                }
+              }
+            }
+          }
+        }
+        userErrors { field message }
+      }
+    }
+    """
+    data = await shopify_query(query, {
+        "cartId": item.cartId,
+        "variantId": item.variantId,
+        "quantity": item.quantity
+    })
+    errors = data["cartLinesAdd"].get("userErrors", [])
+    if errors:
+        raise HTTPException(status_code=400, detail=errors)
+    return data["cartLinesAdd"]["cart"]
+
+
+@router.put("/cart/update")
+async def update_cart_item(item: CartUpdateInput):
+    """Update quantity of a cart line."""
+    query = """
+    mutation CartLinesUpdate($cartId: ID!, $lineId: ID!, $quantity: Int!) {
+      cartLinesUpdate(cartId: $cartId, lines: [{ id: $lineId quantity: $quantity }]) {
+        cart {
+          id checkoutUrl totalQuantity
+          cost { totalAmount { amount currencyCode } }
+          lines(first: 20) {
+            edges {
+              node {
+                id quantity
+                merchandise {
+                  ... on ProductVariant {
+                    id title price { amount currencyCode }
+                    product { title handle }
+                  }
+                }
+              }
+            }
+          }
+        }
+        userErrors { field message }
+      }
+    }
+    """
+    data = await shopify_query(query, {
+        "cartId": item.cartId,
+        "lineId": item.lineId,
+        "quantity": item.quantity
+    })
+    errors = data["cartLinesUpdate"].get("userErrors", [])
+    if errors:
+        raise HTTPException(status_code=400, detail=errors)
+    return data["cartLinesUpdate"]["cart"]
+
+
+@router.post("/cart/remove")
+async def remove_from_cart(item: CartRemoveInput):
+    """Remove items from cart."""
+    query = """
+    mutation CartLinesRemove($cartId: ID!, $lineIds: [ID!]!) {
+      cartLinesRemove(cartId: $cartId, lineIds: $lineIds) {
+        cart {
+          id checkoutUrl totalQuantity
+          cost { totalAmount { amount currencyCode } }
+          lines(first: 20) {
+            edges {
+              node {
+                id quantity
+                merchandise {
+                  ... on ProductVariant {
+                    id title price { amount currencyCode }
+                    product { title handle }
+                  }
+                }
+              }
+            }
+          }
+        }
+        userErrors { field message }
+      }
+    }
+    """
+    data = await shopify_query(query, {"cartId": item.cartId, "lineIds": item.lineIds})
+    errors = data["cartLinesRemove"].get("userErrors", [])
+    if errors:
+        raise HTTPException(status_code=400, detail=errors)
+    return data["cartLinesRemove"]["cart"]
+
+
+@router.get("/cart/{cart_id}")
+async def get_cart(cart_id: str):
+    """Fetch current cart state."""
+    query = """
+    query GetCart($cartId: ID!) {
+      cart(id: $cartId) {
+        id checkoutUrl totalQuantity
+        cost {
+          totalAmount { amount currencyCode }
+          subtotalAmount { amount currencyCode }
+          totalTaxAmount { amount currencyCode }
+        }
+        lines(first: 20) {
+          edges {
+            node {
+              id quantity
+              cost { totalAmount { amount currencyCode } }
+              merchandise {
+                ... on ProductVariant {
+                  id title price { amount currencyCode }
+                  product {
+                    title handle
+                    images(first: 1) { edges { node { url altText } } }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+    """
+    data = await shopify_query(query, {"cartId": cart_id})
+    if not data.get("cart"):
+        raise HTTPException(status_code=404, detail="Cart not found")
+    return data["cart"]
