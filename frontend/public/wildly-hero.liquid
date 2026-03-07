@@ -1,0 +1,121 @@
+{% comment %}
+  Wildly Ones Custom Hero Section
+  Upload to: Online Store → Themes → Edit code → Sections → Add new section → name it "wildly-hero"
+{% endcomment %}
+
+<style>
+  .wo-hero{background:#FDF8F3;padding:0}
+  .wo-hero-inner{max-width:1280px;margin:0 auto;display:flex;align-items:center;padding:40px 24px;gap:40px}
+  .wo-hero-content{flex:1}
+  .wo-hero-badge{display:inline-flex;align-items:center;gap:8px;background:#fff;border:1px solid #2D4A3E;border-radius:50px;padding:8px 16px;font-size:14px;color:#2D4A3E;margin-bottom:24px}
+  .wo-hero-title{font-size:clamp(2.5rem,5vw,4rem);color:#2D4A3E;line-height:1.1;margin:0 0 24px}
+  .wo-hero-title span{color:#7A9A7E;font-style:italic}
+  .wo-hero-text{color:#5C6D5E;font-size:18px;margin-bottom:32px;max-width:500px}
+  .wo-hero-btn{display:inline-flex;align-items:center;gap:8px;background:#2D4A3E;color:#fff;padding:16px 32px;border-radius:50px;text-decoration:none;font-weight:600}
+  .wo-hero-btn:hover{background:#1F342B}
+  .wo-hero-img{flex:1;max-width:550px}
+  .wo-hero-img img{width:100%;border-radius:24px}
+  .wo-banner{background:#7A9A7E;padding:16px 24px}
+  .wo-banner-inner{max-width:1280px;margin:0 auto;display:flex;justify-content:space-between;align-items:center;color:#fff}
+  .wo-banner-text{font-size:16px;font-weight:600}
+  .wo-banner-sub{opacity:0.9;font-size:14px}
+  .wo-banner-btn{background:#fff;color:#2D4A3E;padding:12px 24px;border-radius:50px;text-decoration:none;font-weight:600;font-size:14px}
+  .wo-trust{background:#4A6B4F;padding:16px 24px}
+  .wo-trust-inner{max-width:1280px;margin:0 auto;display:flex;justify-content:space-between;color:#fff}
+  .wo-trust-item{display:flex;align-items:center;gap:12px}
+  .wo-trust-icon{width:40px;height:40px;background:rgba(255,255,255,0.1);border-radius:50%;display:flex;align-items:center;justify-content:center}
+  .wo-trust-title{font-weight:600;font-size:14px}
+  .wo-trust-sub{opacity:0.7;font-size:12px}
+  @media(max-width:768px){
+    .wo-hero-inner{flex-direction:column;text-align:center}
+    .wo-hero-img{max-width:100%}
+    .wo-banner-inner{flex-direction:column;gap:16px;text-align:center}
+    .wo-trust-inner{flex-direction:column;gap:16px;align-items:center}
+  }
+</style>
+
+<section class="wo-hero">
+  <div class="wo-hero-inner">
+    <div class="wo-hero-content">
+      <div class="wo-hero-badge">
+        <svg width="16" height="16" fill="none" stroke="#2D4A3E" stroke-width="2"><path d="M8 1v14M1 8h14"/></svg>
+        Premium Pet Wellness
+      </div>
+      <h1 class="wo-hero-title">
+        Happy pets <span>start</span><br>with <span>better care.</span>
+      </h1>
+      <p class="wo-hero-text">Nature-inspired, science-backed wellness for the animals who fill your life with joy.</p>
+      <a href="/collections/all" class="wo-hero-btn">
+        Shop Now
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
+      </a>
+    </div>
+    <div class="wo-hero-img">
+      {% if section.settings.hero_image != blank %}
+        <img src="{{ section.settings.hero_image | image_url: width: 800 }}" alt="Happy dog">
+      {% else %}
+        <img src="https://images.unsplash.com/photo-1587300003388-59208cc962cb?w=800" alt="Happy dog">
+      {% endif %}
+    </div>
+  </div>
+</section>
+
+<section class="wo-banner">
+  <div class="wo-banner-inner">
+    <div>
+      <div class="wo-banner-text">Subscribe & Save 10%</div>
+      <div class="wo-banner-sub">Never run out of what keeps your pet healthy</div>
+    </div>
+    <a href="/collections/all" class="wo-banner-btn">Shop Now →</a>
+  </div>
+</section>
+
+<section class="wo-trust">
+  <div class="wo-trust-inner">
+    <div class="wo-trust-item">
+      <div class="wo-trust-icon">
+        <svg width="20" height="20" fill="none" stroke="#fff" stroke-width="2"><path d="M5 12l5 5 10-10"/></svg>
+      </div>
+      <div>
+        <div class="wo-trust-title">Free Shipping Over $50</div>
+        <div class="wo-trust-sub">Fast delivery from US warehouses</div>
+      </div>
+    </div>
+    <div class="wo-trust-item">
+      <div class="wo-trust-icon">
+        <svg width="20" height="20" fill="none" stroke="#fff" stroke-width="2"><path d="M4 4h12v12H4z"/></svg>
+      </div>
+      <div>
+        <div class="wo-trust-title">30-Day Returns</div>
+        <div class="wo-trust-sub">Full refund, no questions</div>
+      </div>
+    </div>
+    <div class="wo-trust-item">
+      <div class="wo-trust-icon">
+        <svg width="20" height="20" fill="none" stroke="#fff" stroke-width="2"><path d="M10 2a8 8 0 100 16 8 8 0 000-16z"/></svg>
+      </div>
+      <div>
+        <div class="wo-trust-title">Vet-Informed</div>
+        <div class="wo-trust-sub">Science-backed formulas</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+{% schema %}
+{
+  "name": "Wildly Hero",
+  "settings": [
+    {
+      "type": "image_picker",
+      "id": "hero_image",
+      "label": "Hero Image"
+    }
+  ],
+  "presets": [
+    {
+      "name": "Wildly Hero"
+    }
+  ]
+}
+{% endschema %}
