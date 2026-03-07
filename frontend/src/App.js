@@ -413,11 +413,6 @@ const AppLayout = ({ children }) => {
 };
 
 function App() {
-  // Seed products on first load
-  useEffect(() => {
-    axios.post(`${API}/seed-products`).catch(() => {});
-  }, []);
-
   return (
     <AuthProvider>
       <CartProvider>

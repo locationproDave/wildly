@@ -87,29 +87,6 @@ const HomePage = () => {
 
   return (
     <div className="min-h-screen">
-      {/* Promo Banner */}
-      {showPromoBanner && (
-        <div className="bg-gradient-to-r from-[#D4A574] to-[#C49564] text-[#2D4A3E] py-3 px-4 relative">
-          <div className="max-w-7xl mx-auto flex items-center justify-center gap-4 text-sm md:text-base">
-            <Gift className="w-5 h-5 animate-bounce" />
-            <span className="font-medium">
-              <strong>WELCOME15</strong> - Get 15% off your first order! 
-              <span className="hidden md:inline"> | Join our Loyalty Program & earn points on every purchase!</span>
-            </span>
-            <Link to="/products" className="underline font-semibold hover:no-underline">
-              Shop Now
-            </Link>
-            <button 
-              onClick={() => setShowPromoBanner(false)}
-              className="absolute right-4 top-1/2 -translate-y-1/2 hover:bg-white/20 rounded-full p-1"
-              aria-label="Close banner"
-            >
-              <X className="w-4 h-4" />
-            </button>
-          </div>
-        </div>
-      )}
-
       {/* Hero Section */}
       <section className="relative bg-gradient-to-b from-[#E8DFD5] to-[#FDF8F3] overflow-hidden">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-16 sm:pt-24 pb-12 sm:pb-20">
@@ -155,50 +132,7 @@ const HomePage = () => {
                 <div className="absolute inset-0 bg-gradient-to-t from-[#2D4A3E]/20 to-transparent"></div>
               </div>
               
-              {/* Floating Card */}
-              <div className="absolute -bottom-6 -left-6 bg-white rounded-2xl shadow-xl p-4 animate-fade-in-up stagger-4">
-                <div className="flex items-center gap-3">
-                  <div className="flex -space-x-1">
-                    {[...Array(5)].map((_, i) => (
-                      <Star key={i} className="w-5 h-5 fill-[#D4A574] text-[#D4A574]" />
-                    ))}
-                  </div>
-                  <div>
-                    <p className="font-semibold text-[#2D4A3E] text-sm">4.8/5 Rating</p>
-                    <p className="text-xs text-[#5C6D5E]">2,000+ Happy Pets</p>
-                  </div>
-                </div>
-              </div>
             </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Subscribe & Save Banner */}
-      <section className="py-6 bg-gradient-to-r from-[#6B8F71] to-[#4A6B4F]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-            <div className="flex items-center gap-3 text-white">
-              <div className="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0">
-                <RefreshCw className="w-6 h-6" />
-              </div>
-              <div>
-                <h3 className="text-xl font-bold font-['Fraunces']">Subscribe & Save 10%</h3>
-                <p className="text-white/80 text-sm">
-                  Never run out of what keeps your pet healthy.<br />
-                  Wellness essentials delivered to your door every month.
-                </p>
-              </div>
-            </div>
-            <Link to="/products?category=Supplements">
-              <Button 
-                className="bg-white text-[#2D4A3E] hover:bg-[#E8DFD5] rounded-full px-6 py-2 font-semibold text-sm"
-                data-testid="subscribe-cta"
-              >
-                Shop Now
-                <ArrowRight className="w-4 h-4 ml-2" />
-              </Button>
-            </Link>
           </div>
         </div>
       </section>
@@ -294,6 +228,10 @@ const HomePage = () => {
                   <div className="bg-gray-200 h-4 rounded w-1/2"></div>
                 </div>
               ))}
+            </div>
+          ) : bestsellers.length === 0 ? (
+            <div className="text-center py-12 bg-white rounded-2xl">
+              <p className="text-[#5C6D5E]">No products available yet</p>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -445,6 +383,10 @@ const HomePage = () => {
                   <div className="bg-gray-200 h-4 rounded w-1/2"></div>
                 </div>
               ))}
+            </div>
+          ) : featuredProducts.length === 0 ? (
+            <div className="text-center py-12 bg-white rounded-2xl">
+              <p className="text-[#5C6D5E]">No products available yet</p>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
