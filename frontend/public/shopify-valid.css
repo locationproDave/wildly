@@ -1,0 +1,20 @@
+/* Wildly Ones */
+:root{--wo:#2D4A3E;--ws:#7A9A7E;--wt:#D4A574;--wc:#FDF8F3}
+body{background:var(--wc)}
+h1,h2,h3,h4{color:var(--wo)}
+a{color:var(--wo)}
+a:hover{color:var(--ws)}
+.button,.btn{background:var(--wo);color:#fff;border-radius:50px;border:none}
+.button:hover,.btn:hover{background:#1F342B}
+.card{background:#fff;border-radius:16px;box-shadow:0 2px 8px rgba(45,74,62,.08)}
+.card:hover{box-shadow:0 8px 24px rgba(45,74,62,.12);transform:translateY(-4px)}
+.price{color:var(--wo);font-weight:600}
+.header{background:#fff}
+.announcement-bar{background:var(--ws)}
+.footer{background:var(--wo);color:#fff}
+.footer a{color:rgba(255,255,255,.8)}
+.footer a:hover{color:var(--wt)}
+.cart-count-bubble{background:var(--wt);color:var(--wo)}
+input,select,textarea{border:2px solid rgba(45,74,62,.2);border-radius:8px}
+input:focus,select:focus{border-color:var(--wo);outline:none}
+.badge--sale{background:#D66D5A;color:#fff}
