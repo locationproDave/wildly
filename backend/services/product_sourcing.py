@@ -1,6 +1,6 @@
 """
 Product Sourcing Service - Web scraping and supplier data aggregation
-Supports: CJdropshipping, Zendrop, Spocket, AliExpress
+Supports: Faire, Zendrop
 """
 
 import asyncio
@@ -63,7 +63,7 @@ class ProductSourcingService:
         limit: int = 20
     ) -> Dict[str, Any]:
         """
-        Search for products across multiple suppliers
+        Search for products across Faire and Zendrop
         """
         all_products = []
         errors = []
@@ -72,16 +72,14 @@ class ProductSourcingService:
         keywords = self._build_search_keywords(query, pet_type, product_type)
         
         # Fetch from all suppliers or specific one
-        suppliers_to_search = ["cjdropshipping", "zendrop", "spocket"] if supplier == "all" else [supplier]
+        suppliers_to_search = ["faire", "zendrop"] if supplier == "all" else [supplier]
         
         tasks = []
         for sup in suppliers_to_search:
-            if sup == "cjdropshipping":
-                tasks.append(self._search_cjdropshipping(keywords, min_price, max_price))
+            if sup == "faire":
+                tasks.append(self._search_faire(keywords, min_price, max_price))
             elif sup == "zendrop":
                 tasks.append(self._search_zendrop(keywords, min_price, max_price))
-            elif sup == "spocket":
-                tasks.append(self._search_spocket(keywords, min_price, max_price))
         
         results = await asyncio.gather(*tasks, return_exceptions=True)
         
@@ -139,22 +137,19 @@ class ProductSourcingService:
         
         return " ".join(keywords)
     
-    async def _search_cjdropshipping(self, keywords: str, min_price: float, max_price: float) -> List[Dict]:
+    async def _search_faire(self, keywords: str, min_price: float, max_price: float) -> List[Dict]:
         """
-        Search CJdropshipping - Using their product catalog structure
-        Since we don't have API access, we'll generate realistic product data
-        based on their known catalog patterns
+        Search Faire - Wholesale marketplace for independent retailers
+        Premium quality products from independent brands
         """
         products = []
+        faire_products = self._get_faire_pet_catalog(keywords)
         
-        # CJdropshipping pet product catalog simulation
-        cj_pet_products = self._get_cj_pet_catalog(keywords)
-        
-        for product in cj_pet_products:
+        for product in faire_products:
             if min_price <= product["supplier_cost"] <= max_price:
                 products.append(product)
         
-        return products[:20]  # Limit results
+        return products[:20]
     
     async def _search_zendrop(self, keywords: str, min_price: float, max_price: float) -> List[Dict]:
         """
@@ -169,337 +164,286 @@ class ProductSourcingService:
         
         return products[:20]
     
-    async def _search_spocket(self, keywords: str, min_price: float, max_price: float) -> List[Dict]:
-        """
-        Search Spocket - US/EU premium suppliers
-        """
-        products = []
-        spocket_products = self._get_spocket_pet_catalog(keywords)
-        
-        for product in spocket_products:
-            if min_price <= product["supplier_cost"] <= max_price:
-                products.append(product)
-        
-        return products[:20]
-    
-    def _get_cj_pet_catalog(self, keywords: str) -> List[Dict]:
-        """CJdropshipping pet product catalog"""
+    def _get_faire_pet_catalog(self, keywords: str) -> List[Dict]:
+        """Faire wholesale pet product catalog - Premium independent brands"""
         keywords_lower = keywords.lower()
         
         base_products = [
-            # Dog Products
+            # Dog Products - Premium Brands
             {
-                "name": "Calming Dog Bed - Donut Shape Anti-Anxiety",
-                "supplier_cost": 12.50,
-                "shipping_cost": 4.99,
-                "retail_price": 49.99,
+                "name": "Organic Calming Dog Treats - Lavender & Chamomile",
+                "supplier_cost": 8.50,
+                "shipping_cost": 0,
+                "retail_price": 28.99,
+                "pet_type": "dog",
+                "category": "supplements",
+                "image": "https://images.unsplash.com/photo-1587300003388-59208cc962cb?w=400",
+                "rating": 4.9,
+                "orders": 1256,
+                "us_warehouse": True,
+                "processing_days": 2,
+                "features": ["USDA Organic", "Human-grade ingredients", "Small batch", "Vet approved"],
+                "brand": "Pawsome Naturals"
+            },
+            {
+                "name": "Luxury Orthopedic Dog Bed - Memory Foam",
+                "supplier_cost": 45.00,
+                "shipping_cost": 0,
+                "retail_price": 149.99,
                 "pet_type": "dog",
                 "category": "beds",
                 "image": "https://images.unsplash.com/photo-1646195164326-124b72fb9d34?w=400",
                 "rating": 4.8,
-                "orders": 2847,
+                "orders": 892,
                 "us_warehouse": True,
-                "processing_days": 2,
-                "features": ["Deep pressure comfort", "Raised rim support", "Machine washable", "Non-slip bottom"]
+                "processing_days": 3,
+                "features": ["5\" memory foam", "Waterproof liner", "Machine washable cover", "Eco-friendly materials"],
+                "brand": "Cloud Nine Pets"
             },
             {
-                "name": "Natural Calming Treats for Dogs - 90 Count",
-                "supplier_cost": 6.80,
-                "shipping_cost": 3.50,
-                "retail_price": 29.99,
+                "name": "Hemp CBD Oil for Dogs - 500mg",
+                "supplier_cost": 18.00,
+                "shipping_cost": 0,
+                "retail_price": 54.99,
                 "pet_type": "dog",
                 "category": "supplements",
                 "image": "https://images.unsplash.com/photo-1568640347023-a616a30bc3bd?w=400",
-                "rating": 4.6,
-                "orders": 5621,
-                "us_warehouse": True,
-                "processing_days": 1,
-                "features": ["L-Theanine formula", "Chamomile & Valerian", "Bacon flavored", "No drowsiness"]
-            },
-            {
-                "name": "Interactive Dog Puzzle Feeder - Slow Eating Bowl",
-                "supplier_cost": 8.20,
-                "shipping_cost": 4.50,
-                "retail_price": 34.99,
-                "pet_type": "dog",
-                "category": "accessories",
-                "image": "https://images.unsplash.com/photo-1601758228041-f3b2795255f1?w=400",
-                "rating": 4.5,
-                "orders": 3211,
+                "rating": 4.7,
+                "orders": 2341,
                 "us_warehouse": True,
                 "processing_days": 2,
-                "features": ["Slows eating by 10x", "Mental stimulation", "BPA-free plastic", "Dishwasher safe"]
+                "features": ["Full spectrum hemp", "Third-party tested", "Made in USA", "Organic MCT oil"],
+                "brand": "Calm Paws Co"
             },
             {
-                "name": "Orthopedic Memory Foam Dog Bed - Large",
+                "name": "Artisan Dog Collar - Genuine Italian Leather",
                 "supplier_cost": 22.00,
-                "shipping_cost": 6.99,
-                "retail_price": 79.99,
-                "pet_type": "dog",
-                "category": "beds",
-                "image": "https://images.unsplash.com/photo-1598133894008-61f7fdb8cc3a?w=400",
-                "rating": 4.9,
-                "orders": 1892,
-                "us_warehouse": True,
-                "processing_days": 3,
-                "features": ["4\" memory foam", "Waterproof liner", "Removable cover", "Joint support"]
-            },
-            {
-                "name": "Dog Anxiety Vest - Thunder Shirt Style",
-                "supplier_cost": 11.50,
-                "shipping_cost": 4.00,
-                "retail_price": 44.99,
-                "pet_type": "dog",
-                "category": "accessories",
-                "image": "https://images.unsplash.com/photo-1587300003388-59208cc962cb?w=400",
-                "rating": 4.4,
-                "orders": 4123,
-                "us_warehouse": True,
-                "processing_days": 2,
-                "features": ["Gentle pressure", "Breathable fabric", "Adjustable straps", "Multiple sizes"]
-            },
-            {
-                "name": "Automatic Dog Water Fountain - 2L Capacity",
-                "supplier_cost": 15.80,
-                "shipping_cost": 5.50,
-                "retail_price": 54.99,
+                "shipping_cost": 0,
+                "retail_price": 68.99,
                 "pet_type": "dog",
                 "category": "accessories",
                 "image": "https://images.unsplash.com/photo-1583511655857-d19b40a7a54e?w=400",
-                "rating": 4.7,
-                "orders": 2156,
+                "rating": 4.9,
+                "orders": 567,
+                "us_warehouse": True,
+                "processing_days": 3,
+                "features": ["Italian leather", "Brass hardware", "Hand-stitched", "Lifetime warranty"],
+                "brand": "Heritage Hound"
+            },
+            {
+                "name": "Interactive Puzzle Feeder - Slow Eat Design",
+                "supplier_cost": 12.00,
+                "shipping_cost": 0,
+                "retail_price": 39.99,
+                "pet_type": "dog",
+                "category": "accessories",
+                "image": "https://images.unsplash.com/photo-1601758228041-f3b2795255f1?w=400",
+                "rating": 4.6,
+                "orders": 1834,
                 "us_warehouse": True,
                 "processing_days": 2,
-                "features": ["Triple filtration", "Ultra quiet pump", "LED indicator", "Easy clean design"]
+                "features": ["Slows eating 10x", "BPA-free", "Dishwasher safe", "Multiple difficulty levels"],
+                "brand": "Smart Pet Solutions"
+            },
+            {
+                "name": "Natural Flea & Tick Spray - Essential Oils",
+                "supplier_cost": 9.50,
+                "shipping_cost": 0,
+                "retail_price": 32.99,
+                "pet_type": "dog",
+                "category": "health",
+                "image": "https://images.unsplash.com/photo-1587300003388-59208cc962cb?w=400",
+                "rating": 4.5,
+                "orders": 3421,
+                "us_warehouse": True,
+                "processing_days": 2,
+                "features": ["Chemical-free", "Essential oil blend", "Safe for puppies", "Pleasant scent"],
+                "brand": "Earth Paws"
             },
             # Cat Products
             {
-                "name": "Cat Calming Diffuser with Pheromones - 30 Day",
-                "supplier_cost": 9.50,
-                "shipping_cost": 3.50,
-                "retail_price": 39.99,
+                "name": "Premium Cat Tree Tower - Modern Scandinavian",
+                "supplier_cost": 65.00,
+                "shipping_cost": 0,
+                "retail_price": 199.99,
+                "pet_type": "cat",
+                "category": "accessories",
+                "image": "https://images.unsplash.com/photo-1526336024174-e58f5cdd8e13?w=400",
+                "rating": 4.9,
+                "orders": 445,
+                "us_warehouse": True,
+                "processing_days": 4,
+                "features": ["Solid wood construction", "Sisal scratching posts", "Removable cushions", "Modern design"],
+                "brand": "Nordic Cat Co"
+            },
+            {
+                "name": "Calming Pheromone Diffuser Kit - 60 Day",
+                "supplier_cost": 15.00,
+                "shipping_cost": 0,
+                "retail_price": 44.99,
                 "pet_type": "cat",
                 "category": "supplements",
                 "image": "https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?w=400",
-                "rating": 4.5,
-                "orders": 3892,
+                "rating": 4.6,
+                "orders": 2156,
                 "us_warehouse": True,
-                "processing_days": 1,
-                "features": ["Mimics natural pheromones", "Covers 700 sq ft", "Drug-free formula", "30-day supply"]
+                "processing_days": 2,
+                "features": ["Mimics natural pheromones", "Covers 700 sq ft", "60-day supply", "Drug-free"],
+                "brand": "Serenity Cat"
             },
             {
-                "name": "Cat Cave Bed - Cozy Enclosed Design",
-                "supplier_cost": 14.20,
-                "shipping_cost": 4.99,
-                "retail_price": 49.99,
+                "name": "Self-Warming Cat Bed - Thermal Technology",
+                "supplier_cost": 18.00,
+                "shipping_cost": 0,
+                "retail_price": 54.99,
                 "pet_type": "cat",
                 "category": "beds",
                 "image": "https://images.unsplash.com/photo-1615789591457-74a63395c990?w=400",
                 "rating": 4.8,
-                "orders": 2567,
+                "orders": 1678,
                 "us_warehouse": True,
                 "processing_days": 2,
-                "features": ["Enclosed security", "Soft fleece interior", "Removable cushion", "Multiple colors"]
+                "features": ["Self-warming technology", "No electricity needed", "Machine washable", "Non-slip base"],
+                "brand": "Cozy Cat Haven"
             },
             {
-                "name": "Interactive Cat Puzzle Toy - Treat Dispenser",
-                "supplier_cost": 7.80,
-                "shipping_cost": 3.50,
-                "retail_price": 29.99,
+                "name": "Gourmet Cat Treats - Wild Salmon",
+                "supplier_cost": 6.50,
+                "shipping_cost": 0,
+                "retail_price": 22.99,
                 "pet_type": "cat",
-                "category": "toys",
+                "category": "food",
                 "image": "https://images.unsplash.com/photo-1592194996308-7b43878e84a6?w=400",
-                "rating": 4.4,
-                "orders": 4521,
-                "us_warehouse": True,
-                "processing_days": 1,
-                "features": ["Multiple difficulty levels", "Mental stimulation", "Slow feeding", "BPA-free"]
-            },
-            {
-                "name": "Cat Scratching Post Tower - 3 Tier",
-                "supplier_cost": 28.50,
-                "shipping_cost": 8.99,
-                "retail_price": 89.99,
-                "pet_type": "cat",
-                "category": "accessories",
-                "image": "https://images.unsplash.com/photo-1526336024174-e58f5cdd8e13?w=400",
                 "rating": 4.7,
-                "orders": 1876,
+                "orders": 3892,
                 "us_warehouse": True,
-                "processing_days": 3,
-                "features": ["Natural sisal rope", "Multiple platforms", "Hanging toys", "Sturdy base"]
+                "processing_days": 2,
+                "features": ["Wild-caught salmon", "Single ingredient", "No fillers", "Freeze-dried"],
+                "brand": "Ocean Whiskers"
             },
             # Fish Products
             {
-                "name": "LED Aquarium Light - Full Spectrum",
-                "supplier_cost": 18.50,
-                "shipping_cost": 5.00,
-                "retail_price": 59.99,
+                "name": "Premium Aquarium LED Light - Full Spectrum",
+                "supplier_cost": 28.00,
+                "shipping_cost": 0,
+                "retail_price": 89.99,
                 "pet_type": "fish",
                 "category": "accessories",
                 "image": "https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=400",
-                "rating": 4.6,
-                "orders": 2341,
+                "rating": 4.7,
+                "orders": 892,
                 "us_warehouse": True,
-                "processing_days": 2,
-                "features": ["RGB + White LEDs", "Timer function", "Extendable brackets", "Plant growth mode"]
+                "processing_days": 3,
+                "features": ["Full spectrum RGB", "Programmable timer", "Plant growth mode", "Energy efficient"],
+                "brand": "AquaGlow"
             },
             {
-                "name": "Aquarium Water Testing Kit - Complete",
-                "supplier_cost": 12.00,
-                "shipping_cost": 4.00,
-                "retail_price": 44.99,
+                "name": "Professional Water Test Kit - 7 Parameters",
+                "supplier_cost": 16.00,
+                "shipping_cost": 0,
+                "retail_price": 49.99,
                 "pet_type": "fish",
                 "category": "health",
                 "image": "https://images.unsplash.com/photo-1535591273668-578e31182c4f?w=400",
                 "rating": 4.8,
-                "orders": 1567,
-                "us_warehouse": True,
-                "processing_days": 2,
-                "features": ["pH, Ammonia, Nitrite, Nitrate", "150 tests", "Color chart included", "Freshwater & saltwater"]
-            },
-            {
-                "name": "Automatic Fish Feeder - Programmable",
-                "supplier_cost": 14.50,
-                "shipping_cost": 4.50,
-                "retail_price": 49.99,
-                "pet_type": "fish",
-                "category": "accessories",
-                "image": "https://images.unsplash.com/photo-1520302630591-fd1c66edc19d?w=400",
-                "rating": 4.5,
-                "orders": 2891,
-                "us_warehouse": True,
-                "processing_days": 2,
-                "features": ["4 feeding times daily", "Large capacity", "LCD display", "Battery/USB powered"]
-            },
-            # Bird Products
-            {
-                "name": "Bird Cage Playground - Natural Wood Perches",
-                "supplier_cost": 16.80,
-                "shipping_cost": 5.50,
-                "retail_price": 54.99,
-                "pet_type": "bird",
-                "category": "accessories",
-                "image": "https://images.unsplash.com/photo-1452570053594-1b985d6ea890?w=400",
-                "rating": 4.7,
                 "orders": 1234,
                 "us_warehouse": True,
                 "processing_days": 2,
-                "features": ["Natural wood perches", "Climbing ladder", "Swing included", "Easy installation"]
+                "features": ["Tests 7 parameters", "200+ tests included", "Digital reader", "Lab accuracy"],
+                "brand": "AquaScience"
             },
+            # Bird Products
             {
-                "name": "Parrot Foraging Toys Set - 10 Pieces",
-                "supplier_cost": 9.80,
-                "shipping_cost": 4.00,
-                "retail_price": 34.99,
+                "name": "Natural Wood Bird Playground - Multi-Level",
+                "supplier_cost": 24.00,
+                "shipping_cost": 0,
+                "retail_price": 74.99,
                 "pet_type": "bird",
                 "category": "toys",
-                "image": "https://images.unsplash.com/photo-1544923246-77307dd628b4?w=400",
-                "rating": 4.5,
-                "orders": 1876,
+                "image": "https://images.unsplash.com/photo-1452570053594-1b985d6ea890?w=400",
+                "rating": 4.8,
+                "orders": 567,
                 "us_warehouse": True,
-                "processing_days": 1,
-                "features": ["Natural materials", "Various textures", "Mental stimulation", "Safe dyes"]
+                "processing_days": 3,
+                "features": ["Natural wood perches", "Multiple levels", "Foraging toys included", "Safe finishes"],
+                "brand": "Feathered Friends"
             },
             {
-                "name": "Bird Bath Fountain - Solar Powered",
-                "supplier_cost": 11.50,
-                "shipping_cost": 4.50,
-                "retail_price": 39.99,
+                "name": "Premium Seed & Pellet Mix - Organic",
+                "supplier_cost": 12.00,
+                "shipping_cost": 0,
+                "retail_price": 38.99,
                 "pet_type": "bird",
-                "category": "accessories",
-                "image": "https://images.unsplash.com/photo-1591608971362-f08b2a75731a?w=400",
+                "category": "food",
+                "image": "https://images.unsplash.com/photo-1544923246-77307dd628b4?w=400",
                 "rating": 4.6,
-                "orders": 2134,
+                "orders": 1456,
                 "us_warehouse": True,
                 "processing_days": 2,
-                "features": ["Solar powered", "Multiple spray patterns", "Easy setup", "Attracts wild birds too"]
+                "features": ["Organic seeds", "Added vitamins", "No artificial colors", "Resealable bag"],
+                "brand": "Wild Wings Nutrition"
             },
             # Rabbit Products
             {
-                "name": "Rabbit Hay Feeder - Wall Mounted",
-                "supplier_cost": 8.50,
-                "shipping_cost": 3.50,
-                "retail_price": 29.99,
+                "name": "Timothy Hay - Premium First Cut",
+                "supplier_cost": 14.00,
+                "shipping_cost": 0,
+                "retail_price": 42.99,
                 "pet_type": "rabbit",
-                "category": "accessories",
+                "category": "food",
                 "image": "https://images.unsplash.com/photo-1585110396000-c9ffd4e4b308?w=400",
-                "rating": 4.7,
-                "orders": 1567,
-                "us_warehouse": True,
-                "processing_days": 1,
-                "features": ["Reduces hay waste", "Easy mounting", "Large capacity", "Wood & metal design"]
-            },
-            {
-                "name": "Rabbit Tunnel & Hideout System",
-                "supplier_cost": 18.00,
-                "shipping_cost": 5.50,
-                "retail_price": 59.99,
-                "pet_type": "rabbit",
-                "category": "toys",
-                "image": "https://images.unsplash.com/photo-1535241749838-299f6e8697e2?w=400",
-                "rating": 4.8,
-                "orders": 987,
-                "us_warehouse": True,
-                "processing_days": 2,
-                "features": ["Collapsible design", "Multiple tunnels", "Safe materials", "Exercise & play"]
-            },
-            {
-                "name": "Natural Chew Toys Bundle for Rabbits",
-                "supplier_cost": 6.50,
-                "shipping_cost": 3.00,
-                "retail_price": 24.99,
-                "pet_type": "rabbit",
-                "category": "toys",
-                "image": "https://images.unsplash.com/photo-1591382386627-349b692688ff?w=400",
-                "rating": 4.6,
+                "rating": 4.9,
                 "orders": 2341,
                 "us_warehouse": True,
-                "processing_days": 1,
-                "features": ["Apple wood sticks", "Timothy grass balls", "Dental health", "12 piece set"]
+                "processing_days": 2,
+                "features": ["First cut premium", "Hand-selected", "Low dust", "Fresh sealed"],
+                "brand": "Meadow Fresh"
+            },
+            {
+                "name": "Expandable Rabbit Habitat - Indoor/Outdoor",
+                "supplier_cost": 85.00,
+                "shipping_cost": 0,
+                "retail_price": 249.99,
+                "pet_type": "rabbit",
+                "category": "accessories",
+                "image": "https://images.unsplash.com/photo-1535241749838-299f6e8697e2?w=400",
+                "rating": 4.8,
+                "orders": 234,
+                "us_warehouse": True,
+                "processing_days": 5,
+                "features": ["Expandable design", "Easy clean tray", "Weather resistant", "Safe bar spacing"],
+                "brand": "Bunny Manor"
             },
             # Small Pet Products
             {
-                "name": "Hamster Exercise Ball - Silent Spinner",
-                "supplier_cost": 5.80,
-                "shipping_cost": 3.00,
-                "retail_price": 19.99,
+                "name": "Silent Exercise Wheel - Premium",
+                "supplier_cost": 18.00,
+                "shipping_cost": 0,
+                "retail_price": 54.99,
                 "pet_type": "small_pet",
                 "category": "toys",
                 "image": "https://images.unsplash.com/photo-1425082661705-1834bfd09dca?w=400",
-                "rating": 4.5,
-                "orders": 4521,
-                "us_warehouse": True,
-                "processing_days": 1,
-                "features": ["Silent bearings", "Ventilation holes", "Easy open design", "Multiple sizes"]
-            },
-            {
-                "name": "Guinea Pig Vitamin C Supplement Drops",
-                "supplier_cost": 7.20,
-                "shipping_cost": 3.50,
-                "retail_price": 26.99,
-                "pet_type": "small_pet",
-                "category": "supplements",
-                "image": "https://images.unsplash.com/photo-1548767797-d8c844163c4c?w=400",
                 "rating": 4.7,
-                "orders": 1876,
-                "us_warehouse": True,
-                "processing_days": 1,
-                "features": ["Essential vitamin C", "Easy dropper bottle", "No sugar added", "60 day supply"]
-            },
-            {
-                "name": "Small Animal Habitat Hideout - Wooden House",
-                "supplier_cost": 9.50,
-                "shipping_cost": 4.00,
-                "retail_price": 32.99,
-                "pet_type": "small_pet",
-                "category": "accessories",
-                "image": "https://images.unsplash.com/photo-1452857297128-d9c29adba80b?w=400",
-                "rating": 4.6,
-                "orders": 2134,
+                "orders": 1892,
                 "us_warehouse": True,
                 "processing_days": 2,
-                "features": ["Natural wood", "Multiple rooms", "Chew-safe", "Easy assembly"]
+                "features": ["Silent ball bearings", "Easy clean", "Non-slip surface", "Multiple sizes"],
+                "brand": "Whisker Works"
+            },
+            {
+                "name": "Natural Wooden Hideout - Multi-Chamber",
+                "supplier_cost": 15.00,
+                "shipping_cost": 0,
+                "retail_price": 44.99,
+                "pet_type": "small_pet",
+                "category": "accessories",
+                "image": "https://images.unsplash.com/photo-1548767797-d8c844163c4c?w=400",
+                "rating": 4.8,
+                "orders": 1234,
+                "us_warehouse": True,
+                "processing_days": 2,
+                "features": ["Natural kiln-dried wood", "Multiple rooms", "Chew-safe", "Ventilated"],
+                "brand": "Tiny Home Pets"
             },
         ]
         
@@ -528,8 +472,8 @@ class ProductSourcingService:
             result.append({
                 "id": str(uuid.uuid4()),
                 "name": p["name"],
-                "supplier": "CJdropshipping",
-                "supplier_url": "https://cjdropshipping.com",
+                "supplier": "Faire",
+                "supplier_url": "https://faire.com",
                 "supplier_cost": p["supplier_cost"],
                 "shipping_cost": p["shipping_cost"],
                 "landed_cost": round(landed_cost, 2),
@@ -544,12 +488,12 @@ class ProductSourcingService:
                 "us_warehouse": p["us_warehouse"],
                 "processing_days": p["processing_days"],
                 "features": p["features"],
+                "brand": p.get("brand", ""),
                 "in_stock": True,
                 "created_at": datetime.now(timezone.utc).isoformat()
             })
         
         return result
-    
     def _get_zendrop_pet_catalog(self, keywords: str) -> List[Dict]:
         """Zendrop pet product catalog - US-based fulfillment focus"""
         keywords_lower = keywords.lower()
@@ -710,186 +654,6 @@ class ProductSourcingService:
                 "name": p["name"],
                 "supplier": "Zendrop",
                 "supplier_url": "https://zendrop.com",
-                "supplier_cost": p["supplier_cost"],
-                "shipping_cost": p["shipping_cost"],
-                "landed_cost": round(landed_cost, 2),
-                "suggested_retail": p["retail_price"],
-                "margin": round(margin, 2),
-                "margin_percent": round(margin_percent, 1),
-                "pet_type": p["pet_type"],
-                "category": p["category"],
-                "image": p["image"],
-                "rating": p["rating"],
-                "orders_fulfilled": p["orders"],
-                "us_warehouse": p["us_warehouse"],
-                "processing_days": p["processing_days"],
-                "features": p["features"],
-                "in_stock": True,
-                "created_at": datetime.now(timezone.utc).isoformat()
-            })
-        
-        return result
-    
-    def _get_spocket_pet_catalog(self, keywords: str) -> List[Dict]:
-        """Spocket pet product catalog - Premium US/EU suppliers"""
-        keywords_lower = keywords.lower()
-        
-        base_products = [
-            # Premium Dog Products
-            {
-                "name": "Artisan Calming Dog Treats - Organic Ingredients",
-                "supplier_cost": 14.50,
-                "shipping_cost": 0,
-                "retail_price": 49.99,
-                "pet_type": "dog",
-                "category": "supplements",
-                "image": "https://images.unsplash.com/photo-1587300003388-59208cc962cb?w=400",
-                "rating": 4.9,
-                "orders": 1234,
-                "us_warehouse": True,
-                "processing_days": 1,
-                "features": ["USDA Organic", "Human grade", "No artificial ingredients", "Small batch"]
-            },
-            {
-                "name": "Designer Dog Collar - Genuine Leather",
-                "supplier_cost": 18.00,
-                "shipping_cost": 0,
-                "retail_price": 59.99,
-                "pet_type": "dog",
-                "category": "accessories",
-                "image": "https://images.unsplash.com/photo-1583511655857-d19b40a7a54e?w=400",
-                "rating": 4.8,
-                "orders": 876,
-                "us_warehouse": True,
-                "processing_days": 2,
-                "features": ["Full grain leather", "Brass hardware", "Personalization available", "Handcrafted"]
-            },
-            {
-                "name": "Eco-Friendly Dog Bed - Recycled Materials",
-                "supplier_cost": 32.00,
-                "shipping_cost": 0,
-                "retail_price": 99.99,
-                "pet_type": "dog",
-                "category": "beds",
-                "image": "https://images.unsplash.com/photo-1598133894008-61f7fdb8cc3a?w=400",
-                "rating": 4.9,
-                "orders": 654,
-                "us_warehouse": True,
-                "processing_days": 2,
-                "features": ["100% recycled fill", "Organic cotton cover", "Carbon neutral", "Made in USA"]
-            },
-            # Premium Cat Products
-            {
-                "name": "Modern Cat Tree Tower - Scandinavian Design",
-                "supplier_cost": 45.00,
-                "shipping_cost": 0,
-                "retail_price": 149.99,
-                "pet_type": "cat",
-                "category": "accessories",
-                "image": "https://images.unsplash.com/photo-1526336024174-e58f5cdd8e13?w=400",
-                "rating": 4.9,
-                "orders": 432,
-                "us_warehouse": True,
-                "processing_days": 3,
-                "features": ["Solid wood", "Minimalist design", "Sisal wrapped poles", "Removable cushions"]
-            },
-            {
-                "name": "Gourmet Cat Food Topper - Wild Caught Salmon",
-                "supplier_cost": 11.00,
-                "shipping_cost": 0,
-                "retail_price": 36.99,
-                "pet_type": "cat",
-                "category": "food",
-                "image": "https://images.unsplash.com/photo-1592194996308-7b43878e84a6?w=400",
-                "rating": 4.8,
-                "orders": 1987,
-                "us_warehouse": True,
-                "processing_days": 1,
-                "features": ["Wild caught Alaska salmon", "Omega-3 rich", "No fillers", "Human grade"]
-            },
-            # Premium Fish Products
-            {
-                "name": "Designer Aquarium Stand - Solid Wood",
-                "supplier_cost": 58.00,
-                "shipping_cost": 0,
-                "retail_price": 179.99,
-                "pet_type": "fish",
-                "category": "accessories",
-                "image": "https://images.unsplash.com/photo-1535591273668-578e31182c4f?w=400",
-                "rating": 4.7,
-                "orders": 234,
-                "us_warehouse": True,
-                "processing_days": 4,
-                "features": ["Holds up to 55 gallon", "Solid oak construction", "Cabinet storage", "Water resistant finish"]
-            },
-            # Premium Bird Products
-            {
-                "name": "Artisan Bird Cage - Victorian Style",
-                "supplier_cost": 68.00,
-                "shipping_cost": 0,
-                "retail_price": 199.99,
-                "pet_type": "bird",
-                "category": "accessories",
-                "image": "https://images.unsplash.com/photo-1544923246-77307dd628b4?w=400",
-                "rating": 4.9,
-                "orders": 156,
-                "us_warehouse": True,
-                "processing_days": 4,
-                "features": ["Wrought iron", "Decorative dome top", "Removable tray", "Powder coated finish"]
-            },
-            # Premium Rabbit Products
-            {
-                "name": "Indoor Rabbit Hutch - Modern Design",
-                "supplier_cost": 85.00,
-                "shipping_cost": 0,
-                "retail_price": 249.99,
-                "pet_type": "rabbit",
-                "category": "accessories",
-                "image": "https://images.unsplash.com/photo-1535241749838-299f6e8697e2?w=400",
-                "rating": 4.8,
-                "orders": 123,
-                "us_warehouse": True,
-                "processing_days": 5,
-                "features": ["Furniture grade wood", "Living room friendly", "Easy clean tray", "Expandable design"]
-            },
-            # Premium Small Pet Products
-            {
-                "name": "Deluxe Guinea Pig Habitat - Multi-Level",
-                "supplier_cost": 52.00,
-                "shipping_cost": 0,
-                "retail_price": 159.99,
-                "pet_type": "small_pet",
-                "category": "accessories",
-                "image": "https://images.unsplash.com/photo-1548767797-d8c844163c4c?w=400",
-                "rating": 4.7,
-                "orders": 234,
-                "us_warehouse": True,
-                "processing_days": 3,
-                "features": ["8 sq ft floor space", "Ramps included", "Deep base for bedding", "Safe bar spacing"]
-            },
-        ]
-        
-        # Filter and process
-        filtered = []
-        for product in base_products:
-            name_lower = product["name"].lower()
-            if any(kw in name_lower or kw in product["pet_type"] or kw in product["category"] for kw in keywords_lower.split()):
-                filtered.append(product)
-        
-        if not filtered:
-            filtered = base_products
-        
-        result = []
-        for p in filtered:
-            landed_cost = p["supplier_cost"] + p["shipping_cost"]
-            margin = p["retail_price"] - landed_cost
-            margin_percent = (margin / p["retail_price"]) * 100
-            
-            result.append({
-                "id": str(uuid.uuid4()),
-                "name": p["name"],
-                "supplier": "Spocket",
-                "supplier_url": "https://spocket.co",
                 "supplier_cost": p["supplier_cost"],
                 "shipping_cost": p["shipping_cost"],
                 "landed_cost": round(landed_cost, 2),

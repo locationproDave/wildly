@@ -4419,9 +4419,8 @@ async def get_sourcing_categories(user: dict = Depends(require_admin)):
         ],
         "suppliers": [
             {"value": "all", "label": "All Suppliers"},
-            {"value": "cjdropshipping", "label": "CJdropshipping"},
-            {"value": "zendrop", "label": "Zendrop"},
-            {"value": "spocket", "label": "Spocket"}
+            {"value": "faire", "label": "Faire"},
+            {"value": "zendrop", "label": "Zendrop"}
         ]
     }
 

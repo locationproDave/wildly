@@ -243,12 +243,10 @@ const AdminSourcingPage = () => {
 
   const getSupplierBadgeColor = (supplierName) => {
     switch (supplierName?.toLowerCase()) {
-      case "cjdropshipping":
-        return "bg-blue-100 text-blue-800";
+      case "faire":
+        return "bg-emerald-100 text-emerald-800";
       case "zendrop":
         return "bg-purple-100 text-purple-800";
-      case "spocket":
-        return "bg-green-100 text-green-800";
       default:
         return "bg-gray-100 text-gray-800";
     }
