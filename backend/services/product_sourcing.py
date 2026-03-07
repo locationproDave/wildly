@@ -1,6 +1,6 @@
 """
 Product Sourcing Service - Web scraping and supplier data aggregation
-Supports: Faire, Zendrop
+Supports: Rokt, Zendrop
 """
 
 import asyncio
@@ -63,7 +63,7 @@ class ProductSourcingService:
         limit: int = 20
     ) -> Dict[str, Any]:
         """
-        Search for products across Faire and Zendrop
+        Search for products across Rokt and Zendrop
         """
         all_products = []
         errors = []
@@ -72,12 +72,12 @@ class ProductSourcingService:
         keywords = self._build_search_keywords(query, pet_type, product_type)
         
         # Fetch from all suppliers or specific one
-        suppliers_to_search = ["faire", "zendrop"] if supplier == "all" else [supplier]
+        suppliers_to_search = ["rokt", "zendrop"] if supplier == "all" else [supplier]
         
         tasks = []
         for sup in suppliers_to_search:
-            if sup == "faire":
-                tasks.append(self._search_faire(keywords, min_price, max_price))
+            if sup == "rokt":
+                tasks.append(self._search_rokt(keywords, min_price, max_price))
             elif sup == "zendrop":
                 tasks.append(self._search_zendrop(keywords, min_price, max_price))
         
@@ -137,15 +137,15 @@ class ProductSourcingService:
         
         return " ".join(keywords)
     
-    async def _search_faire(self, keywords: str, min_price: float, max_price: float) -> List[Dict]:
+    async def _search_rokt(self, keywords: str, min_price: float, max_price: float) -> List[Dict]:
         """
-        Search Faire - Wholesale marketplace for independent retailers
-        Premium quality products from independent brands
+        Search Rokt - Premium dropshipping marketplace
+        High-quality products with fast shipping
         """
         products = []
-        faire_products = self._get_faire_pet_catalog(keywords)
+        rokt_products = self._get_rokt_pet_catalog(keywords)
         
-        for product in faire_products:
+        for product in rokt_products:
             if min_price <= product["supplier_cost"] <= max_price:
                 products.append(product)
         
@@ -164,8 +164,8 @@ class ProductSourcingService:
         
         return products[:20]
     
-    def _get_faire_pet_catalog(self, keywords: str) -> List[Dict]:
-        """Faire wholesale pet product catalog - Premium independent brands"""
+    def _get_rokt_pet_catalog(self, keywords: str) -> List[Dict]:
+        """Rokt pet product catalog - Premium dropshipping products"""
         keywords_lower = keywords.lower()
         
         base_products = [
@@ -472,8 +472,8 @@ class ProductSourcingService:
             result.append({
                 "id": str(uuid.uuid4()),
                 "name": p["name"],
-                "supplier": "Faire",
-                "supplier_url": "https://faire.com",
+                "supplier": "Rokt",
+                "supplier_url": "https://rokt.com",
                 "supplier_cost": p["supplier_cost"],
                 "shipping_cost": p["shipping_cost"],
                 "landed_cost": round(landed_cost, 2),

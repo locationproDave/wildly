@@ -243,8 +243,8 @@ const AdminSourcingPage = () => {
 
   const getSupplierBadgeColor = (supplierName) => {
     switch (supplierName?.toLowerCase()) {
-      case "faire":
-        return "bg-emerald-100 text-emerald-800";
+      case "rokt":
+        return "bg-orange-100 text-orange-800";
       case "zendrop":
         return "bg-purple-100 text-purple-800";
       default:
