@@ -134,30 +134,25 @@ const HomePage = () => {
       </section>
 
       {/* Subscribe & Save Banner - Light Sage Green */}
-      <section className="bg-[#7A9A7E] py-8 sm:py-10">
+      <section className="bg-[#7A9A7E] py-3">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-            <div className="flex items-center gap-4 text-white">
-              <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-white/15 flex items-center justify-center flex-shrink-0">
-                <RefreshCw className="w-6 h-6 sm:w-7 sm:h-7" />
-              </div>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3 text-white">
+              <RefreshCw className="w-5 h-5" />
               <div>
-                <h3 className="text-xl sm:text-2xl font-bold font-['Fraunces']">Subscribe & Save 10%</h3>
-                <p className="text-white/80 text-sm sm:text-base">
-                  Never run out of what keeps your pet healthy.
-                </p>
-                <p className="text-white/80 text-sm sm:text-base">
-                  Wellness essentials delivered to your door every month.
-                </p>
+                <span className="text-sm sm:text-base font-semibold">Subscribe & Save 10%</span>
+                <span className="text-white/80 text-xs sm:text-sm ml-2 hidden sm:inline">
+                  — Never run out of what keeps your pet healthy
+                </span>
               </div>
             </div>
             <Link to="/products">
               <Button 
-                className="bg-white text-[#2D4A3E] hover:bg-gray-100 rounded-lg px-8 py-3 font-semibold text-base shadow-md"
+                className="bg-white text-[#2D4A3E] hover:bg-gray-100 rounded-md px-4 py-1.5 font-medium text-sm"
                 data-testid="subscribe-cta"
               >
                 Shop Now
-                <ArrowRight className="w-4 h-4 ml-2" />
+                <ArrowRight className="w-3 h-3 ml-1" />
               </Button>
             </Link>
           </div>
@@ -165,17 +160,17 @@ const HomePage = () => {
       </section>
 
       {/* Trust Badges - Darker Green */}
-      <section className="bg-[#4A6B4F] py-8 sm:py-10">
+      <section className="bg-[#4A6B4F] py-3">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center">
             {features.map((feature, index) => (
-              <div key={index} className={`flex flex-col sm:flex-row items-center gap-2 sm:gap-4 text-white text-center sm:text-left ${index === 2 ? 'sm:flex-row-reverse sm:text-right' : ''}`}>
-                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white/10 flex items-center justify-center flex-shrink-0">
+              <div key={index} className="flex items-center gap-2 text-white">
+                <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center">
                   {feature.icon}
                 </div>
                 <div>
-                  <h3 className="font-semibold text-xs sm:text-base font-['Fraunces']">{feature.title}</h3>
-                  <p className="text-white/70 text-xs hidden sm:block">{feature.description}</p>
+                  <h3 className="font-medium text-xs sm:text-sm">{feature.title}</h3>
+                  <p className="text-white/70 text-xs hidden md:block">{feature.description}</p>
                 </div>
               </div>
             ))}
