@@ -133,8 +133,39 @@ const HomePage = () => {
         </div>
       </section>
 
-      {/* Trust Badges */}
-      <section className="bg-[#2D4A3E] py-4 sm:py-6">
+      {/* Subscribe & Save Banner - Light Sage Green */}
+      <section className="bg-[#7A9A7E] py-8 sm:py-10">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+            <div className="flex items-center gap-4 text-white">
+              <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-white/15 flex items-center justify-center flex-shrink-0">
+                <RefreshCw className="w-6 h-6 sm:w-7 sm:h-7" />
+              </div>
+              <div>
+                <h3 className="text-xl sm:text-2xl font-bold font-['Fraunces']">Subscribe & Save 10%</h3>
+                <p className="text-white/80 text-sm sm:text-base">
+                  Never run out of what keeps your pet healthy.
+                </p>
+                <p className="text-white/80 text-sm sm:text-base">
+                  Wellness essentials delivered to your door every month.
+                </p>
+              </div>
+            </div>
+            <Link to="/products">
+              <Button 
+                className="bg-white text-[#2D4A3E] hover:bg-gray-100 rounded-lg px-8 py-3 font-semibold text-base shadow-md"
+                data-testid="subscribe-cta"
+              >
+                Shop Now
+                <ArrowRight className="w-4 h-4 ml-2" />
+              </Button>
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* Trust Badges - Darker Green */}
+      <section className="bg-[#4A6B4F] py-8 sm:py-10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center">
             {features.map((feature, index) => (
@@ -143,39 +174,11 @@ const HomePage = () => {
                   {feature.icon}
                 </div>
                 <div>
-                  <h3 className="font-semibold text-xs sm:text-base">{feature.title}</h3>
+                  <h3 className="font-semibold text-xs sm:text-base font-['Fraunces']">{feature.title}</h3>
                   <p className="text-white/70 text-xs hidden sm:block">{feature.description}</p>
                 </div>
               </div>
             ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Subscribe & Save Banner */}
-      <section className="bg-gradient-to-r from-[#D4A574] to-[#C49564] py-4 sm:py-6">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-            <div className="flex items-center gap-3 text-[#2D4A3E]">
-              <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0">
-                <RefreshCw className="w-5 h-5 sm:w-6 sm:h-6" />
-              </div>
-              <div>
-                <h3 className="text-base sm:text-lg font-bold font-['Fraunces']">Subscribe & Save 10%</h3>
-                <p className="text-[#2D4A3E]/80 text-xs sm:text-sm">
-                  Never run out of essentials. Auto-delivery to your door.
-                </p>
-              </div>
-            </div>
-            <Link to="/products">
-              <Button 
-                className="bg-[#2D4A3E] text-white hover:bg-[#1F342B] rounded-full px-6 py-2 font-semibold text-sm"
-                data-testid="subscribe-cta"
-              >
-                Shop Now
-                <ArrowRight className="w-4 h-4 ml-2" />
-              </Button>
-            </Link>
           </div>
         </div>
       </section>
