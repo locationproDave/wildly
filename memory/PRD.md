@@ -109,9 +109,9 @@ Build a pet wellness e-commerce store with:
 - [x] Email Marketing
 - [x] Customer Service
 
-### Product Sourcing Dashboard (NEW - March 6, 2026)
+### Product Sourcing Dashboard (Updated - March 7, 2026)
 - [x] **Admin Sourcing Page** (/admin/sourcing)
-  - Search products across 3 suppliers (CJdropshipping, Zendrop, Spocket)
+  - Search products across 2 suppliers (Faire, Zendrop)
   - Filter by pet type (Dogs, Cats, Fish, Birds, Rabbits, Small Pets)
   - Filter by product category (Supplements, Food, Grooming, Toys, Beds, Accessories, Health)
   - Filter by supplier and price range
@@ -208,7 +208,8 @@ Build a pet wellness e-commerce store with:
 ### P1 - Next Priority
 - [ ] Backend Refactoring - Split monolithic server.py into modular structure
 - [ ] Blog section for SEO content
-- [ ] Real supplier API integration (CJdropshipping, Zendrop, Spocket APIs)
+- [ ] Real supplier API integration (Faire, Zendrop APIs)
+- [ ] Add "Refer & Earn" feature to checkout page
 
 ### P2 - Medium Priority
 - [ ] Web scraping for live supplier data
