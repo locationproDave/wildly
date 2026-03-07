@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { useAuth } from "../App";
 import axios from "axios";
 import { toast } from "sonner";
+import AdminSidebar from "../components/admin/AdminSidebar";
 import { 
   Tag, 
   Plus, 
@@ -163,19 +164,11 @@ const AdminPromotionsPage = () => {
   };
 
   return (
-    <div className="min-h-screen pt-24 pb-12">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <Link 
-          to="/admin" 
-          className="inline-flex items-center text-[#5C6D5E] hover:text-[#2D4A3E] mb-6"
-        >
-          <ChevronLeft className="w-4 h-4 mr-1" />
-          Back to Dashboard
-        </Link>
-
-        <div className="flex items-center justify-between mb-8">
+    <AdminSidebar>
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-[#2D4A3E] font-['Fraunces']">
+            <h1 className="text-2xl font-bold text-[#2D4A3E] font-['Fraunces']">
               Promotions
             </h1>
             <p className="text-[#5C6D5E]">Manage discount codes and special offers</p>
@@ -485,7 +478,7 @@ const AdminPromotionsPage = () => {
           )}
         </div>
       </div>
-    </div>
+    </AdminSidebar>
   );
 };
 

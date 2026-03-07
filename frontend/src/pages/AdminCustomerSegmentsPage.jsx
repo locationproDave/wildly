@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../App";
 import axios from "axios";
+import AdminSidebar from "../components/admin/AdminSidebar";
 import { 
   ChevronLeft,
   Users,
@@ -130,38 +131,29 @@ const AdminCustomerSegmentsPage = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen pt-24 pb-12 bg-[#FDF8F3]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="animate-pulse space-y-6">
-            <div className="h-8 bg-gray-200 rounded w-64"></div>
-            <div className="grid grid-cols-3 gap-6">
-              {[...Array(5)].map((_, i) => (
-                <div key={i} className="h-48 bg-gray-200 rounded-2xl"></div>
-              ))}
-            </div>
+      <AdminSidebar>
+        <div className="animate-pulse space-y-6">
+          <div className="h-8 bg-gray-200 rounded w-64"></div>
+          <div className="grid grid-cols-3 gap-6">
+            {[...Array(5)].map((_, i) => (
+              <div key={i} className="h-48 bg-gray-200 rounded-2xl"></div>
+            ))}
           </div>
         </div>
-      </div>
+      </AdminSidebar>
     );
   }
 
   return (
-    <div className="min-h-screen pt-24 pb-12 bg-[#FDF8F3]">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <AdminSidebar>
+      <div className="space-y-6">
         {/* Header */}
-        <div className="flex items-center justify-between mb-8">
-          <div className="flex items-center gap-4">
-            <Link to="/admin">
-              <Button variant="ghost" size="icon" className="rounded-full">
-                <ChevronLeft className="w-5 h-5" />
-              </Button>
-            </Link>
-            <div>
-              <h1 className="text-3xl font-bold text-[#2D4A3E] font-['Fraunces']" data-testid="page-title">
-                Customer Segments
-              </h1>
-              <p className="text-[#5C6D5E]">AI-powered customer segmentation for targeted campaigns</p>
-            </div>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold text-[#2D4A3E] font-['Fraunces']" data-testid="page-title">
+              Customer Segments
+            </h1>
+            <p className="text-[#5C6D5E]">AI-powered customer segmentation for targeted campaigns</p>
           </div>
           <Badge className="bg-[#6B8F71] text-white px-4 py-2">
             <Zap className="w-4 h-4 mr-2" />
@@ -463,7 +455,7 @@ const AdminCustomerSegmentsPage = () => {
           </DialogContent>
         </Dialog>
       </div>
-    </div>
+    </AdminSidebar>
   );
 };
 

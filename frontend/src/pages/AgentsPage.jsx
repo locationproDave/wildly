@@ -3,6 +3,7 @@ import { useAuth } from "../App";
 import { Link } from "react-router-dom";
 import axios from "axios";
 import { toast } from "sonner";
+import AdminSidebar from "../components/admin/AdminSidebar";
 import { 
   Send, 
   Loader2,
@@ -254,20 +255,12 @@ const AgentsPage = () => {
   const examples = AGENT_EXAMPLES[activeAgent] || [];
 
   return (
-    <div className="min-h-screen pt-24 pb-8">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Back Link */}
-        <Link 
-          to="/admin" 
-          className="inline-flex items-center text-[#5C6D5E] hover:text-[#2D4A3E] mb-6"
-        >
-          ← Back to Dashboard
-        </Link>
-        
+    <AdminSidebar>
+      <div className="space-y-6">
         {/* Agent Tabs */}
         <Tabs value={activeAgent} onValueChange={setActiveAgent} className="w-full">
-          <div className="mb-6">
-            <h1 className="text-3xl font-bold text-[#2F3E32] mb-2 font-['Fraunces']">
+          <div>
+            <h1 className="text-2xl font-bold text-[#2F3E32] mb-2 font-['Fraunces']">
               AI Agents
             </h1>
             <p className="text-[#57534E] mb-4">
@@ -296,7 +289,7 @@ const AgentsPage = () => {
             </TabsList>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 mt-6">
             {/* Sidebar - Sessions */}
             <div className="hidden lg:block">
               <div className="card-base p-4 sticky top-24">
@@ -497,7 +490,7 @@ const AgentsPage = () => {
           </div>
         </Tabs>
       </div>
-    </div>
+    </AdminSidebar>
   );
 };
 
